@@ -1,0 +1,6 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cash_register.add_count payload", "type": "object", "additionalProperties": true,
+  "required": ["session_id","count_type"],
+  "properties": {
+    "session_id": {"type":"string"}, "count_type": {"type":"string","enum":["opening","closing"]},
+    "denominations": {"type":"object"}, "total": {"type":["number","string"]}, "notes": {"type":"string"} } }
