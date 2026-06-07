@@ -1,0 +1,12 @@
+{
+  "name": "@erplora/module-cash_register",
+  "private": true,
+  "version": "1.2.6",
+  "type": "module",
+  "description": "Módulo cash_register (manifest declarativo + Web Component Lit).",
+  "dependencies": {
+    "@erplora/module-sdk": "workspace:*",
+    "@erplora/outfitkit": "workspace:*",
+    "lit": "^3.2.0"
+  }
+}

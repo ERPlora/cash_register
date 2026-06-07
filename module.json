@@ -4,57 +4,332 @@
   "version": "1.2.6",
   "agent": {
     "description": "Manages cash register sessions, cash movements, and drawer counts: open/close sessions, record cash in/out, perform cash counts, and list register activity.",
-    "keywords": ["cash register", "session", "drawer", "cash movement", "till", "cash count", "pos"]
+    "keywords": [
+      "cash register",
+      "session",
+      "drawer",
+      "cash movement",
+      "till",
+      "cash count",
+      "pos"
+    ]
   },
   "depends_on": [],
   "permissions": [
-    "cash_register.view_session", "cash_register.add_session", "cash_register.close_session",
-    "cash_register.view_movement", "cash_register.add_movement",
-    "cash_register.view_count", "cash_register.add_count",
-    "cash_register.view_reports", "cash_register.manage_settings"
+    "cash_register.view_session",
+    "cash_register.add_session",
+    "cash_register.close_session",
+    "cash_register.view_movement",
+    "cash_register.add_movement",
+    "cash_register.view_count",
+    "cash_register.add_count",
+    "cash_register.view_reports",
+    "cash_register.manage_settings"
   ],
   "role_permissions": {
-    "admin": ["*"],
-    "manager": ["cash_register.view_session","cash_register.add_session","cash_register.close_session",
-      "cash_register.view_movement","cash_register.add_movement","cash_register.view_count",
-      "cash_register.add_count","cash_register.view_reports"],
-    "employee": ["cash_register.view_session","cash_register.add_session","cash_register.close_session",
-      "cash_register.view_movement","cash_register.add_movement","cash_register.view_count","cash_register.add_count","cash_register.view_reports"]
+    "admin": [
+      "*"
+    ],
+    "manager": [
+      "cash_register.view_session",
+      "cash_register.add_session",
+      "cash_register.close_session",
+      "cash_register.view_movement",
+      "cash_register.add_movement",
+      "cash_register.view_count",
+      "cash_register.add_count",
+      "cash_register.view_reports"
+    ],
+    "employee": [
+      "cash_register.view_session",
+      "cash_register.add_session",
+      "cash_register.close_session",
+      "cash_register.view_movement",
+      "cash_register.add_movement",
+      "cash_register.view_count",
+      "cash_register.add_count",
+      "cash_register.view_reports"
+    ]
   },
   "navigation": [
-    { "id": "cash_register", "label": "Cash Register", "icon": "dollar-sign", "component": "erp-cashregister-dashboard" }
+    {
+      "id": "cash_register",
+      "label": "Cash Register",
+      "icon": "dollar-sign",
+      "component": "erp-cashregister-dashboard"
+    }
   ],
-  "migrations": { "sqlite": ["migrations/sqlite/001_init.sql"] },
+  "migrations": {
+    "sqlite": [
+      "migrations/sqlite/001_init.sql"
+    ]
+  },
   "queries": {
-    "cash_register.sessions.list":   { "permission": "cash_register.view_session",  "sql": "queries/sessions_list.sql", "ai": { "description": "Lists all cash register sessions with their status and totals" } },
-    "cash_register.session.summary": { "permission": "cash_register.view_session",  "sql": "queries/session_summary.sql", "ai": { "description": "Returns the totals and movement summary for a specific cash register session" } },
-    "cash_register.movements.list":  { "permission": "cash_register.view_movement", "sql": "queries/movements_list.sql", "ai": { "description": "Lists all cash movements (in/out) for a given register session" } },
-    "cash_register.counts.list":     { "permission": "cash_register.view_count",    "sql": "queries/counts_list.sql", "ai": { "description": "Lists cash counts (till counts) performed on a register" } },
-    "cash_register.registers.list":  { "permission": "cash_register.view_session",  "sql": "queries/registers_list.sql", "ai": { "description": "Lists the available cash registers configured in the system" } }
+    "cash_register.sessions.list": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/sessions_list.sql",
+      "list": {
+        "search": [
+          "session_number"
+        ],
+        "sort": [
+          "id",
+          "session_number",
+          "status",
+          "register_id",
+          "opened_at",
+          "opening_balance",
+          "closed_at",
+          "closing_balance",
+          "expected_balance",
+          "difference"
+        ],
+        "default_sort": "id",
+        "default_dir": "asc",
+        "filters": {
+          "session_number": {
+            "op": "eq"
+          },
+          "status": {
+            "op": "eq"
+          },
+          "register_id": {
+            "op": "eq"
+          },
+          "opened_at": {
+            "op": "range"
+          },
+          "opening_balance": {
+            "op": "range"
+          },
+          "closed_at": {
+            "op": "range"
+          },
+          "closing_balance": {
+            "op": "range"
+          },
+          "expected_balance": {
+            "op": "range"
+          },
+          "difference": {
+            "op": "eq"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists all cash register sessions with their status and totals"
+      }
+    },
+    "cash_register.session.summary": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/session_summary.sql",
+      "ai": {
+        "description": "Returns the totals and movement summary for a specific cash register session"
+      }
+    },
+    "cash_register.movements.list": {
+      "permission": "cash_register.view_movement",
+      "sql": "queries/movements_list.sql",
+      "list": {
+        "search": [
+          "sale_reference",
+          "description"
+        ],
+        "sort": [
+          "id",
+          "movement_type",
+          "amount",
+          "payment_method",
+          "sale_reference",
+          "description",
+          "created_at"
+        ],
+        "default_sort": "created_at",
+        "default_dir": "desc",
+        "filters": {
+          "movement_type": {
+            "op": "eq"
+          },
+          "amount": {
+            "op": "range"
+          },
+          "payment_method": {
+            "op": "eq"
+          },
+          "sale_reference": {
+            "op": "eq"
+          },
+          "description": {
+            "op": "eq"
+          },
+          "created_at": {
+            "op": "range"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists all cash movements (in/out) for a given register session"
+      }
+    },
+    "cash_register.counts.list": {
+      "permission": "cash_register.view_count",
+      "sql": "queries/counts_list.sql",
+      "list": {
+        "sort": [
+          "id",
+          "count_type",
+          "total",
+          "denominations",
+          "notes",
+          "counted_at"
+        ],
+        "default_sort": "id",
+        "default_dir": "asc",
+        "filters": {
+          "count_type": {
+            "op": "range"
+          },
+          "total": {
+            "op": "range"
+          },
+          "denominations": {
+            "op": "eq"
+          },
+          "notes": {
+            "op": "eq"
+          },
+          "counted_at": {
+            "op": "range"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists cash counts (till counts) performed on a register"
+      }
+    },
+    "cash_register.registers.list": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/registers_list.sql",
+      "list": {
+        "search": [
+          "name"
+        ],
+        "sort": [
+          "id",
+          "name",
+          "is_active"
+        ],
+        "default_sort": "name",
+        "default_dir": "asc",
+        "filters": {
+          "name": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists the available cash registers configured in the system"
+      }
+    }
   },
   "commands": {
-    "cash_register.registers.create": { "permission": "cash_register.manage_settings", "transaction": true, "sql": ["commands/register_create.sql"], "ai": { "description": "Creates a new cash register" } },
-    "cash_register.session.open":  { "permission": "cash_register.add_session", "transaction": true, "sql": ["commands/open_session.sql"], "emit": ["cash_register.session_opened"], "ai": { "description": "Opens a new cash register session with the specified opening float" } },
-    "cash_register.session.close": { "permission": "cash_register.close_session", "transaction": true, "sql": ["commands/close_session.sql"], "emit": ["cash_register.session_closed"], "ai": { "description": "Closes the active cash register session and records the final cash amount" } },
-    "cash_register.movement.add":  { "permission": "cash_register.add_movement", "transaction": true, "sql": ["commands/add_movement.sql"], "ai": { "description": "Records a cash movement (cash-in or cash-out) against the active register session" } },
+    "cash_register.registers.create": {
+      "permission": "cash_register.manage_settings",
+      "transaction": true,
+      "sql": [
+        "commands/register_create.sql"
+      ],
+      "ai": {
+        "description": "Creates a new cash register"
+      }
+    },
+    "cash_register.session.open": {
+      "permission": "cash_register.add_session",
+      "transaction": true,
+      "sql": [
+        "commands/open_session.sql"
+      ],
+      "emit": [
+        "cash_register.session_opened"
+      ],
+      "ai": {
+        "description": "Opens a new cash register session with the specified opening float"
+      }
+    },
+    "cash_register.session.close": {
+      "permission": "cash_register.close_session",
+      "transaction": true,
+      "sql": [
+        "commands/close_session.sql"
+      ],
+      "emit": [
+        "cash_register.session_closed"
+      ],
+      "ai": {
+        "description": "Closes the active cash register session and records the final cash amount"
+      }
+    },
+    "cash_register.movement.add": {
+      "permission": "cash_register.add_movement",
+      "transaction": true,
+      "sql": [
+        "commands/add_movement.sql"
+      ],
+      "ai": {
+        "description": "Records a cash movement (cash-in or cash-out) against the active register session"
+      }
+    },
     "cash_register.count.add": {
       "permission": "cash_register.add_count",
-      "handler": { "type": "wasm", "file": "dist/handler.wasm", "function": "add_count" },
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "add_count"
+      },
       "schema": "schemas/add_count.json",
-      "ai": { "description": "Performs a cash count by recording the number of each denomination in the drawer" }
+      "ai": {
+        "description": "Performs a cash count by recording the number of each denomination in the drawer"
+      }
     },
     "cash_register.record_sale": {
       "permission": "cash_register.add_movement",
-      "handler": { "type": "wasm", "file": "dist/handler.wasm", "function": "record_sale" },
-      "ai": { "description": "Records the cash movement corresponding to a completed sale" }
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "record_sale"
+      },
+      "ai": {
+        "description": "Records the cash movement corresponding to a completed sale"
+      }
     },
-    "cash_register._insert_count": { "permission": "cash_register.add_count", "sql": ["commands/_insert_count.sql"] },
-    "cash_register._movement_for_open_session": { "permission": "cash_register.add_movement", "sql": ["commands/_movement_for_open_session.sql"] }
+    "cash_register._insert_count": {
+      "permission": "cash_register.add_count",
+      "sql": [
+        "commands/_insert_count.sql"
+      ]
+    },
+    "cash_register._movement_for_open_session": {
+      "permission": "cash_register.add_movement",
+      "sql": [
+        "commands/_movement_for_open_session.sql"
+      ]
+    }
   },
   "events": {
     "listen": {
-      "sale.completed": { "command": "cash_register.record_sale" }
+      "sale.completed": {
+        "command": "cash_register.record_sale"
+      }
     }
   },
-  "ui": { "entry": "dist/cash_register.esm.js" }
+  "ui": {
+    "entry": "dist/cash_register.esm.js"
+  }
 }

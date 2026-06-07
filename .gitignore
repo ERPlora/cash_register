@@ -1,0 +1,5 @@
+node_modules/
+target/
+.stencil-out/
+*.log
+.DS_Store
