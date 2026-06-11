@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cash_register.settings.update",
+  "description": "Configuración de caja (singleton por hub). La UI envía el snapshot completo (upsert).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enable_cash_register": { "type": "boolean" },
+    "require_opening_balance": { "type": "boolean" },
+    "require_closing_balance": { "type": "boolean" },
+    "allow_negative_balance": { "type": "boolean" },
+    "auto_open_session_on_login": { "type": "boolean" },
+    "auto_close_session_on_logout": { "type": "boolean" },
+    "protected_pos_url": { "type": "string", "maxLength": 255 }
+  },
+  "required": [
+    "enable_cash_register",
+    "require_opening_balance",
+    "require_closing_balance",
+    "allow_negative_balance",
+    "auto_open_session_on_login",
+    "auto_close_session_on_logout",
+    "protected_pos_url"
+  ]
+}

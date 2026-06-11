@@ -3174,6 +3174,133 @@ __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
-export {
-  ErpCashRegisterDashboard
+
+// ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
+var DEFAULT_SETTINGS = {
+  enable_cash_register: true,
+  require_opening_balance: false,
+  require_closing_balance: true,
+  allow_negative_balance: false,
+  auto_open_session_on_login: true,
+  auto_close_session_on_logout: true,
+  protected_pos_url: "/m/sales/pos/"
 };
+var TOGGLES = [
+  { key: "enable_cash_register", label: "Caja activada" },
+  { key: "require_opening_balance", label: "Exigir fondo de apertura" },
+  { key: "require_closing_balance", label: "Exigir recuento al cierre" },
+  { key: "allow_negative_balance", label: "Permitir saldo negativo" },
+  { key: "auto_open_session_on_login", label: "Abrir sesi\xF3n al iniciar sesi\xF3n" },
+  { key: "auto_close_session_on_logout", label: "Cerrar sesi\xF3n al salir" }
+];
+function erplora2() {
+  const c5 = globalThis.erplora;
+  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
+  return c5;
+}
+var ErpCashRegisterSettings = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.settings = { ...DEFAULT_SETTINGS };
+    this.loading = true;
+    this.saving = false;
+    this.msg = "";
+    this.error = "";
+  }
+  static {
+    this.styles = i`
+    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
+    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
+    h2 { margin:0; font-size:1.15rem; flex:1; }
+    .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--surface-2,#faf8f2); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(16rem, 1fr)); gap:.25rem .75rem; }
+    .url { margin-top:.5rem; }
+    .url ion-input { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; max-width:24rem; }
+    footer { display:flex; gap:.5rem; align-items:center; margin-top:.75rem; }
+    .err { color:#d9480f; font-weight:600; }
+    .ok { color:#2b8a3e; font-weight:600; }
+  `;
+  }
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.loadSettings();
+  }
+  async loadSettings() {
+    this.loading = true;
+    this.error = "";
+    try {
+      const rows = await erplora2().query("cash_register.settings.get");
+      const row = rows?.[0];
+      if (row) {
+        this.settings = {
+          enable_cash_register: Boolean(Number(row.enable_cash_register)),
+          require_opening_balance: Boolean(Number(row.require_opening_balance)),
+          require_closing_balance: Boolean(Number(row.require_closing_balance)),
+          allow_negative_balance: Boolean(Number(row.allow_negative_balance)),
+          auto_open_session_on_login: Boolean(Number(row.auto_open_session_on_login)),
+          auto_close_session_on_logout: Boolean(Number(row.auto_close_session_on_logout)),
+          protected_pos_url: String(row.protected_pos_url ?? DEFAULT_SETTINGS.protected_pos_url)
+        };
+      }
+    } catch (e5) {
+      this.error = e5 instanceof Error ? e5.message : "No se pudieron cargar los ajustes";
+    } finally {
+      this.loading = false;
+    }
+  }
+  async save(ev) {
+    ev.preventDefault();
+    this.saving = true;
+    this.msg = "";
+    this.error = "";
+    try {
+      await erplora2().command("cash_register.settings.update", { ...this.settings });
+      this.msg = "Ajustes guardados";
+    } catch (e5) {
+      this.error = e5 instanceof Error ? e5.message : "No se pudieron guardar los ajustes";
+    } finally {
+      this.saving = false;
+    }
+  }
+  setBool(key, value) {
+    this.settings = { ...this.settings, [key]: value };
+  }
+  render() {
+    return b2`<div>
+      <header>
+        <h2>Ajustes de caja</h2>
+      </header>
+      <form class="panel" @submit=${(e5) => this.save(e5)}>
+        <div class="grid">
+          ${TOGGLES.map(
+      (f3) => b2`<ion-toggle .checked=${this.settings[f3.key]} ?disabled=${this.loading} @ionChange=${(e5) => this.setBool(f3.key, e5.detail.checked)}>${f3.label}</ion-toggle>`
+    )}
+        </div>
+        <div class="url">
+          <ion-input label="URL del POS protegida" label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
+        </div>
+        <footer>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? "Guardando\u2026" : "Guardar ajustes"}</ion-button>
+          ${this.msg ? b2`<span class="ok">${this.msg}</span>` : A}
+          ${this.error ? b2`<span class="err">${this.error}</span>` : A}
+        </footer>
+      </form>
+    </div>`;
+  }
+};
+__decorateClass([
+  r5()
+], ErpCashRegisterSettings.prototype, "settings", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSettings.prototype, "loading", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSettings.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSettings.prototype, "msg", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSettings.prototype, "error", 2);
+define("erp-cashregister-settings", ErpCashRegisterSettings);

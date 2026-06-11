@@ -57,6 +57,12 @@
       "label": "Cash Register",
       "icon": "dollar-sign",
       "component": "erp-cashregister-dashboard"
+    },
+    {
+      "id": "settings",
+      "label": "Settings",
+      "icon": "settings-outline",
+      "component": "erp-cashregister-settings"
     }
   ],
   "migrations": {
@@ -210,6 +216,14 @@
         "description": "Lists cash counts (till counts) performed on a register"
       }
     },
+    "cash_register.settings.get": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/settings_get.sql",
+      "schema": "schemas/settings_get.json",
+      "ai": {
+        "description": "Retrieves the cash register settings for the hub (toggles and protected POS URL)"
+      }
+    },
     "cash_register.registers.list": {
       "permission": "cash_register.view_session",
       "sql": "queries/registers_list.sql",
@@ -248,6 +262,20 @@
       ],
       "ai": {
         "description": "Creates a new cash register"
+      }
+    },
+    "cash_register.settings.update": {
+      "permission": "cash_register.manage_settings",
+      "transaction": true,
+      "sql": [
+        "commands/settings_update.sql"
+      ],
+      "schema": "schemas/settings_update.json",
+      "emit": [
+        "cash_register.settings_updated"
+      ],
+      "ai": {
+        "description": "Updates the cash register settings (upsert of the per-hub singleton row)"
       }
     },
     "cash_register.session.open": {
