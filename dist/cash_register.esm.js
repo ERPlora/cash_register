@@ -9,22 +9,687 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/css-tag.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+var ElementInternalsShim = class ElementInternals {
+  get shadowRoot() {
+    return this.__host.__shadowRoot;
+  }
+  constructor(_host) {
+    this.ariaActiveDescendantElement = null;
+    this.ariaAtomic = "";
+    this.ariaAutoComplete = "";
+    this.ariaBrailleLabel = "";
+    this.ariaBrailleRoleDescription = "";
+    this.ariaBusy = "";
+    this.ariaChecked = "";
+    this.ariaColCount = "";
+    this.ariaColIndex = "";
+    this.ariaColIndexText = "";
+    this.ariaColSpan = "";
+    this.ariaControlsElements = null;
+    this.ariaCurrent = "";
+    this.ariaDescribedByElements = null;
+    this.ariaDescription = "";
+    this.ariaDetailsElements = null;
+    this.ariaDisabled = "";
+    this.ariaErrorMessageElements = null;
+    this.ariaExpanded = "";
+    this.ariaFlowToElements = null;
+    this.ariaHasPopup = "";
+    this.ariaHidden = "";
+    this.ariaInvalid = "";
+    this.ariaKeyShortcuts = "";
+    this.ariaLabel = "";
+    this.ariaLabelledByElements = null;
+    this.ariaLevel = "";
+    this.ariaLive = "";
+    this.ariaModal = "";
+    this.ariaMultiLine = "";
+    this.ariaMultiSelectable = "";
+    this.ariaOrientation = "";
+    this.ariaOwnsElements = null;
+    this.ariaPlaceholder = "";
+    this.ariaPosInSet = "";
+    this.ariaPressed = "";
+    this.ariaReadOnly = "";
+    this.ariaRelevant = "";
+    this.ariaRequired = "";
+    this.ariaRoleDescription = "";
+    this.ariaRowCount = "";
+    this.ariaRowIndex = "";
+    this.ariaRowIndexText = "";
+    this.ariaRowSpan = "";
+    this.ariaSelected = "";
+    this.ariaSetSize = "";
+    this.ariaSort = "";
+    this.ariaValueMax = "";
+    this.ariaValueMin = "";
+    this.ariaValueNow = "";
+    this.ariaValueText = "";
+    this.role = "";
+    this.form = null;
+    this.labels = [];
+    this.states = /* @__PURE__ */ new Set();
+    this.validationMessage = "";
+    this.validity = {};
+    this.willValidate = true;
+    this.__host = _host;
+  }
+  checkValidity() {
+    console.warn("`ElementInternals.checkValidity()` was called on the server.This method always returns true.");
+    return true;
+  }
+  reportValidity() {
+    return true;
+  }
+  setFormValue() {
+  }
+  setValidity() {
+  }
+};
+
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
+  if (kind === "m") throw new TypeError("Private method is not writable");
+  if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
+  if (typeof state === "function" ? receiver !== state || !f3 : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+  return kind === "a" ? f3.call(receiver, value) : f3 ? f3.value = value : state.set(receiver, value), value;
+};
+var __classPrivateFieldGet = function(receiver, state, kind, f3) {
+  if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a getter");
+  if (typeof state === "function" ? receiver !== state || !f3 : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+  return kind === "m" ? f3 : kind === "a" ? f3.call(receiver) : f3 ? f3.value : state.get(receiver);
+};
+var _Event_cancelable;
+var _Event_bubbles;
+var _Event_composed;
+var _Event_defaultPrevented;
+var _Event_timestamp;
+var _Event_propagationStopped;
+var _Event_type;
+var _Event_target;
+var _Event_isBeingDispatched;
+var _a;
+var _CustomEvent_detail;
+var _b;
+var NONE = 0;
+var CAPTURING_PHASE = 1;
+var AT_TARGET = 2;
+var BUBBLING_PHASE = 3;
+var enumerableProperty = { __proto__: null };
+enumerableProperty.enumerable = true;
+Object.freeze(enumerableProperty);
+var EventShim = (_a = class Event {
+  constructor(type, options = {}) {
+    _Event_cancelable.set(this, false);
+    _Event_bubbles.set(this, false);
+    _Event_composed.set(this, false);
+    _Event_defaultPrevented.set(this, false);
+    _Event_timestamp.set(this, Date.now());
+    _Event_propagationStopped.set(this, false);
+    _Event_type.set(this, void 0);
+    _Event_target.set(this, void 0);
+    _Event_isBeingDispatched.set(this, void 0);
+    this.NONE = NONE;
+    this.CAPTURING_PHASE = CAPTURING_PHASE;
+    this.AT_TARGET = AT_TARGET;
+    this.BUBBLING_PHASE = BUBBLING_PHASE;
+    if (arguments.length === 0)
+      throw new Error(`The type argument must be specified`);
+    if (typeof options !== "object" || !options) {
+      throw new Error(`The "options" argument must be an object`);
+    }
+    const { bubbles, cancelable, composed } = options;
+    __classPrivateFieldSet(this, _Event_cancelable, !!cancelable, "f");
+    __classPrivateFieldSet(this, _Event_bubbles, !!bubbles, "f");
+    __classPrivateFieldSet(this, _Event_composed, !!composed, "f");
+    __classPrivateFieldSet(this, _Event_type, `${type}`, "f");
+    __classPrivateFieldSet(this, _Event_target, null, "f");
+    __classPrivateFieldSet(this, _Event_isBeingDispatched, false, "f");
+  }
+  initEvent(_type, _bubbles, _cancelable) {
+    throw new Error("Method not implemented.");
+  }
+  stopImmediatePropagation() {
+    this.stopPropagation();
+  }
+  preventDefault() {
+    __classPrivateFieldSet(this, _Event_defaultPrevented, true, "f");
+  }
+  get target() {
+    return __classPrivateFieldGet(this, _Event_target, "f");
+  }
+  get currentTarget() {
+    return __classPrivateFieldGet(this, _Event_target, "f");
+  }
+  get srcElement() {
+    return __classPrivateFieldGet(this, _Event_target, "f");
+  }
+  get type() {
+    return __classPrivateFieldGet(this, _Event_type, "f");
+  }
+  get cancelable() {
+    return __classPrivateFieldGet(this, _Event_cancelable, "f");
+  }
+  get defaultPrevented() {
+    return __classPrivateFieldGet(this, _Event_cancelable, "f") && __classPrivateFieldGet(this, _Event_defaultPrevented, "f");
+  }
+  get timeStamp() {
+    return __classPrivateFieldGet(this, _Event_timestamp, "f");
+  }
+  composedPath() {
+    return __classPrivateFieldGet(this, _Event_isBeingDispatched, "f") ? [__classPrivateFieldGet(this, _Event_target, "f")] : [];
+  }
+  get returnValue() {
+    return !__classPrivateFieldGet(this, _Event_cancelable, "f") || !__classPrivateFieldGet(this, _Event_defaultPrevented, "f");
+  }
+  get bubbles() {
+    return __classPrivateFieldGet(this, _Event_bubbles, "f");
+  }
+  get composed() {
+    return __classPrivateFieldGet(this, _Event_composed, "f");
+  }
+  get eventPhase() {
+    return __classPrivateFieldGet(this, _Event_isBeingDispatched, "f") ? _a.AT_TARGET : _a.NONE;
+  }
+  get cancelBubble() {
+    return __classPrivateFieldGet(this, _Event_propagationStopped, "f");
+  }
+  set cancelBubble(value) {
+    if (value) {
+      __classPrivateFieldSet(this, _Event_propagationStopped, true, "f");
+    }
+  }
+  stopPropagation() {
+    __classPrivateFieldSet(this, _Event_propagationStopped, true, "f");
+  }
+  get isTrusted() {
+    return false;
+  }
+}, _Event_cancelable = /* @__PURE__ */ new WeakMap(), _Event_bubbles = /* @__PURE__ */ new WeakMap(), _Event_composed = /* @__PURE__ */ new WeakMap(), _Event_defaultPrevented = /* @__PURE__ */ new WeakMap(), _Event_timestamp = /* @__PURE__ */ new WeakMap(), _Event_propagationStopped = /* @__PURE__ */ new WeakMap(), _Event_type = /* @__PURE__ */ new WeakMap(), _Event_target = /* @__PURE__ */ new WeakMap(), _Event_isBeingDispatched = /* @__PURE__ */ new WeakMap(), _a.NONE = NONE, _a.CAPTURING_PHASE = CAPTURING_PHASE, _a.AT_TARGET = AT_TARGET, _a.BUBBLING_PHASE = BUBBLING_PHASE, _a);
+Object.defineProperties(EventShim.prototype, {
+  initEvent: enumerableProperty,
+  stopImmediatePropagation: enumerableProperty,
+  preventDefault: enumerableProperty,
+  target: enumerableProperty,
+  currentTarget: enumerableProperty,
+  srcElement: enumerableProperty,
+  type: enumerableProperty,
+  cancelable: enumerableProperty,
+  defaultPrevented: enumerableProperty,
+  timeStamp: enumerableProperty,
+  composedPath: enumerableProperty,
+  returnValue: enumerableProperty,
+  bubbles: enumerableProperty,
+  composed: enumerableProperty,
+  eventPhase: enumerableProperty,
+  cancelBubble: enumerableProperty,
+  stopPropagation: enumerableProperty,
+  isTrusted: enumerableProperty
+});
+var CustomEventShim = (_b = class CustomEvent2 extends EventShim {
+  constructor(type, options = {}) {
+    super(type, options);
+    _CustomEvent_detail.set(this, void 0);
+    __classPrivateFieldSet(this, _CustomEvent_detail, options?.detail ?? null, "f");
+  }
+  initCustomEvent(_type, _bubbles, _cancelable, _detail) {
+    throw new Error("Method not implemented.");
+  }
+  get detail() {
+    return __classPrivateFieldGet(this, _CustomEvent_detail, "f");
+  }
+}, _CustomEvent_detail = /* @__PURE__ */ new WeakMap(), _b);
+Object.defineProperties(CustomEventShim.prototype, {
+  detail: enumerableProperty
+});
+var EventShimWithRealType = EventShim;
+var CustomEventShimWithRealType = CustomEventShim;
+
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+var _a2;
+var CSSRuleShim = (_a2 = class CSSRule {
+  constructor() {
+    this.STYLE_RULE = 1;
+    this.CHARSET_RULE = 2;
+    this.IMPORT_RULE = 3;
+    this.MEDIA_RULE = 4;
+    this.FONT_FACE_RULE = 5;
+    this.PAGE_RULE = 6;
+    this.NAMESPACE_RULE = 10;
+    this.KEYFRAMES_RULE = 7;
+    this.KEYFRAME_RULE = 8;
+    this.SUPPORTS_RULE = 12;
+    this.COUNTER_STYLE_RULE = 11;
+    this.FONT_FEATURE_VALUES_RULE = 14;
+    this.MARGIN_RULE = 9;
+    this.__parentStyleSheet = null;
+    this.cssText = "";
+  }
+  get parentRule() {
+    return null;
+  }
+  get parentStyleSheet() {
+    return this.__parentStyleSheet;
+  }
+  get type() {
+    return 0;
+  }
+}, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
+
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/index.js
+globalThis.Event ??= EventShimWithRealType;
+globalThis.CustomEvent ??= CustomEventShimWithRealType;
+var constructionToken = Symbol();
+var isCaptureEventListener = (options) => typeof options === "boolean" ? options : options?.capture ?? false;
+var enumerableProperty2 = { __proto__: null };
+enumerableProperty2.enumerable = true;
+Object.freeze(enumerableProperty2);
+var EventTarget = class {
+  constructor() {
+    this.__eventListeners = /* @__PURE__ */ new Map();
+    this.__captureEventListeners = /* @__PURE__ */ new Map();
+  }
+  addEventListener(type, callback, options) {
+    if (callback === void 0 || callback === null) {
+      return;
+    }
+    const eventListenersMap = isCaptureEventListener(options) ? this.__captureEventListeners : this.__eventListeners;
+    let eventListeners = eventListenersMap.get(type);
+    if (eventListeners === void 0) {
+      eventListeners = /* @__PURE__ */ new Map();
+      eventListenersMap.set(type, eventListeners);
+    } else if (eventListeners.has(callback)) {
+      return;
+    }
+    const normalizedOptions = typeof options === "object" && options ? options : {};
+    normalizedOptions.signal?.addEventListener("abort", () => this.removeEventListener(type, callback, options));
+    eventListeners.set(callback, normalizedOptions ?? {});
+  }
+  removeEventListener(type, callback, options) {
+    if (callback === void 0 || callback === null) {
+      return;
+    }
+    const eventListenersMap = isCaptureEventListener(options) ? this.__captureEventListeners : this.__eventListeners;
+    const eventListeners = eventListenersMap.get(type);
+    if (eventListeners !== void 0) {
+      eventListeners.delete(callback);
+      if (!eventListeners.size) {
+        eventListenersMap.delete(type);
+      }
+    }
+  }
+  dispatchEvent(event) {
+    let composedPath = this.__resolveFullEventPath();
+    if (!event.composed && this.__host) {
+      composedPath = composedPath.slice(0, composedPath.indexOf(this.__host));
+    }
+    let stopPropagation = false;
+    let stopImmediatePropagation = false;
+    let eventPhase = EventShimWithRealType.NONE;
+    let target = null;
+    let tmpTarget = null;
+    let currentTarget = null;
+    const originalStopPropagation = event.stopPropagation;
+    const originalStopImmediatePropagation = event.stopImmediatePropagation;
+    Object.defineProperties(event, {
+      target: {
+        get() {
+          return target ?? tmpTarget;
+        },
+        ...enumerableProperty2
+      },
+      srcElement: {
+        get() {
+          return event.target;
+        },
+        ...enumerableProperty2
+      },
+      currentTarget: {
+        get() {
+          return currentTarget;
+        },
+        ...enumerableProperty2
+      },
+      eventPhase: {
+        get() {
+          return eventPhase;
+        },
+        ...enumerableProperty2
+      },
+      composedPath: {
+        value: () => composedPath,
+        ...enumerableProperty2
+      },
+      stopPropagation: {
+        value: () => {
+          stopPropagation = true;
+          originalStopPropagation.call(event);
+        },
+        ...enumerableProperty2
+      },
+      stopImmediatePropagation: {
+        value: () => {
+          stopImmediatePropagation = true;
+          originalStopImmediatePropagation.call(event);
+        },
+        ...enumerableProperty2
+      }
+    });
+    const invokeEventListener = (listener, options, eventListenerMap) => {
+      if (typeof listener === "function") {
+        listener(event);
+      } else if (typeof listener?.handleEvent === "function") {
+        listener.handleEvent(event);
+      }
+      if (options.once) {
+        eventListenerMap.delete(listener);
+      }
+    };
+    const finishDispatch = () => {
+      currentTarget = null;
+      eventPhase = EventShimWithRealType.NONE;
+      return !event.defaultPrevented;
+    };
+    const captureEventPath = composedPath.slice().reverse();
+    target = !this.__host || !event.composed ? this : null;
+    const retarget = (eventTargets) => {
+      tmpTarget = this;
+      while (tmpTarget.__host && eventTargets.includes(tmpTarget.__host)) {
+        tmpTarget = tmpTarget.__host;
+      }
+    };
+    for (const eventTarget of captureEventPath) {
+      if (!target && (!tmpTarget || tmpTarget === eventTarget.__host)) {
+        retarget(captureEventPath.slice(captureEventPath.indexOf(eventTarget)));
+      }
+      currentTarget = eventTarget;
+      eventPhase = eventTarget === event.target ? EventShimWithRealType.AT_TARGET : EventShimWithRealType.CAPTURING_PHASE;
+      const captureEventListeners = eventTarget.__captureEventListeners.get(event.type);
+      if (captureEventListeners) {
+        for (const [listener, options] of captureEventListeners) {
+          invokeEventListener(listener, options, captureEventListeners);
+          if (stopImmediatePropagation) {
+            return finishDispatch();
+          }
+        }
+      }
+      if (stopPropagation) {
+        return finishDispatch();
+      }
+    }
+    const bubbleEventPath = event.bubbles ? composedPath : [this];
+    tmpTarget = null;
+    for (const eventTarget of bubbleEventPath) {
+      if (!target && (!tmpTarget || eventTarget === tmpTarget.__host)) {
+        retarget(bubbleEventPath.slice(0, bubbleEventPath.indexOf(eventTarget) + 1));
+      }
+      currentTarget = eventTarget;
+      eventPhase = eventTarget === event.target ? EventShimWithRealType.AT_TARGET : EventShimWithRealType.BUBBLING_PHASE;
+      const eventListeners = eventTarget.__eventListeners.get(event.type);
+      if (eventListeners) {
+        for (const [listener, options] of eventListeners) {
+          invokeEventListener(listener, options, eventListeners);
+          if (stopImmediatePropagation) {
+            return finishDispatch();
+          }
+        }
+      }
+      if (stopPropagation) {
+        return finishDispatch();
+      }
+    }
+    return finishDispatch();
+  }
+  __resolveFullEventPath() {
+    if (this.__eventPathCache) {
+      return this.__eventPathCache;
+    } else if (!this.__eventTargetParent) {
+      return this.__eventPathCache = [this, documentShim, windowShim];
+    } else {
+      return this.__eventPathCache = [
+        this,
+        ...this.__eventTargetParent.__resolveFullEventPath()
+      ];
+    }
+  }
+};
+var attributes = /* @__PURE__ */ new WeakMap();
+var attributesForElement = (element) => {
+  let attrs = attributes.get(element);
+  if (attrs === void 0) {
+    attributes.set(element, attrs = /* @__PURE__ */ new Map());
+  }
+  return attrs;
+};
+var NodeShim = class Node extends EventTarget {
+  getRootNode(options) {
+    if (options?.composed) {
+      return document2;
+    }
+    const host = this.__host;
+    return host?.__shadowRoot ?? document2;
+  }
+};
+var DocumentShim = class Document2 extends NodeShim {
+  get adoptedStyleSheets() {
+    return [];
+  }
+  createTreeWalker() {
+    return {};
+  }
+  createTextNode() {
+    return {};
+  }
+  createElement() {
+    return {};
+  }
+};
+var documentShim = new DocumentShim();
+var document2 = documentShim;
+var WindowShim = class Window extends NodeShim {
+  constructor(token) {
+    super();
+    if (token !== constructionToken) {
+      throw new TypeError("Illegal constructor");
+    }
+    Object.assign(this, globalThis, {
+      CustomElementRegistry,
+      customElements: customElements2,
+      document: document2,
+      Document: DocumentShim,
+      Element: ElementShim,
+      EventTarget,
+      HTMLElement: HTMLElementShim,
+      Node: NodeShim,
+      ShadowRoot: ShadowRootShim,
+      window: this,
+      Window: WindowShim
+    });
+  }
+};
+var ElementShim = class Element extends NodeShim {
+  constructor() {
+    super(...arguments);
+    this.__shadowRootMode = null;
+    this.__shadowRoot = null;
+    this.__internals = null;
+  }
+  get attributes() {
+    return Array.from(attributesForElement(this)).map(([name, value]) => ({
+      name,
+      value
+    }));
+  }
+  get shadowRoot() {
+    if (this.__shadowRootMode === "closed") {
+      return null;
+    }
+    return this.__shadowRoot;
+  }
+  get localName() {
+    return this.constructor.__localName;
+  }
+  get tagName() {
+    return this.localName?.toUpperCase();
+  }
+  setAttribute(name, value) {
+    attributesForElement(this).set(name, String(value));
+  }
+  removeAttribute(name) {
+    attributesForElement(this).delete(name);
+  }
+  toggleAttribute(name, force) {
+    if (this.hasAttribute(name)) {
+      if (force === void 0 || !force) {
+        this.removeAttribute(name);
+        return false;
+      }
+    } else {
+      if (force === void 0 || force) {
+        this.setAttribute(name, "");
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+  hasAttribute(name) {
+    return attributesForElement(this).has(name);
+  }
+  attachShadow(init) {
+    this.__shadowRootMode = init.mode;
+    const shadowRoot = new ShadowRootShim(constructionToken, init);
+    shadowRoot.__eventTargetParent = this;
+    shadowRoot.__host = this;
+    return this.__shadowRoot = shadowRoot;
+  }
+  attachInternals() {
+    if (this.__internals !== null) {
+      throw new Error(`Failed to execute 'attachInternals' on 'HTMLElement': ElementInternals for the specified element was already attached.`);
+    }
+    const internals = new ElementInternalsShim(this);
+    this.__internals = internals;
+    return internals;
+  }
+  getAttribute(name) {
+    const value = attributesForElement(this).get(name);
+    return value ?? null;
+  }
+};
+var HTMLElementShim = class HTMLElement extends ElementShim {
+};
+var HTMLElementShimWithRealType = HTMLElementShim;
+var ShadowRootShim = class ShadowRoot extends NodeShim {
+  get host() {
+    return this.__host;
+  }
+  constructor(constructionToken2, init) {
+    super();
+    if (constructionToken2 !== constructionToken2) {
+      throw new TypeError("Illegal constructor");
+    }
+    this.mode = init.mode;
+  }
+};
+globalThis.litServerRoot ??= Object.defineProperty(new HTMLElementShimWithRealType(), "localName", {
+  // Patch localName (and tagName) to return a unique name.
+  get() {
+    return "lit-server-root";
+  }
+});
+function promiseWithResolvers() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+var CustomElementRegistry = class {
+  constructor() {
+    this.__definitions = /* @__PURE__ */ new Map();
+    this.__reverseDefinitions = /* @__PURE__ */ new Map();
+    this.__pendingWhenDefineds = /* @__PURE__ */ new Map();
+  }
+  define(name, ctor) {
+    if (this.__definitions.has(name)) {
+      if (true) {
+        console.warn(`'CustomElementRegistry' already has "${name}" defined. This may have been caused by live reload or hot module replacement in which case it can be safely ignored.
+Make sure to test your application with a production build as repeat registrations will throw in production.`);
+      } else {
+        throw new Error(`Failed to execute 'define' on 'CustomElementRegistry': the name "${name}" has already been used with this registry`);
+      }
+    }
+    if (this.__reverseDefinitions.has(ctor)) {
+      throw new Error(`Failed to execute 'define' on 'CustomElementRegistry': the constructor has already been used with this registry for the tag name ${this.__reverseDefinitions.get(ctor)}`);
+    }
+    ctor.__localName = name;
+    this.__definitions.set(name, {
+      ctor,
+      // Note it's important we read `observedAttributes` in case it is a getter
+      // with side-effects, as is the case in Lit, where it triggers class
+      // finalization.
+      //
+      // TODO(aomarks) To be spec compliant, we should also capture the
+      // registration-time lifecycle methods like `connectedCallback`. For them
+      // to be actually accessible to e.g. the Lit SSR element renderer, though,
+      // we'd need to introduce a new API for accessing them (since `get` only
+      // returns the constructor).
+      observedAttributes: ctor.observedAttributes ?? []
+    });
+    this.__reverseDefinitions.set(ctor, name);
+    this.__pendingWhenDefineds.get(name)?.resolve(ctor);
+    this.__pendingWhenDefineds.delete(name);
+  }
+  get(name) {
+    const definition = this.__definitions.get(name);
+    return definition?.ctor;
+  }
+  getName(ctor) {
+    return this.__reverseDefinitions.get(ctor) ?? null;
+  }
+  initialize(_root) {
+    throw new Error(`customElements.initialize is not currently supported in SSR. Please file a bug if you need it.`);
+  }
+  upgrade(_element) {
+    throw new Error(`customElements.upgrade is not currently supported in SSR. Please file a bug if you need it.`);
+  }
+  async whenDefined(name) {
+    const definition = this.__definitions.get(name);
+    if (definition) {
+      return definition.ctor;
+    }
+    let withResolvers = this.__pendingWhenDefineds.get(name);
+    if (!withResolvers) {
+      withResolvers = promiseWithResolvers();
+      this.__pendingWhenDefineds.set(name, withResolvers);
+    }
+    return withResolvers.promise;
+  }
+};
+var CustomElementRegistryShimWithRealType = CustomElementRegistry;
+var customElements2 = new CustomElementRegistryShimWithRealType();
+var windowShim = new WindowShim(constructionToken);
+
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
 var o = /* @__PURE__ */ new WeakMap();
 var n = class {
-  constructor(t5, e6, o6) {
-    if (this._$cssResult$ = true, o6 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t5, this.t = e6;
+  constructor(t5, e5, o7) {
+    if (this._$cssResult$ = true, o7 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = t5, this.t = e5;
   }
   get styleSheet() {
     let t5 = this.o;
     const s5 = this.t;
     if (e && void 0 === t5) {
-      const e6 = void 0 !== s5 && 1 === s5.length;
-      e6 && (t5 = o.get(s5)), void 0 === t5 && ((this.o = t5 = new CSSStyleSheet()).replaceSync(this.cssText), e6 && o.set(s5, t5));
+      const e5 = void 0 !== s5 && 1 === s5.length;
+      e5 && (t5 = o.get(s5)), void 0 === t5 && ((this.o = t5 = new CSSStyleSheet()).replaceSync(this.cssText), e5 && o.set(s5, t5));
     }
     return t5;
   }
@@ -33,38 +698,39 @@ var n = class {
   }
 };
 var r = (t5) => new n("string" == typeof t5 ? t5 : t5 + "", void 0, s);
-var i = (t5, ...e6) => {
-  const o6 = 1 === t5.length ? t5[0] : e6.reduce((e7, s5, o7) => e7 + ((t6) => {
+var i = (t5, ...e5) => {
+  const o7 = 1 === t5.length ? t5[0] : e5.reduce((e6, s5, o8) => e6 + ((t6) => {
     if (true === t6._$cssResult$) return t6.cssText;
     if ("number" == typeof t6) return t6;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + t6 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(s5) + t5[o7 + 1], t5[0]);
-  return new n(o6, t5, s);
+  })(s5) + t5[o8 + 1], t5[0]);
+  return new n(o7, t5, s);
 };
-var S = (s5, o6) => {
-  if (e) s5.adoptedStyleSheets = o6.map((t5) => t5 instanceof CSSStyleSheet ? t5 : t5.styleSheet);
-  else for (const e6 of o6) {
-    const o7 = document.createElement("style"), n5 = t.litNonce;
-    void 0 !== n5 && o7.setAttribute("nonce", n5), o7.textContent = e6.cssText, s5.appendChild(o7);
+var S = (s5, o7) => {
+  if (e) s5.adoptedStyleSheets = o7.map((t5) => t5 instanceof CSSStyleSheet ? t5 : t5.styleSheet);
+  else for (const e5 of o7) {
+    const o8 = document.createElement("style"), n6 = t.litNonce;
+    void 0 !== n6 && o8.setAttribute("nonce", n6), o8.textContent = e5.cssText, s5.appendChild(o8);
   }
 };
-var c = e ? (t5) => t5 : (t5) => t5 instanceof CSSStyleSheet ? ((t6) => {
-  let e6 = "";
-  for (const s5 of t6.cssRules) e6 += s5.cssText;
-  return r(e6);
+var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSSStyleSheet ? ((t6) => {
+  let e5 = "";
+  for (const s5 of t6.cssRules) e5 += s5.cssText;
+  return r(e5);
 })(t5) : t5;
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/reactive-element.js
-var { is: i2, defineProperty: e2, getOwnPropertyDescriptor: h, getOwnPropertyNames: r2, getOwnPropertySymbols: o2, getPrototypeOf: n2 } = Object;
-var a = globalThis;
-var c2 = a.trustedTypes;
-var l = c2 ? c2.emptyScript : "";
-var p = a.reactiveElementPolyfillSupport;
-var d = (t5, s5) => t5;
-var u = { toAttribute(t5, s5) {
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/reactive-element.js
+var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
+var l = globalThis;
+l.customElements ??= customElements2;
+var p = l.trustedTypes;
+var d = p ? p.emptyScript : "";
+var u = l.reactiveElementPolyfillSupport;
+var f = (t5, s5) => t5;
+var b = { toAttribute(t5, s5) {
   switch (s5) {
     case Boolean:
-      t5 = t5 ? l : null;
+      t5 = t5 ? d : null;
       break;
     case Object:
     case Array:
@@ -90,45 +756,45 @@ var u = { toAttribute(t5, s5) {
   }
   return i7;
 } };
-var f = (t5, s5) => !i2(t5, s5);
-var b = { attribute: true, type: String, converter: u, reflect: false, useDefault: false, hasChanged: f };
-Symbol.metadata ??= Symbol("metadata"), a.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var y = class extends HTMLElement {
+var m = (t5, s5) => !h(t5, s5);
+var y = { attribute: true, type: String, converter: b, reflect: false, useDefault: false, hasChanged: m };
+Symbol.metadata ??= Symbol("metadata"), l.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
+var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
   static addInitializer(t5) {
     this._$Ei(), (this.l ??= []).push(t5);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(t5, s5 = b) {
+  static createProperty(t5, s5 = y) {
     if (s5.state && (s5.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t5) && ((s5 = Object.create(s5)).wrapped = true), this.elementProperties.set(t5, s5), !s5.noAccessor) {
-      const i7 = Symbol(), h4 = this.getPropertyDescriptor(t5, i7, s5);
-      void 0 !== h4 && e2(this.prototype, t5, h4);
+      const i7 = Symbol(), e5 = this.getPropertyDescriptor(t5, i7, s5);
+      void 0 !== e5 && r2(this.prototype, t5, e5);
     }
   }
   static getPropertyDescriptor(t5, s5, i7) {
-    const { get: e6, set: r6 } = h(this.prototype, t5) ?? { get() {
+    const { get: e5, set: h4 } = o2(this.prototype, t5) ?? { get() {
       return this[s5];
     }, set(t6) {
       this[s5] = t6;
     } };
-    return { get: e6, set(s6) {
-      const h4 = e6?.call(this);
-      r6?.call(this, s6), this.requestUpdate(t5, h4, i7);
+    return { get: e5, set(s6) {
+      const r6 = e5?.call(this);
+      h4?.call(this, s6), this.requestUpdate(t5, r6, i7);
     }, configurable: true, enumerable: true };
   }
   static getPropertyOptions(t5) {
-    return this.elementProperties.get(t5) ?? b;
+    return this.elementProperties.get(t5) ?? y;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(d("elementProperties"))) return;
-    const t5 = n2(this);
+    if (this.hasOwnProperty(f("elementProperties"))) return;
+    const t5 = c2(this);
     t5.finalize(), void 0 !== t5.l && (this.l = [...t5.l]), this.elementProperties = new Map(t5.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(d("finalized"))) return;
-    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d("properties"))) {
-      const t6 = this.properties, s5 = [...r2(t6), ...o2(t6)];
+    if (this.hasOwnProperty(f("finalized"))) return;
+    if (this.finalized = true, this._$Ei(), this.hasOwnProperty(f("properties"))) {
+      const t6 = this.properties, s5 = [...n2(t6), ...a(t6)];
       for (const i7 of s5) this.createProperty(i7, t6[i7]);
     }
     const t5 = this[Symbol.metadata];
@@ -143,13 +809,13 @@ var y = class extends HTMLElement {
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
-  static finalizeStyles(s5) {
-    const i7 = [];
-    if (Array.isArray(s5)) {
-      const e6 = new Set(s5.flat(1 / 0).reverse());
-      for (const s6 of e6) i7.unshift(c(s6));
-    } else void 0 !== s5 && i7.push(c(s5));
-    return i7;
+  static finalizeStyles(t5) {
+    const s5 = [];
+    if (Array.isArray(t5)) {
+      const e5 = new Set(t5.flat(1 / 0).reverse());
+      for (const t6 of e5) s5.unshift(c(t6));
+    } else void 0 !== t5 && s5.push(c(t5));
+    return s5;
   }
   static _$Eu(t5, s5) {
     const i7 = s5.attribute;
@@ -188,31 +854,31 @@ var y = class extends HTMLElement {
     this._$AK(t5, i7);
   }
   _$ET(t5, s5) {
-    const i7 = this.constructor.elementProperties.get(t5), e6 = this.constructor._$Eu(t5, i7);
-    if (void 0 !== e6 && true === i7.reflect) {
-      const h4 = (void 0 !== i7.converter?.toAttribute ? i7.converter : u).toAttribute(s5, i7.type);
-      this._$Em = t5, null == h4 ? this.removeAttribute(e6) : this.setAttribute(e6, h4), this._$Em = null;
+    const i7 = this.constructor.elementProperties.get(t5), e5 = this.constructor._$Eu(t5, i7);
+    if (void 0 !== e5 && true === i7.reflect) {
+      const h4 = (void 0 !== i7.converter?.toAttribute ? i7.converter : b).toAttribute(s5, i7.type);
+      this._$Em = t5, null == h4 ? this.removeAttribute(e5) : this.setAttribute(e5, h4), this._$Em = null;
     }
   }
   _$AK(t5, s5) {
-    const i7 = this.constructor, e6 = i7._$Eh.get(t5);
-    if (void 0 !== e6 && this._$Em !== e6) {
-      const t6 = i7.getPropertyOptions(e6), h4 = "function" == typeof t6.converter ? { fromAttribute: t6.converter } : void 0 !== t6.converter?.fromAttribute ? t6.converter : u;
-      this._$Em = e6;
+    const i7 = this.constructor, e5 = i7._$Eh.get(t5);
+    if (void 0 !== e5 && this._$Em !== e5) {
+      const t6 = i7.getPropertyOptions(e5), h4 = "function" == typeof t6.converter ? { fromAttribute: t6.converter } : void 0 !== t6.converter?.fromAttribute ? t6.converter : b;
+      this._$Em = e5;
       const r6 = h4.fromAttribute(s5, t6.type);
-      this[e6] = r6 ?? this._$Ej?.get(e6) ?? r6, this._$Em = null;
+      this[e5] = r6 ?? this._$Ej?.get(e5) ?? r6, this._$Em = null;
     }
   }
-  requestUpdate(t5, s5, i7, e6 = false, h4) {
+  requestUpdate(t5, s5, i7, e5 = false, h4) {
     if (void 0 !== t5) {
       const r6 = this.constructor;
-      if (false === e6 && (h4 = this[t5]), i7 ??= r6.getPropertyOptions(t5), !((i7.hasChanged ?? f)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t5) && !this.hasAttribute(r6._$Eu(t5, i7)))) return;
+      if (false === e5 && (h4 = this[t5]), i7 ??= r6.getPropertyOptions(t5), !((i7.hasChanged ?? m)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t5) && !this.hasAttribute(r6._$Eu(t5, i7)))) return;
       this.C(t5, s5, i7);
     }
     false === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(t5, s5, { useDefault: i7, reflect: e6, wrapped: h4 }, r6) {
-    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t5) && (this._$Ej.set(t5, r6 ?? s5 ?? this[t5]), true !== h4 || void 0 !== r6) || (this._$AL.has(t5) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t5, s5)), true === e6 && this._$Em !== t5 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t5));
+  C(t5, s5, { useDefault: i7, reflect: e5, wrapped: h4 }, r6) {
+    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t5) && (this._$Ej.set(t5, r6 ?? s5 ?? this[t5]), true !== h4 || void 0 !== r6) || (this._$AL.has(t5) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t5, s5)), true === e5 && this._$Em !== t5 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t5));
   }
   async _$EP() {
     this.isUpdatePending = true;
@@ -236,8 +902,8 @@ var y = class extends HTMLElement {
       }
       const t6 = this.constructor.elementProperties;
       if (t6.size > 0) for (const [s6, i7] of t6) {
-        const { wrapped: t7 } = i7, e6 = this[s6];
-        true !== t7 || this._$AL.has(s6) || void 0 === e6 || this.C(s6, void 0, i7, e6);
+        const { wrapped: t7 } = i7, e5 = this[s6];
+        true !== t7 || this._$AL.has(s6) || void 0 === e5 || this.C(s6, void 0, i7, e5);
       }
     }
     let t5 = false;
@@ -274,13 +940,13 @@ var y = class extends HTMLElement {
   firstUpdated(t5) {
   }
 };
-y.elementStyles = [], y.shadowRootOptions = { mode: "open" }, y[d("elementProperties")] = /* @__PURE__ */ new Map(), y[d("finalized")] = /* @__PURE__ */ new Map(), p?.({ ReactiveElement: y }), (a.reactiveElementVersions ??= []).push("2.1.2");
+g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
+// ../../../module-toolkit/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
-var i3 = (t5) => t5;
+var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
-var e3 = s2 ? s2.createPolicy("lit-html", { createHTML: (t5) => t5 }) : void 0;
+var e2 = s2 ? s2.createPolicy("lit-html", { createHTML: (t5) => t5 }) : void 0;
 var h2 = "$lit$";
 var o3 = `lit$${Math.random().toFixed(9).slice(2)}$`;
 var n3 = "?" + o3;
@@ -293,10 +959,10 @@ var d2 = (t5) => u2(t5) || "function" == typeof t5?.[Symbol.iterator];
 var f2 = "[ 	\n\f\r]";
 var v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g;
 var _ = /-->/g;
-var m = />/g;
+var m2 = />/g;
 var p2 = RegExp(`>|${f2}(?:([^\\s"'>=/]+)(${f2}*=${f2}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g");
-var g = /'/g;
+var g2 = /'/g;
 var $ = /"/g;
 var y2 = /^(?:script|style|textarea|title)$/i;
 var x = (t5) => (i7, ...s5) => ({ _$litType$: t5, strings: i7, values: s5 });
@@ -309,35 +975,35 @@ var C = /* @__PURE__ */ new WeakMap();
 var P = l2.createTreeWalker(l2, 129);
 function V(t5, i7) {
   if (!u2(t5) || !t5.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return void 0 !== e3 ? e3.createHTML(i7) : i7;
+  return void 0 !== e2 ? e2.createHTML(i7) : i7;
 }
 var N = (t5, i7) => {
-  const s5 = t5.length - 1, e6 = [];
-  let n5, l3 = 2 === i7 ? "<svg>" : 3 === i7 ? "<math>" : "", c5 = v;
+  const s5 = t5.length - 1, e5 = [];
+  let n6, l3 = 2 === i7 ? "<svg>" : 3 === i7 ? "<math>" : "", c5 = v;
   for (let i8 = 0; i8 < s5; i8++) {
     const s6 = t5[i8];
     let a3, u5, d3 = -1, f3 = 0;
-    for (; f3 < s6.length && (c5.lastIndex = f3, u5 = c5.exec(s6), null !== u5); ) f3 = c5.lastIndex, c5 === v ? "!--" === u5[1] ? c5 = _ : void 0 !== u5[1] ? c5 = m : void 0 !== u5[2] ? (y2.test(u5[2]) && (n5 = RegExp("</" + u5[2], "g")), c5 = p2) : void 0 !== u5[3] && (c5 = p2) : c5 === p2 ? ">" === u5[0] ? (c5 = n5 ?? v, d3 = -1) : void 0 === u5[1] ? d3 = -2 : (d3 = c5.lastIndex - u5[2].length, a3 = u5[1], c5 = void 0 === u5[3] ? p2 : '"' === u5[3] ? $ : g) : c5 === $ || c5 === g ? c5 = p2 : c5 === _ || c5 === m ? c5 = v : (c5 = p2, n5 = void 0);
+    for (; f3 < s6.length && (c5.lastIndex = f3, u5 = c5.exec(s6), null !== u5); ) f3 = c5.lastIndex, c5 === v ? "!--" === u5[1] ? c5 = _ : void 0 !== u5[1] ? c5 = m2 : void 0 !== u5[2] ? (y2.test(u5[2]) && (n6 = RegExp("</" + u5[2], "g")), c5 = p2) : void 0 !== u5[3] && (c5 = p2) : c5 === p2 ? ">" === u5[0] ? (c5 = n6 ?? v, d3 = -1) : void 0 === u5[1] ? d3 = -2 : (d3 = c5.lastIndex - u5[2].length, a3 = u5[1], c5 = void 0 === u5[3] ? p2 : '"' === u5[3] ? $ : g2) : c5 === $ || c5 === g2 ? c5 = p2 : c5 === _ || c5 === m2 ? c5 = v : (c5 = p2, n6 = void 0);
     const x2 = c5 === p2 && t5[i8 + 1].startsWith("/>") ? " " : "";
-    l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e6.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
+    l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e5.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
   }
-  return [V(t5, l3 + (t5[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e6];
+  return [V(t5, l3 + (t5[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e5];
 };
 var S2 = class _S {
-  constructor({ strings: t5, _$litType$: i7 }, e6) {
+  constructor({ strings: t5, _$litType$: i7 }, e5) {
     let r6;
     this.parts = [];
     let l3 = 0, a3 = 0;
     const u5 = t5.length - 1, d3 = this.parts, [f3, v3] = N(t5, i7);
-    if (this.el = _S.createElement(f3, e6), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
+    if (this.el = _S.createElement(f3, e5), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
       const t6 = this.el.content.firstChild;
       t6.replaceWith(...t6.childNodes);
     }
     for (; null !== (r6 = P.nextNode()) && d3.length < u5; ) {
       if (1 === r6.nodeType) {
         if (r6.hasAttributes()) for (const t6 of r6.getAttributeNames()) if (t6.endsWith(h2)) {
-          const i8 = v3[a3++], s5 = r6.getAttribute(t6).split(o3), e7 = /([.?@])?(.*)/.exec(i8);
-          d3.push({ type: 1, index: l3, name: e7[2], strings: s5, ctor: "." === e7[1] ? I : "?" === e7[1] ? L : "@" === e7[1] ? z : H }), r6.removeAttribute(t6);
+          const i8 = v3[a3++], s5 = r6.getAttribute(t6).split(o3), e6 = /([.?@])?(.*)/.exec(i8);
+          d3.push({ type: 1, index: l3, name: e6[2], strings: s5, ctor: "." === e6[1] ? I : "?" === e6[1] ? L : "@" === e6[1] ? z : H }), r6.removeAttribute(t6);
         } else t6.startsWith(o3) && (d3.push({ type: 6, index: l3 }), r6.removeAttribute(t6));
         if (y2.test(r6.tagName)) {
           const t6 = r6.textContent.split(o3), i8 = t6.length - 1;
@@ -360,11 +1026,11 @@ var S2 = class _S {
     return s5.innerHTML = t5, s5;
   }
 };
-function M(t5, i7, s5 = t5, e6) {
+function M(t5, i7, s5 = t5, e5) {
   if (i7 === E) return i7;
-  let h4 = void 0 !== e6 ? s5._$Co?.[e6] : s5._$Cl;
-  const o6 = a2(i7) ? void 0 : i7._$litDirective$;
-  return h4?.constructor !== o6 && (h4?._$AO?.(false), void 0 === o6 ? h4 = void 0 : (h4 = new o6(t5), h4._$AT(t5, s5, e6)), void 0 !== e6 ? (s5._$Co ??= [])[e6] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t5, h4._$AS(t5, i7.values), h4, e6)), i7;
+  let h4 = void 0 !== e5 ? s5._$Co?.[e5] : s5._$Cl;
+  const o7 = a2(i7) ? void 0 : i7._$litDirective$;
+  return h4?.constructor !== o7 && (h4?._$AO?.(false), void 0 === o7 ? h4 = void 0 : (h4 = new o7(t5), h4._$AT(t5, s5, e5)), void 0 !== e5 ? (s5._$Co ??= [])[e5] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t5, h4._$AS(t5, i7.values), h4, e5)), i7;
 }
 var R = class {
   constructor(t5, i7) {
@@ -377,17 +1043,17 @@ var R = class {
     return this._$AM._$AU;
   }
   u(t5) {
-    const { el: { content: i7 }, parts: s5 } = this._$AD, e6 = (t5?.creationScope ?? l2).importNode(i7, true);
-    P.currentNode = e6;
-    let h4 = P.nextNode(), o6 = 0, n5 = 0, r6 = s5[0];
+    const { el: { content: i7 }, parts: s5 } = this._$AD, e5 = (t5?.creationScope ?? l2).importNode(i7, true);
+    P.currentNode = e5;
+    let h4 = P.nextNode(), o7 = 0, n6 = 0, r6 = s5[0];
     for (; void 0 !== r6; ) {
-      if (o6 === r6.index) {
+      if (o7 === r6.index) {
         let i8;
-        2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t5) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t5) : 6 === r6.type && (i8 = new Z(h4, this, t5)), this._$AV.push(i8), r6 = s5[++n5];
+        2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t5) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t5) : 6 === r6.type && (i8 = new Z(h4, this, t5)), this._$AV.push(i8), r6 = s5[++n6];
       }
-      o6 !== r6?.index && (h4 = P.nextNode(), o6++);
+      o7 !== r6?.index && (h4 = P.nextNode(), o7++);
     }
-    return P.currentNode = l2, e6;
+    return P.currentNode = l2, e5;
   }
   p(t5) {
     let i7 = 0;
@@ -398,8 +1064,8 @@ var k = class _k {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
-  constructor(t5, i7, s5, e6) {
-    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t5, this._$AB = i7, this._$AM = s5, this.options = e6, this._$Cv = e6?.isConnected ?? true;
+  constructor(t5, i7, s5, e5) {
+    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t5, this._$AB = i7, this._$AM = s5, this.options = e5, this._$Cv = e5?.isConnected ?? true;
   }
   get parentNode() {
     let t5 = this._$AA.parentNode;
@@ -425,10 +1091,10 @@ var k = class _k {
     this._$AH !== A && a2(this._$AH) ? this._$AA.nextSibling.data = t5 : this.T(l2.createTextNode(t5)), this._$AH = t5;
   }
   $(t5) {
-    const { values: i7, _$litType$: s5 } = t5, e6 = "number" == typeof s5 ? this._$AC(t5) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
-    if (this._$AH?._$AD === e6) this._$AH.p(i7);
+    const { values: i7, _$litType$: s5 } = t5, e5 = "number" == typeof s5 ? this._$AC(t5) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
+    if (this._$AH?._$AD === e5) this._$AH.p(i7);
     else {
-      const t6 = new R(e6, this), s6 = t6.u(this.options);
+      const t6 = new R(e5, this), s6 = t6.u(this.options);
       t6.p(i7), this.T(s6), this._$AH = t6;
     }
   }
@@ -439,14 +1105,14 @@ var k = class _k {
   k(t5) {
     u2(this._$AH) || (this._$AH = [], this._$AR());
     const i7 = this._$AH;
-    let s5, e6 = 0;
-    for (const h4 of t5) e6 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e6], s5._$AI(h4), e6++;
-    e6 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e6), i7.length = e6);
+    let s5, e5 = 0;
+    for (const h4 of t5) e5 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e5], s5._$AI(h4), e5++;
+    e5 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e5), i7.length = e5);
   }
   _$AR(t5 = this._$AA.nextSibling, s5) {
     for (this._$AP?.(false, true, s5); t5 !== this._$AB; ) {
-      const s6 = i3(t5).nextSibling;
-      i3(t5).remove(), t5 = s6;
+      const s6 = i2(t5).nextSibling;
+      i2(t5).remove(), t5 = s6;
     }
   }
   setConnected(t5) {
@@ -460,19 +1126,19 @@ var H = class {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(t5, i7, s5, e6, h4) {
-    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t5, this.name = i7, this._$AM = e6, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
+  constructor(t5, i7, s5, e5, h4) {
+    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t5, this.name = i7, this._$AM = e5, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
   }
-  _$AI(t5, i7 = this, s5, e6) {
+  _$AI(t5, i7 = this, s5, e5) {
     const h4 = this.strings;
-    let o6 = false;
-    if (void 0 === h4) t5 = M(this, t5, i7, 0), o6 = !a2(t5) || t5 !== this._$AH && t5 !== E, o6 && (this._$AH = t5);
+    let o7 = false;
+    if (void 0 === h4) t5 = M(this, t5, i7, 0), o7 = !a2(t5) || t5 !== this._$AH && t5 !== E, o7 && (this._$AH = t5);
     else {
-      const e7 = t5;
-      let n5, r6;
-      for (t5 = h4[0], n5 = 0; n5 < h4.length - 1; n5++) r6 = M(this, e7[s5 + n5], i7, n5), r6 === E && (r6 = this._$AH[n5]), o6 ||= !a2(r6) || r6 !== this._$AH[n5], r6 === A ? t5 = A : t5 !== A && (t5 += (r6 ?? "") + h4[n5 + 1]), this._$AH[n5] = r6;
+      const e6 = t5;
+      let n6, r6;
+      for (t5 = h4[0], n6 = 0; n6 < h4.length - 1; n6++) r6 = M(this, e6[s5 + n6], i7, n6), r6 === E && (r6 = this._$AH[n6]), o7 ||= !a2(r6) || r6 !== this._$AH[n6], r6 === A ? t5 = A : t5 !== A && (t5 += (r6 ?? "") + h4[n6 + 1]), this._$AH[n6] = r6;
     }
-    o6 && !e6 && this.j(t5);
+    o7 && !e5 && this.j(t5);
   }
   j(t5) {
     t5 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t5 ?? "");
@@ -495,13 +1161,13 @@ var L = class extends H {
   }
 };
 var z = class extends H {
-  constructor(t5, i7, s5, e6, h4) {
-    super(t5, i7, s5, e6, h4), this.type = 5;
+  constructor(t5, i7, s5, e5, h4) {
+    super(t5, i7, s5, e5, h4), this.type = 5;
   }
   _$AI(t5, i7 = this) {
     if ((t5 = M(this, t5, i7, 0) ?? A) === E) return;
-    const s5 = this._$AH, e6 = t5 === A && s5 !== A || t5.capture !== s5.capture || t5.once !== s5.once || t5.passive !== s5.passive, h4 = t5 !== A && (s5 === A || e6);
-    e6 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t5), this._$AH = t5;
+    const s5 = this._$AH, e5 = t5 === A && s5 !== A || t5.capture !== s5.capture || t5.once !== s5.once || t5.passive !== s5.passive, h4 = t5 !== A && (s5 === A || e5);
+    e5 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t5), this._$AH = t5;
   }
   handleEvent(t5) {
     "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t5) : this._$AH.handleEvent(t5);
@@ -522,18 +1188,18 @@ var j = { M: h2, P: o3, A: n3, C: 1, L: N, R, D: d2, V: M, I: k, H, N: L, U: z, 
 var B = t2.litHtmlPolyfillSupport;
 B?.(S2, k), (t2.litHtmlVersions ??= []).push("3.3.3");
 var D = (t5, i7, s5) => {
-  const e6 = s5?.renderBefore ?? i7;
-  let h4 = e6._$litPart$;
+  const e5 = s5?.renderBefore ?? i7;
+  let h4 = e5._$litPart$;
   if (void 0 === h4) {
     const t6 = s5?.renderBefore ?? null;
-    e6._$litPart$ = h4 = new k(i7.insertBefore(c3(), t6), t6, void 0, s5 ?? {});
+    e5._$litPart$ = h4 = new k(i7.insertBefore(c3(), t6), t6, void 0, s5 ?? {});
   }
   return h4._$AI(t5), h4;
 };
 
-// ../../node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
+// ../../../module-toolkit/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
-var i4 = class extends y {
+var i3 = class extends g {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -555,160 +1221,189 @@ var i4 = class extends y {
     return E;
   }
 };
-i4._$litElement$ = true, i4["finalized"] = true, s3.litElementHydrateSupport?.({ LitElement: i4 });
+i3._$litElement$ = true, i3["finalized"] = true, s3.litElementHydrateSupport?.({ LitElement: i3 });
 var o4 = s3.litElementPolyfillSupport;
-o4?.({ LitElement: i4 });
+o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/decorators/property.js
-var o5 = { attribute: true, type: String, converter: u, reflect: false, hasChanged: f };
-var r4 = (t5 = o5, e6, r6) => {
-  const { kind: n5, metadata: i7 } = r6;
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/property.js
+var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
+var r4 = (t5 = o5, e5, r6) => {
+  const { kind: n6, metadata: i7 } = r6;
   let s5 = globalThis.litPropertyMetadata.get(i7);
-  if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n5 && ((t5 = Object.create(t5)).wrapped = true), s5.set(r6.name, t5), "accessor" === n5) {
-    const { name: o6 } = r6;
+  if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n6 && ((t5 = Object.create(t5)).wrapped = true), s5.set(r6.name, t5), "accessor" === n6) {
+    const { name: o7 } = r6;
     return { set(r7) {
-      const n6 = e6.get.call(this);
-      e6.set.call(this, r7), this.requestUpdate(o6, n6, t5, true, r7);
-    }, init(e7) {
-      return void 0 !== e7 && this.C(o6, void 0, t5, e7), e7;
+      const n7 = e5.get.call(this);
+      e5.set.call(this, r7), this.requestUpdate(o7, n7, t5, true, r7);
+    }, init(e6) {
+      return void 0 !== e6 && this.C(o7, void 0, t5, e6), e6;
     } };
   }
-  if ("setter" === n5) {
-    const { name: o6 } = r6;
+  if ("setter" === n6) {
+    const { name: o7 } = r6;
     return function(r7) {
-      const n6 = this[o6];
-      e6.call(this, r7), this.requestUpdate(o6, n6, t5, true, r7);
+      const n7 = this[o7];
+      e5.call(this, r7), this.requestUpdate(o7, n7, t5, true, r7);
     };
   }
-  throw Error("Unsupported decorator location: " + n5);
+  throw Error("Unsupported decorator location: " + n6);
 };
 function n4(t5) {
-  return (e6, o6) => "object" == typeof o6 ? r4(t5, e6, o6) : ((t6, e7, o7) => {
-    const r6 = e7.hasOwnProperty(o7);
-    return e7.constructor.createProperty(o7, t6), r6 ? Object.getOwnPropertyDescriptor(e7, o7) : void 0;
-  })(t5, e6, o6);
+  return (e5, o7) => "object" == typeof o7 ? r4(t5, e5, o7) : ((t6, e6, o8) => {
+    const r6 = e6.hasOwnProperty(o8);
+    return e6.constructor.createProperty(o8, t6), r6 ? Object.getOwnPropertyDescriptor(e6, o8) : void 0;
+  })(t5, e5, o7);
 }
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/decorators/state.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../outfitkit/dist/define.js
+// ../../../outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+// ../../../module-toolkit/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
-var e5 = (t5) => (...e6) => ({ _$litDirective$: t5, values: e6 });
-var i5 = class {
+var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
+var i4 = class {
   constructor(t5) {
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AT(t5, e6, i7) {
-    this._$Ct = t5, this._$AM = e6, this._$Ci = i7;
+  _$AT(t5, e5, i7) {
+    this._$Ct = t5, this._$AM = e5, this._$Ci = i7;
   }
-  _$AS(t5, e6) {
-    return this.update(t5, e6);
+  _$AS(t5, e5) {
+    return this.update(t5, e5);
   }
-  update(t5, e6) {
-    return this.render(...e6);
+  update(t5, e5) {
+    return this.render(...e5);
   }
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+// ../../../module-toolkit/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
-var i6 = (o6) => o6;
+var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
-var v2 = (o6, n5, e6) => {
-  const l3 = o6._$AA.parentNode, d3 = void 0 === n5 ? o6._$AB : n5._$AA;
-  if (void 0 === e6) {
-    const i7 = l3.insertBefore(s4(), d3), n6 = l3.insertBefore(s4(), d3);
-    e6 = new t4(i7, n6, o6, o6.options);
+var v2 = (o7, n6, e5) => {
+  const l3 = o7._$AA.parentNode, d3 = void 0 === n6 ? o7._$AB : n6._$AA;
+  if (void 0 === e5) {
+    const i7 = l3.insertBefore(s4(), d3), n7 = l3.insertBefore(s4(), d3);
+    e5 = new t4(i7, n7, o7, o7.options);
   } else {
-    const t5 = e6._$AB.nextSibling, n6 = e6._$AM, c5 = n6 !== o6;
+    const t5 = e5._$AB.nextSibling, n7 = e5._$AM, c5 = n7 !== o7;
     if (c5) {
       let t6;
-      e6._$AQ?.(o6), e6._$AM = o6, void 0 !== e6._$AP && (t6 = o6._$AU) !== n6._$AU && e6._$AP(t6);
+      e5._$AQ?.(o7), e5._$AM = o7, void 0 !== e5._$AP && (t6 = o7._$AU) !== n7._$AU && e5._$AP(t6);
     }
     if (t5 !== d3 || c5) {
-      let o7 = e6._$AA;
-      for (; o7 !== t5; ) {
-        const t6 = i6(o7).nextSibling;
-        i6(l3).insertBefore(o7, d3), o7 = t6;
+      let o8 = e5._$AA;
+      for (; o8 !== t5; ) {
+        const t6 = i5(o8).nextSibling;
+        i5(l3).insertBefore(o8, d3), o8 = t6;
       }
     }
   }
-  return e6;
+  return e5;
 };
-var u3 = (o6, t5, i7 = o6) => (o6._$AI(t5, i7), o6);
-var m2 = {};
-var p3 = (o6, t5 = m2) => o6._$AH = t5;
-var M2 = (o6) => o6._$AH;
-var h3 = (o6) => {
-  o6._$AR(), o6._$AA.remove();
+var u3 = (o7, t5, i7 = o7) => (o7._$AI(t5, i7), o7);
+var m3 = {};
+var p3 = (o7, t5 = m3) => o7._$AH = t5;
+var M2 = (o7) => o7._$AH;
+var h3 = (o7) => {
+  o7._$AR(), o7._$AA.remove();
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
-var u4 = (e6, s5, t5) => {
+// ../../../module-toolkit/node_modules/lit-html/directives/repeat.js
+var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
-  for (let l3 = s5; l3 <= t5; l3++) r6.set(e6[l3], l3);
+  for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
   return r6;
 };
-var c4 = e5(class extends i5 {
-  constructor(e6) {
-    if (super(e6), e6.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
+var c4 = e4(class extends i4 {
+  constructor(e5) {
+    if (super(e5), e5.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
   }
-  dt(e6, s5, t5) {
+  dt(e5, s5, t5) {
     let r6;
     void 0 === t5 ? t5 = s5 : void 0 !== s5 && (r6 = s5);
-    const l3 = [], o6 = [];
+    const l3 = [], o7 = [];
     let i7 = 0;
-    for (const s6 of e6) l3[i7] = r6 ? r6(s6, i7) : i7, o6[i7] = t5(s6, i7), i7++;
-    return { values: o6, keys: l3 };
+    for (const s6 of e5) l3[i7] = r6 ? r6(s6, i7) : i7, o7[i7] = t5(s6, i7), i7++;
+    return { values: o7, keys: l3 };
   }
-  render(e6, s5, t5) {
-    return this.dt(e6, s5, t5).values;
+  render(e5, s5, t5) {
+    return this.dt(e5, s5, t5).values;
   }
   update(s5, [t5, r6, c5]) {
     const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t5, r6, c5);
     if (!Array.isArray(d3)) return this.ut = a3, p4;
     const h4 = this.ut ??= [], v3 = [];
-    let m3, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
+    let m4, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
     for (; x2 <= j2 && k2 <= w2; ) if (null === d3[x2]) x2++;
     else if (null === d3[j2]) j2--;
     else if (h4[x2] === a3[k2]) v3[k2] = u3(d3[x2], p4[k2]), x2++, k2++;
     else if (h4[j2] === a3[w2]) v3[w2] = u3(d3[j2], p4[w2]), j2--, w2--;
     else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
     else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
-    else if (void 0 === m3 && (m3 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m3.has(h4[x2])) if (m3.has(h4[j2])) {
-      const e6 = y3.get(a3[k2]), t6 = void 0 !== e6 ? d3[e6] : null;
+    else if (void 0 === m4 && (m4 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m4.has(h4[x2])) if (m4.has(h4[j2])) {
+      const e5 = y3.get(a3[k2]), t6 = void 0 !== e5 ? d3[e5] : null;
       if (null === t6) {
-        const e7 = v2(s5, d3[x2]);
-        u3(e7, p4[k2]), v3[k2] = e7;
-      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e6] = null;
+        const e6 = v2(s5, d3[x2]);
+        u3(e6, p4[k2]), v3[k2] = e6;
+      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e5] = null;
       k2++;
     } else h3(d3[j2]), j2--;
     else h3(d3[x2]), x2++;
     for (; k2 <= w2; ) {
-      const e6 = v2(s5, v3[w2 + 1]);
-      u3(e6, p4[k2]), v3[k2++] = e6;
+      const e5 = v2(s5, v3[w2 + 1]);
+      u3(e5, p4[k2]), v3[k2++] = e5;
     }
     for (; x2 <= j2; ) {
-      const e6 = d3[x2++];
-      null !== e6 && h3(e6);
+      const e5 = d3[x2++];
+      null !== e5 && h3(e5);
     }
     return this.ut = a3, p3(s5, v3), E;
   }
 });
 
-// ../outfitkit/dist/ok-data-table.js
+// ../../../module-toolkit/node_modules/lit-html/directives/style-map.js
+var n5 = "important";
+var i6 = " !" + n5;
+var o6 = e4(class extends i4 {
+  constructor(t5) {
+    if (super(t5), t5.type !== t3.ATTRIBUTE || "style" !== t5.name || t5.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
+  }
+  render(t5) {
+    return Object.keys(t5).reduce((e5, r6) => {
+      const s5 = t5[r6];
+      return null == s5 ? e5 : e5 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
+    }, "");
+  }
+  update(e5, [r6]) {
+    const { style: s5 } = e5.element;
+    if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
+    for (const t5 of this.ft) null == r6[t5] && (this.ft.delete(t5), t5.includes("-") ? s5.removeProperty(t5) : s5[t5] = null);
+    for (const t5 in r6) {
+      const e6 = r6[t5];
+      if (null != e6) {
+        this.ft.add(t5);
+        const r7 = "string" == typeof e6 && e6.endsWith(i6);
+        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e6.slice(0, -11) : e6, r7 ? n5 : "") : s5[t5] = e6;
+      }
+    }
+    return E;
+  }
+});
+
+// ../../../outfitkit/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -718,7 +1413,43 @@ var __decorateClass2 = (decorators, target, key, kind) => {
   if (result) __defProp2(target, key, result);
   return result;
 };
-var OkDataTable = class extends i4 {
+var DEFAULT_LABELS = {
+  search: "Search\u2026",
+  empty: "No results",
+  filters: "Filters",
+  clear: "Clear",
+  apply: "Apply",
+  selected: "{n} selected",
+  importCsv: "Import CSV",
+  exportCsv: "Export CSV",
+  add: "Add",
+  moreActions: "More actions",
+  rowsPerPage: "Rows per page",
+  perPageShort: "{n} / page",
+  viewList: "View as list",
+  viewCards: "View as cards",
+  columnsVisible: "Visible columns",
+  columns: "Columns",
+  actions: "Actions",
+  close: "Close",
+  newRecord: "New",
+  form: "Form",
+  filterPlaceholder: "Filter\u2026",
+  from: "From",
+  to: "To",
+  fromOf: "{label} from",
+  toOf: "{label} to",
+  gte: "\u2265",
+  lte: "\u2264",
+  noValues: "No values",
+  selectAll: "Select all",
+  selectRow: "Select row",
+  select: "Select",
+  showing: "Showing {from}\u2013{to} of",
+  recordSingular: "record",
+  recordPlural: "records"
+};
+var OkDataTable = class extends i3 {
   constructor() {
     super(...arguments);
     this.columns = [];
@@ -726,16 +1457,39 @@ var OkDataTable = class extends i4 {
     this.searchKeys = [];
     this.rowKeyField = "id";
     this.pageSize = 10;
-    this.emptyMessage = "Sin resultados";
-    this.searchPlaceholder = "Buscar\u2026";
+    this.labels = {};
     this.actions = [];
+    this.addable = false;
+    this.pageSizeOptions = [10, 25, 50, 100];
+    this.fill = false;
+    this.columnPicker = false;
+    this.csv = false;
+    this.csvName = "export.csv";
     this.serverSide = false;
     this.total = 0;
     this.page = 0;
     this.searchable = false;
     this.sortDir = "asc";
+    this.title = "";
+    this.views = false;
+    this.exportable = false;
+    this.importable = false;
+    this.columnSelector = false;
+    this.selectable = false;
+    this.inlineFilters = false;
+    this.menuActions = [];
     this.q = "";
     this.clientPage = 0;
+    this.clientPageSize = 0;
+    this.clientSort = "";
+    this.clientSortDir = "asc";
+    this.clientFilters = {};
+    this.filterDraft = {};
+    this.panel = "none";
+    this.viewMode = "table";
+    this.hiddenKeys = /* @__PURE__ */ new Set();
+    this.internalSelection = /* @__PURE__ */ new Set();
+    this.menuOpen = false;
     this.onSearch = (ev) => {
       const value = ev.target.value ?? "";
       if (this.serverSide) {
@@ -750,45 +1504,397 @@ var OkDataTable = class extends i4 {
     this.styles = i`
     :host {
       /* Vars overridable (estilo Ionic), default = cadena --ok-* → --ion-* → hex */
-      --background: var(--ok-surface, var(--ion-card-background, #ffffff));
+      --background: var(--ok-surface, var(--ion-card-background, var(--ion-background-color, #ffffff)));
       --color: var(--ok-text, var(--ion-text-color, #1c1b17));
-      --color-muted: var(--ok-muted, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.55));
-      --border-color: var(--ok-border, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.12));
-      --border-color-soft: var(--ok-border-soft, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.07));
-      --header-background: var(--ok-surface-2, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04));
-      --border-radius: var(--ok-radius, 12px);
+      --color-muted: var(--ok-muted, var(--ion-color-medium, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.55)));
+      --border-color: var(--ok-border, var(--ion-color-step-150, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.12)));
+      --border-color-soft: var(--ok-border-soft, var(--ion-color-step-100, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.07)));
+      /* Borde más marcado para los controles de la toolbar (selects/pastilla de fechas), para que se
+       * distingan como controles en claro y oscuro aunque el lienzo y la superficie casi no contrasten. */
+      --control-border: color-mix(in srgb, var(--color) 22%, transparent);
+      /* Relieve de cabecera/pie: step-100 (definido en claro y oscuro) → contraste con el lienzo. */
+      --header-background: var(--ok-surface-2, var(--ion-color-step-100, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04)));
+      --row-hover: var(--ok-row-hover, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.03)));
+      --primary: var(--ok-primary, var(--ion-color-primary, #3880ff));
+      --primary-contrast: var(--ok-primary-contrast, var(--ion-color-primary-contrast, #ffffff));
+      --border-radius: var(--ok-radius, 16px);
       --font: var(--ok-font, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
 
       display: block;
       color: var(--color);
       font-family: var(--font);
     }
-    .card { border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; background: var(--background); }
-    .bar { display: flex; flex-direction: column; gap: 0.75rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); }
-    @media (min-width: 640px) { .bar { flex-direction: row; align-items: center; justify-content: space-between; } }
-    .search { flex: 1; max-width: 20rem; }
-    ion-searchbar { --background: var(--header-background); --border-radius: 10px; padding: 0; }
+    * { box-sizing: border-box; }
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      /* Flat: sin borde ni elevación (directiva 2026-06-09). */
+      border: 0;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      background: var(--background);
+      box-shadow: none;
+    }
+
+    /* Panel lateral derecho (drawer) DENTRO de la tabla: filtros / alta-edición. No empuja contenido. */
+    .tk-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.18); z-index: 19; }
+    .drawer { position: absolute; top: 0; right: 0; height: 100%; width: 340px; max-width: 88%;
+      background: var(--background); border-left: 1px solid var(--border-color);
+      box-shadow: -10px 0 28px rgba(0, 0, 0, 0.10); display: flex; flex-direction: column; z-index: 20;
+      animation: tk-slide-in 0.18s ease; }
+    @keyframes tk-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .drawer .dh { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0.5rem 0.6rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 1rem; }
+    .drawer .db { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.85rem; }
+    .fblock { display: flex; flex-direction: column; gap: 0.45rem; }
+    .flabel { font-size: 13px; font-weight: 500; color: var(--color); }
+    .frange { display: flex; gap: 0.5rem; }
+    /* Filtros cliente: chips multi-select (estilo Hub) + rango de fechas. */
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.6rem; border: 1px solid var(--border-color); border-radius: 999px; background: var(--background); color: var(--color-muted); font-size: 12px; cursor: pointer; transition: color 0.12s, background 0.12s, border-color 0.12s; }
+    .chip:hover { color: var(--color); }
+    .chip.on { border-color: var(--primary); color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, transparent); }
+    .chip ion-icon { font-size: 12px; }
+    .chip-empty { font-size: 12px; color: var(--color-muted); }
+    .daterange { display: flex; gap: 0.6rem; }
+    .daterange ion-input { flex: 1; }
+    /* Pie del drawer de filtros: Limpiar / Aplicar. */
+    .df { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 0.4rem; padding: 0.6rem 0.85rem; border-top: 1px solid var(--border-color); }
+    .df .df-clear { margin-right: auto; }
+
+    /* Modo fill: la tabla ocupa el alto del contenedor; filas con scroll interno; pager fijo. */
+    :host([fill]) { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    :host([fill]) .card { flex: 1 1 auto; min-height: 0; }
+    :host([fill]) .bar, :host([fill]) .panel, :host([fill]) .pager { flex: 0 0 auto; }
+    :host([fill]) .scroll, :host([fill]) .cards-grid { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+    /* ── Topbar / cabecera (relieve) ─────────────────────────────────────────────────────── */
+    .bar { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
+    .bar-main { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    .title-wrap { display: flex; align-items: baseline; gap: 0.5rem; margin-right: auto; }
+    .title { font-size: 15px; font-weight: 600; line-height: 1; margin: 0; }
+    .title-count { font-size: 12px; font-weight: 500; color: var(--color-muted); }
+    /* flex-wrap: en pantallas estrechas los controles (y el slot "toolbar",
+     * p.ej. selects de filtro del host) saltan de línea en vez de desbordar
+     * recortados por el borde derecho (cloud#551). */
+    .bar-end { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+    .bar-end ion-button { --padding-start: 0.5rem; --padding-end: 0.5rem; margin: 0; }
+
+    /* Botón de herramienta cuadrado (filtros/import/export), look del Hub: 36×36, badge contador. */
+    .toolbtn { position: relative; --padding-start: 0; --padding-end: 0; --border-radius: 10px; width: 36px; height: 36px; margin: 0; }
+    .toolbtn .badge { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; background: var(--primary); color: var(--primary-contrast); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; pointer-events: none; }
+
+    /* Buscador (caja con icono + limpiar), look del Hub */
+    .search { flex: 1 1 12rem; min-width: 10rem; max-width: 22rem; }
+    ion-searchbar { --background: var(--background); --border-radius: 10px; padding: 0; min-height: 36px; }
+    /* Flat: el buscador quita borde y elevación vía la clase específica de Ionic 'ion-no-border'.
+     * (La regla global de Ionic para .ion-no-border no cruza el Shadow DOM, así que la
+     * reimplementamos aquí dentro: --box-shadow controla la elevación; ::part(native) el borde.) */
+    ion-searchbar.ion-no-border { --box-shadow: none; }
+    ion-searchbar.ion-no-border::part(native) { border: none; box-shadow: none; }
+
+    /* Toggle de vista lista/tarjetas (segmento) */
+    .viewseg { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--background); }
+    .viewseg ion-button { --border-radius: 7px; }
+
+    /* Botón primario (primaryAction) */
+    .primary-btn { --background: var(--primary); --color: var(--primary-contrast); }
+
+    /* Selects de la toolbar: fondo + borde visibles (como el buscador y la pastilla de fechas) para
+     * que se distingan como controles en claro y oscuro (sin fondo eran invisibles en dark). */
+    .tk-cols { min-width: 6.5rem; max-width: 9rem; min-height: 38px; font-size: 13px; background: var(--background); color: var(--color); border: 1px solid var(--control-border); border-radius: 10px; --padding-start: 0.6rem; --padding-end: 0.4rem; --padding-top: 0.3rem; --padding-bottom: 0.3rem; }
+    .vsep { width: 1px; align-self: stretch; background: var(--border-color); margin: 0.3rem 0.25rem; }
+
+    /* Selector de filas/página en la toolbar (consolidado) */
+    /* max-width: ion-select es display:block (sin core.css el host estira a la
+     * línea entera cuando .bar-end hace wrap) — se capa como .tk-cols. */
+    .tk-psize { min-width: 4.25rem; max-width: 5.5rem; min-height: 38px; font-size: 13px; background: var(--background); color: var(--color); border: 1px solid var(--control-border); border-radius: 10px; --padding-start: 0.6rem; --padding-end: 0.4rem; --padding-top: 0.35rem; --padding-bottom: 0.35rem; }
+
+    /* Filtros EN LÍNEA en la toolbar (select / rango de fechas) */
+    .tk-filter { min-width: 8.5rem; max-width: 13rem; min-height: 38px; font-size: 13px; background: var(--background); color: var(--color); border: 1px solid var(--control-border); border-radius: 10px; --padding-start: 0.7rem; --padding-end: 0.5rem; --padding-top: 0.35rem; --padding-bottom: 0.35rem; }
+    .tk-daterange { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.6rem; min-height: 38px; border: 1px solid var(--control-border); border-radius: 10px; background: var(--background); color: var(--color-muted); font-size: 13px; }
+    .tk-daterange ion-icon { font-size: 15px; flex: 0 0 auto; }
+    .tk-daterange ion-input { --background: transparent; --padding-start: 0; --padding-end: 0; --padding-top: 2px; --padding-bottom: 2px; --color: var(--color); min-height: 26px; width: 6.8rem; font-size: 13px; }
+    .tk-daterange .arr { color: var(--color-muted); }
+
+    /* Barra contextual de selección */
+    .selbar { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.7rem; border-radius: 10px;
+      font-size: 13px; color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 12%, transparent); }
+    .selbar .sel-clear { margin-left: auto; display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; font-weight: 500; color: inherit; background: none; border: 0; font: inherit; }
+    .selbar .sel-clear:hover { text-decoration: underline; }
+
+    /* Acordeones (alta / filtros en modo tarjetas) */
+    .panel { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
+    .filters-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem; }
+
+    /* ── Vista lista en CSS GRID (no <table>): permite ancho por columna ──────────────────── */
     .scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    thead tr { background: var(--header-background); }
-    th { text-align: left; padding: 0.75rem 1rem; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
-    th.right, td.right { text-align: right; }
-    th.center, td.center { text-align: center; }
-    th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-    th.sortable:hover { color: var(--color); }
-    .caret { font-size: 10px; opacity: 0.5; margin-left: 0.25rem; }
-    .caret.on { opacity: 1; }
-    tr.filters th { padding: 0.4rem 1rem 0.6rem; text-transform: none; font-weight: 400; }
-    tr.filters input, tr.filters select { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 0.3rem 0.4rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--background); color: var(--color); }
+    .grid { min-width: max-content; font-size: 14px; }
+    .grow { display: grid; align-items: center; gap: 0.5rem; padding: 0 1rem; }
+    .ghead { position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color);
+      background: var(--header-background); padding-top: 0.55rem; padding-bottom: 0.55rem; }
+    .gcell { display: flex; align-items: center; min-width: 0; }
+    .gcell > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .gcell.right { justify-content: flex-end; text-align: right; }
+    .gcell.center { justify-content: center; text-align: center; }
+    .gh { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+    .gh.sortable { cursor: pointer; user-select: none; white-space: nowrap; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
+    @media (hover: hover) {
+      .gh.sortable:hover { color: var(--color); }
+    }
+    /* Caret de orden (3 estados, icono Ionic): neutral atenuado / activo en color primario. */
+    .caret { display: inline-flex; align-items: center; margin-left: 0.25rem; flex: 0 0 auto; font-size: 13px; opacity: 0.3; }
+    .caret.on { opacity: 1; color: var(--primary); }
+    .grow-data { border-bottom: 1px solid var(--border-color-soft); padding-top: 0.6rem; padding-bottom: 0.6rem; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
+    .grow-data:last-child { border-bottom: 0; }
+    @media (hover: hover) {
+      .grow-data:hover { background: var(--row-hover); }
+    }
+    .grow-data:active { transform: scale(0.995); }
+    .grow-data.selected { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+    .selcb { display: flex; align-items: center; justify-content: center; }
+    .filters-grow { padding-top: 0.4rem; padding-bottom: 0.6rem; }
+    .filters-grow input, .filters-grow select { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 0.3rem 0.4rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--background); color: var(--color); }
     .range { display: flex; gap: 0.25rem; }
-    td { padding: 0.7rem 1rem; border-top: 1px solid var(--border-color-soft); color: var(--color); }
-    tbody tr:hover { background: var(--header-background); }
-    .empty { padding: 4rem 1rem; text-align: center; color: var(--color-muted); }
+
+    /* ── Vista tarjetas ──────────────────────────────────────────────────────────────────── */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.75rem; padding: 1rem; }
+    /* Flat: sin borde ni elevación — las tarjetas se delimitan por la superficie (no por sombra). */
+    .rcard { display: flex; flex-direction: column; border: 0; border-radius: 12px; overflow: hidden; background: var(--header-background); box-shadow: none; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
+    @media (hover: hover) {
+      .rcard:hover { background: var(--row-hover); }
+    }
+    .rcard:active { transform: scale(0.995); }
+    @media (prefers-reduced-motion: reduce) {
+      .gh.sortable:hover, .gh.sortable:active,
+      .grow-data:hover, .grow-data:active,
+      .rcard:hover, .rcard:active { transform: none; }
+    }
+    .rcard.selected { background: color-mix(in srgb, var(--primary) 12%, var(--header-background)); }
+    .rcard-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
+    .rcard-head .rc-icon { display: inline-flex; color: var(--primary); }
+    .rcard-head .rc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .rcard-body { flex: 1; padding: 0.6rem 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .rrow { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 13px; }
+    .rrow .rk { color: var(--color-muted); }
+    .rrow .rv { font-weight: 500; text-align: right; }
+    .ractions { display: flex; justify-content: flex-end; gap: 0.25rem; padding: 0.25rem 0.5rem; border-top: 1px solid var(--border-color-soft); background: var(--header-background); }
+
+    /* ── Estado vacío ────────────────────────────────────────────────────────────────────── */
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; padding: 3.5rem 1rem; text-align: center; color: var(--color-muted); }
+    .empty .empty-ic { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 999px; background: var(--header-background); font-size: 26px; }
+
     .actions { display: flex; gap: 0.25rem; justify-content: flex-end; }
-    .pager { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 1rem; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--color-muted); }
-    .pager .nav { display: flex; align-items: center; gap: 0.25rem; }
+
+    /* ── Pie: contador + paginación ──────────────────────────────────────────────────────── */
+    .pager { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 1rem; border-top: 1px solid var(--border-color); background: var(--header-background); font-size: 12.5px; color: var(--color-muted); }
+    .pager .left { display: flex; align-items: center; gap: 0.6rem; }
+    .pager .strong { font-weight: 600; color: var(--color); }
+    .psize { font: inherit; font-size: 12.5px; padding: 0.2rem 0.35rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--background); color: var(--color); }
+    .pager .nav { display: flex; align-items: center; gap: 0.2rem; }
+    .pager .nav .pp { font-weight: 600; color: var(--color); padding: 0 0.25rem; }
+    /* Pager numerado: botón por página + «…» en los saltos (look del Hub). */
+    .pnum { min-width: 1.75rem; height: 1.75rem; padding: 0 0.4rem; border: 1px solid transparent; border-radius: 8px; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--color); cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+    .pnum:hover { background: var(--row-hover); }
+    .pnum.on { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); border-color: color-mix(in srgb, var(--primary) 40%, transparent); }
+    .pgap { padding: 0 0.15rem; color: var(--color-muted); }
     ion-button { --box-shadow: none; }
   `;
+  }
+  // ── i18n: textos efectivos (default inglés ← overrides de `.labels`) ──────────────────────
+  get t() {
+    return { ...DEFAULT_LABELS, ...this.labels };
+  }
+  /** Placeholder efectivo del buscador (prop explícita → label i18n → default inglés). */
+  get effSearchPlaceholder() {
+    return this.searchPlaceholder ?? this.t.search;
+  }
+  /** Mensaje efectivo de estado vacío (prop explícita → label i18n → default inglés). */
+  get effEmptyMessage() {
+    return this.emptyMessage ?? this.t.empty;
+  }
+  // ── Resolución de alias (compat + documentados) ──────────────────────────────────────────
+  get effPageSizes() {
+    return this.pageSizes ?? this.pageSizeOptions;
+  }
+  get effColumnPicker() {
+    return this.columnPicker || this.columnSelector;
+  }
+  get effExport() {
+    return this.csv || this.exportable;
+  }
+  get effImport() {
+    return this.csv || this.importable;
+  }
+  /** ¿Está habilitado el conmutador de vista lista/tarjetas? */
+  get viewToggle() {
+    if (Array.isArray(this.views)) return this.views.length > 1;
+    return this.views === true;
+  }
+  /** ¿Está disponible la vista tarjetas? (presente en `views` o `views === true`). */
+  get cardViewEnabled() {
+    if (Array.isArray(this.views)) return this.views.some((v3) => v3 === "cards" || v3 === "card");
+    return this.views === true;
+  }
+  /** Columnas actualmente visibles (respeta el column chooser). */
+  get visibleColumns() {
+    return this.hiddenKeys.size ? this.columns.filter((c5) => !this.hiddenKeys.has(c5.key)) : this.columns;
+  }
+  setVisibleColumns(keys) {
+    const visible = new Set(keys);
+    this.hiddenKeys = new Set(this.columns.map((c5) => c5.key).filter((k2) => !visible.has(k2)));
+    this.emit("columnsChange", { visible: keys });
+  }
+  // ── Selección ─────────────────────────────────────────────────────────────────────────────
+  keyOf(row) {
+    if (typeof this.rowKey === "function") return String(this.rowKey(row) ?? "");
+    if (typeof this.rowKey === "string") return String(row[this.rowKey] ?? "");
+    return String(row[this.rowKeyField] ?? "");
+  }
+  get selection() {
+    return this.selectedKeys ?? this.internalSelection;
+  }
+  setSelection(next) {
+    if (!this.selectedKeys) this.internalSelection = next;
+    this.emit("selectionChange", { keys: [...next] });
+    this.requestUpdate();
+  }
+  toggleRow(key) {
+    const next = new Set(this.selection);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    this.setSelection(next);
+  }
+  toggleAll(visible) {
+    const keys = visible.map((r6) => this.keyOf(r6));
+    const allOn = keys.length > 0 && keys.every((k2) => this.selection.has(k2));
+    const next = new Set(this.selection);
+    if (allOn) keys.forEach((k2) => next.delete(k2));
+    else keys.forEach((k2) => next.add(k2));
+    this.setSelection(next);
+  }
+  // ── CSV ─────────────────────────────────────────────────────────────────────────────────────
+  csvEscape(v3) {
+    const s5 = v3 === null || v3 === void 0 ? "" : String(v3);
+    return /[",\n\r]/.test(s5) ? `"${s5.replace(/"/g, '""')}"` : s5;
+  }
+  /** Exporta las filas a CSV (cabeceras = column.key). Si no hay filas, exporta solo la estructura. */
+  exportCsv() {
+    const cols = this.columns;
+    const head = cols.map((c5) => this.csvEscape(c5.key)).join(",");
+    const lines = this.rows.map((r6) => cols.map((c5) => this.csvEscape(r6[c5.key])).join(","));
+    const csv = [head, ...lines].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a3 = document.createElement("a");
+    a3.href = url;
+    a3.download = this.csvName;
+    a3.click();
+    URL.revokeObjectURL(url);
+    this.emit("csvExport", { rows: this.rows.length });
+    this.emit("export", { rows: this.rows.length });
+  }
+  parseCsv(text) {
+    const out = [];
+    let row = [];
+    let field = "";
+    let q = false;
+    for (let i7 = 0; i7 < text.length; i7++) {
+      const c5 = text[i7];
+      if (q) {
+        if (c5 === '"') {
+          if (text[i7 + 1] === '"') {
+            field += '"';
+            i7++;
+          } else q = false;
+        } else field += c5;
+      } else if (c5 === '"') q = true;
+      else if (c5 === ",") {
+        row.push(field);
+        field = "";
+      } else if (c5 === "\n" || c5 === "\r") {
+        if (c5 === "\r" && text[i7 + 1] === "\n") i7++;
+        row.push(field);
+        field = "";
+        if (row.length > 1 || row[0] !== "") out.push(row);
+        row = [];
+      } else field += c5;
+    }
+    if (field !== "" || row.length) {
+      row.push(field);
+      out.push(row);
+    }
+    const headers = out.shift() ?? [];
+    const rows = out.map((r6) => Object.fromEntries(headers.map((h4, i7) => [h4, r6[i7] ?? ""])));
+    return { headers, rows };
+  }
+  async onImportFile(ev) {
+    const input = ev.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const { headers, rows } = this.parseCsv(text);
+    this.emit("csvImport", { headers, rows });
+    this.emit("import", { headers, rows });
+    input.value = "";
+  }
+  toggle(p4) {
+    if (p4 === "filters" && this.panel !== "filters") {
+      this.filterDraft = this.cloneFilters(this.clientFilters);
+    }
+    this.panel = this.panel === p4 ? "none" : p4;
+  }
+  // ── Filtros en memoria (modo cliente): borrador → aplicar. ───────────────────────────────────
+  cloneFilters(src) {
+    const out = {};
+    for (const [k2, f3] of Object.entries(src)) {
+      out[k2] = { values: f3.values ? new Set(f3.values) : void 0, from: f3.from, to: f3.to };
+    }
+    return out;
+  }
+  toggleFilterValue(key, value) {
+    const next = this.cloneFilters(this.filterDraft);
+    const values = new Set(next[key]?.values ?? []);
+    if (values.has(value)) values.delete(value);
+    else values.add(value);
+    next[key] = { ...next[key], values };
+    this.filterDraft = next;
+  }
+  setFilterRange(key, edge, value) {
+    const next = this.cloneFilters(this.filterDraft);
+    next[key] = { ...next[key], [edge]: value };
+    this.filterDraft = next;
+  }
+  applyFilters() {
+    const clean = {};
+    for (const [k2, f3] of Object.entries(this.filterDraft)) {
+      if (f3.values && f3.values.size > 0 || f3.from || f3.to) clean[k2] = f3;
+    }
+    this.clientFilters = clean;
+    this.clientPage = 0;
+    this.panel = "none";
+    this.emit("filterChange", { filters: this.serializeFilters(clean) });
+  }
+  clearFilters() {
+    this.filterDraft = {};
+  }
+  serializeFilters(src) {
+    const out = {};
+    for (const [k2, f3] of Object.entries(src)) {
+      if (f3.values && f3.values.size > 0) out[k2] = [...f3.values];
+      else if (f3.from || f3.to) out[k2] = { from: f3.from ?? "", to: f3.to ?? "" };
+    }
+    return out;
+  }
+  /** Abre el panel lateral (API pública para el módulo, p.ej. "editar" abre el form pre-rellenado). */
+  open(panel = "create") {
+    this.panel = panel;
+  }
+  /** Cierra el panel lateral. */
+  close() {
+    this.panel = "none";
   }
   emit(type, detail) {
     this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
@@ -796,25 +1902,104 @@ var OkDataTable = class extends i4 {
   get hasSearch() {
     return this.searchable || this.searchKeys.length > 0;
   }
-  get hasFilterRow() {
-    return this.serverSide && this.columns.some((c5) => c5.filterable);
+  /** Columnas filtrables (con control en el panel de filtros). En cliente y en servidor. */
+  get filterColumns() {
+    return this.columns.filter((c5) => c5.filterable);
   }
+  /** ¿Hay que mostrar el botón de Filtros? (cualquier columna filtrable). */
+  get hasFilterRow() {
+    return this.filterColumns.length > 0;
+  }
+  /** Nº de filtros activos (modo cliente) → badge del botón Filtros. */
+  get activeFilterCount() {
+    return Object.values(this.clientFilters).filter(
+      (f3) => f3.values && f3.values.size > 0 || f3.from || f3.to
+    ).length;
+  }
+  /** Valor crudo de una columna para ordenar/filtrar (usa format si lo hay, si no row[key]). */
+  rawValue(col, row) {
+    if (col.format) return col.format(row);
+    return row[col.key];
+  }
+  /** Valores distintos de una columna (para los chips del filtro multi-select). */
+  distinctValues(col) {
+    const set = /* @__PURE__ */ new Set();
+    for (const row of this.rows) {
+      const v3 = this.rawValue(col, row);
+      if (v3 != null && v3 !== "") set.add(String(v3));
+    }
+    return [...set].sort((a3, b3) => a3.localeCompare(b3));
+  }
+  /** Filas tras buscar + filtrar + ordenar EN MEMORIA (solo modo cliente). */
   get clientFiltered() {
+    let result = this.rows;
     const needle = this.q.trim().toLowerCase();
-    if (!needle || !this.searchKeys.length) return this.rows;
-    return this.rows.filter(
-      (r6) => this.searchKeys.some((k2) => String(r6[k2] ?? "").toLowerCase().includes(needle))
-    );
+    if (needle && this.searchKeys.length) {
+      result = result.filter(
+        (r6) => this.searchKeys.some((k2) => String(r6[k2] ?? "").toLowerCase().includes(needle))
+      );
+    }
+    const fkeys = Object.keys(this.clientFilters);
+    if (fkeys.length) {
+      result = result.filter(
+        (row) => fkeys.every((key) => {
+          const f3 = this.clientFilters[key];
+          const col = this.columns.find((c5) => c5.key === key);
+          if (!col) return true;
+          if (f3.values && f3.values.size > 0) {
+            return f3.values.has(String(this.rawValue(col, row) ?? ""));
+          }
+          if (f3.from || f3.to) {
+            const raw = this.rawValue(col, row);
+            const t5 = raw == null ? NaN : new Date(raw).getTime();
+            const from = f3.from ? new Date(f3.from).getTime() : -Infinity;
+            const to = f3.to ? new Date(f3.to).getTime() + 864e5 - 1 : Infinity;
+            return !Number.isNaN(t5) && t5 >= from && t5 <= to;
+          }
+          return true;
+        })
+      );
+    }
+    if (this.clientSort) {
+      const col = this.columns.find((c5) => c5.key === this.clientSort);
+      if (col) {
+        const dir = this.clientSortDir === "asc" ? 1 : -1;
+        result = [...result].sort((a3, b3) => {
+          const va = this.rawValue(col, a3);
+          const vb = this.rawValue(col, b3);
+          if (va == null) return 1;
+          if (vb == null) return -1;
+          if (va < vb) return -1 * dir;
+          if (va > vb) return 1 * dir;
+          return 0;
+        });
+      }
+    }
+    return result;
   }
   cell(col, row) {
     if (col.format) return col.format(row);
     const v3 = row[col.key];
     return v3 === null || v3 === void 0 ? "" : String(v3);
   }
+  /** ¿Es ordenable la columna? Servidor: opt-in (`sortable`). Cliente: por defecto SÍ (como el Hub),
+   *  salvo `sortable: false` explícito. */
+  isSortable(col) {
+    return this.serverSide ? !!col.sortable : col.sortable !== false;
+  }
   onHeaderClick(col) {
-    if (!this.serverSide || !col.sortable) return;
-    const dir = this.sort === col.key && this.sortDir === "asc" ? "desc" : "asc";
-    this.emit("sortChange", { sort: col.key, dir });
+    if (!this.isSortable(col)) return;
+    if (this.serverSide) {
+      const dir = this.sort === col.key && this.sortDir === "asc" ? "desc" : "asc";
+      this.emit("sortChange", { sort: col.key, dir });
+      return;
+    }
+    if (this.clientSort === col.key) {
+      this.clientSortDir = this.clientSortDir === "asc" ? "desc" : "asc";
+    } else {
+      this.clientSort = col.key;
+      this.clientSortDir = "asc";
+    }
   }
   onFilterInput(col, ev) {
     const value = ev.target.value ?? "";
@@ -829,37 +2014,231 @@ var OkDataTable = class extends i4 {
     const v3 = ev.target.value ?? "";
     this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
   }
+  // ── Filtros EN LÍNEA (toolbar) ────────────────────────────────────────────────────────────
+  // En modo cliente escriben directamente `clientFilters` (filtran en memoria); en servidor solo
+  // emiten `filterChange`. Reutilizan la misma forma de filtro que el drawer (values / from / to).
+  setClientFilter(key, patch) {
+    const next = { ...this.clientFilters };
+    const merged = { ...next[key], ...patch };
+    const empty = (!merged.values || merged.values.size === 0) && !merged.from && !merged.to;
+    if (empty) delete next[key];
+    else next[key] = merged;
+    this.clientFilters = next;
+    this.clientPage = 0;
+  }
+  // ion-select (select/multiselect) del panel de filtros (renderFilterControl). En servidor emite
+  // `filterChange`; en cliente escribe `clientFilters` (multiselect ⇒ filtra por inclusión).
+  onFilterSelect(col, value, multi) {
+    if (this.serverSide) {
+      this.emit("filterChange", { col: col.key, value: value ?? (multi ? [] : "") });
+      return;
+    }
+    if (multi) {
+      const arr = Array.isArray(value) ? value.map((v3) => String(v3)) : value != null && value !== "" ? [String(value)] : [];
+      this.setClientFilter(col.key, { values: arr.length ? new Set(arr) : void 0 });
+    } else {
+      const v3 = String(value ?? "");
+      this.setClientFilter(col.key, { values: v3 ? /* @__PURE__ */ new Set([v3]) : void 0 });
+    }
+  }
+  onInlineRange(col, edge, ev) {
+    const v3 = ev.target.value ?? "";
+    if (this.serverSide) {
+      this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
+      return;
+    }
+    this.setClientFilter(col.key, { [edge]: v3 || void 0 });
+  }
+  // Menú overflow: ancla el popover al botón vía el evento de click (compatible con Shadow DOM).
+  openMenu(ev) {
+    this.menuEv = ev;
+    this.menuOpen = true;
+  }
+  setViewMode(mode) {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    this.emit("viewChange", mode);
+  }
+  // Control de filtro de una columna, con componentes Ionic (mismos inputs que el form de alta).
   renderFilterControl(col) {
-    if (!col.filterable) return b2`<span></span>`;
+    if (!col.filterable) return A;
     const type = col.filterType ?? "text";
-    if (type === "select") {
+    if (type === "select" || type === "multiselect") {
+      const multi = type === "multiselect";
+      const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
       return b2`
-        <select @change=${(e6) => this.onFilterInput(col, e6)}>
-          <option value="">—</option>
-          ${(col.options ?? []).map((o6) => b2`<option value=${o6.value}>${o6.label}</option>`)}
-        </select>
+        <ion-select
+          label=${col.header}
+          label-placement="stacked"
+          ?multiple=${multi}
+          interface="modal"
+          .interfaceOptions=${{ cssClass: "ok-overlay" }}
+          placeholder=${col.header}
+          @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
+        >
+          ${multi ? A : b2`<ion-select-option value="">${col.header}</ion-select-option>`}
+          ${opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+        </ion-select>
       `;
     }
-    if (type === "range") {
+    if (type === "range" || type === "daterange") {
+      const t5 = type === "daterange" ? "date" : "number";
+      const onEdge = type === "daterange" ? this.onDateRangeInput.bind(this) : this.onRangeInput.bind(this);
       return b2`
-        <span class="range">
-          <input type="number" placeholder="≥" @change=${(e6) => this.onRangeInput(col, "from", e6)} />
-          <input type="number" placeholder="≤" @change=${(e6) => this.onRangeInput(col, "to", e6)} />
-        </span>
-      `;
-    }
-    if (type === "daterange") {
-      return b2`
-        <span class="range">
-          <input type="date" @change=${(e6) => this.onDateRangeInput(col, "from", e6)} />
-          <input type="date" @change=${(e6) => this.onDateRangeInput(col, "to", e6)} />
-        </span>
+        <div class="fblock">
+          <span class="flabel">${col.header}</span>
+          <div class="frange">
+            <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
+              @ionInput=${(e5) => onEdge(col, "from", e5)}></ion-input>
+            <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
+              @ionInput=${(e5) => onEdge(col, "to", e5)}></ion-input>
+          </div>
+        </div>
       `;
     }
     const inputType = type === "number" ? "number" : type === "date" ? "date" : "text";
-    return b2`<input type=${inputType} @input=${(e6) => this.onFilterInput(col, e6)} />`;
+    return b2`
+      <ion-input
+        type=${inputType}
+        fill="outline"
+        label=${col.header}
+        label-placement="stacked"
+        placeholder=${this.t.filterPlaceholder}
+        @ionInput=${(e5) => this.onFilterInput(col, e5)}
+      ></ion-input>
+    `;
+  }
+  // Controles de filtro COMPACTOS para la toolbar (modo `inlineFilters`). Solo select y rango de
+  // fechas (los del screenshot); el resto de tipos siguen disponibles vía el drawer si no se activa
+  // `inlineFilters`. Look: «Todos los Estados» (placeholder) / «01/10/25 → 18/10/25».
+  renderInlineFilters() {
+    const cols = this.filterColumns.filter((c5) => {
+      const t5 = c5.filterType ?? "text";
+      return t5 === "select" || t5 === "multiselect" || t5 === "date" || t5 === "daterange";
+    });
+    if (!cols.length) return A;
+    return b2`${cols.map((c5) => this.renderInlineFilter(c5))}`;
+  }
+  renderInlineFilter(col) {
+    const type = col.filterType ?? "text";
+    const f3 = this.clientFilters[col.key];
+    if (type === "select" || type === "multiselect") {
+      const multi = type === "multiselect";
+      const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
+      const current = multi ? [...f3?.values ?? /* @__PURE__ */ new Set()] : f3?.values && f3.values.size ? [...f3.values][0] : "";
+      return b2`
+        <ion-select
+          class="tk-filter"
+          ?multiple=${multi}
+          interface="modal"
+          .interfaceOptions=${{ cssClass: "ok-overlay" }}
+          aria-label=${col.header}
+          placeholder=${col.header}
+          .value=${current}
+          @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
+        >
+          ${multi ? A : b2`<ion-select-option value="">${col.header}</ion-select-option>`}
+          ${opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+        </ion-select>
+      `;
+    }
+    return b2`
+      <span class="tk-daterange" role="group" aria-label=${col.header}>
+        <ion-icon name="calendar-outline"></ion-icon>
+        <ion-input type="date" aria-label=${this.t.fromOf.replace("{label}", col.header)} .value=${f3?.from ?? ""} @ionChange=${(e5) => this.onInlineRange(col, "from", e5)}></ion-input>
+        <span class="arr">→</span>
+        <ion-input type="date" aria-label=${this.t.toOf.replace("{label}", col.header)} .value=${f3?.to ?? ""} @ionChange=${(e5) => this.onInlineRange(col, "to", e5)}></ion-input>
+      </span>
+    `;
+  }
+  // Menú overflow («⋮») con ion-popover anclado por evento (Shadow-DOM-safe).
+  renderOverflowMenu() {
+    if (!this.menuActions.length) return A;
+    return b2`
+      <ion-button class="toolbtn" fill="clear" aria-label=${this.t.moreActions} @click=${(e5) => this.openMenu(e5)}>
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+      <ion-popover
+        .isOpen=${this.menuOpen}
+        .event=${this.menuEv}
+        dismiss-on-select="true"
+        @didDismiss=${() => this.menuOpen = false}
+      >
+        <ion-content>
+          <ion-list lines="none">
+            ${this.menuActions.map(
+      (a3) => b2`
+                <ion-item button .detail=${false} @click=${() => {
+        this.menuOpen = false;
+        this.emit("menuAction", { actionId: a3.id });
+      }}>
+                  ${a3.icon ? b2`<ion-icon slot="start" name=${a3.icon} color=${a3.color ?? A}></ion-icon>` : A}
+                  <ion-label color=${a3.color ?? A}>${a3.label}</ion-label>
+                </ion-item>
+              `
+    )}
+          </ion-list>
+        </ion-content>
+      </ion-popover>
+    `;
+  }
+  // Botones de acción de una fila (compartido por vista tabla y tarjetas).
+  actionButtons(row) {
+    if (!this.actions.length) return A;
+    return b2`
+      <div class="actions">
+        ${this.actions.map(
+      (a3) => b2`
+            <ion-button
+              size="small"
+              fill="clear"
+              color=${a3.color ?? "medium"}
+              @click=${() => this.emit("rowAction", { actionId: a3.id, row })}
+            >
+              ${a3.icon ? b2`<ion-icon slot="icon-only" name=${a3.icon}></ion-icon>` : a3.label}
+            </ion-button>
+          `
+    )}
+      </div>
+    `;
+  }
+  // Botón de barra icon-only (filtros / alta / conmutador de vista). `on` = estado activo.
+  // `badge` opcional → contador (p.ej. nº de filtros activos), look del Hub.
+  toolButton(icon, on, onClick, label, badge) {
+    return b2`
+      <ion-button class="toolbtn" size="small" fill=${on ? "solid" : "outline"} title=${label} aria-label=${label} @click=${onClick}>
+        <ion-icon slot="icon-only" name=${icon}></ion-icon>
+        ${badge && badge > 0 ? b2`<span class="badge">${badge}</span>` : A}
+      </ion-button>
+    `;
+  }
+  /** Plantilla de columnas del grid de la vista lista: [checkbox] [columnas…] [acciones]. */
+  gridTemplate() {
+    return [
+      this.selectable ? "2.75rem" : null,
+      ...this.visibleColumns.map((c5) => c5.width ?? "minmax(8rem,1fr)"),
+      this.actions.length ? "auto" : null
+    ].filter(Boolean).join(" ");
+  }
+  /** Lista de páginas a mostrar en el pager numerado (1-based): primera, última, vecinas de la
+   *  actual y «…» donde haya saltos. P.ej. en página 1 de 52 → [1,2,3,'…',52]. */
+  pageList(cur1, total) {
+    if (total <= 7) return Array.from({ length: total }, (_2, i7) => i7 + 1);
+    const want = /* @__PURE__ */ new Set([1, total, cur1, cur1 - 1, cur1 + 1]);
+    if (cur1 <= 3) [2, 3].forEach((p4) => want.add(p4));
+    if (cur1 >= total - 2) [total - 1, total - 2].forEach((p4) => want.add(p4));
+    const sorted = [...want].filter((p4) => p4 >= 1 && p4 <= total).sort((a3, b3) => a3 - b3);
+    const out = [];
+    let prev = 0;
+    for (const p4 of sorted) {
+      if (p4 - prev > 1) out.push("\u2026");
+      out.push(p4);
+      prev = p4;
+    }
+    return out;
   }
   render() {
+    const ps = this.serverSide ? this.pageSize : this.clientPageSize || this.pageSize;
     let visible;
     let pages;
     let current;
@@ -867,102 +2246,280 @@ var OkDataTable = class extends i4 {
     if (this.serverSide) {
       visible = this.rows;
       count = this.total;
-      pages = Math.max(1, Math.ceil(this.total / this.pageSize));
+      pages = Math.max(1, Math.ceil(this.total / ps));
       current = Math.min(this.page, pages - 1);
     } else {
       const filtered = this.clientFiltered;
       count = filtered.length;
-      pages = Math.max(1, Math.ceil(filtered.length / this.pageSize));
+      pages = Math.max(1, Math.ceil(filtered.length / ps));
       current = Math.min(this.clientPage, pages - 1);
-      visible = filtered.slice(current * this.pageSize, current * this.pageSize + this.pageSize);
+      visible = filtered.slice(current * ps, current * ps + ps);
     }
-    const colSpan = this.columns.length + (this.actions.length ? 1 : 0);
     const goTo = (p4) => {
       if (this.serverSide) this.emit("pageChange", p4);
       else this.clientPage = p4;
     };
-    const searchbar = this.serverSide ? b2`<ion-searchbar placeholder=${this.searchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>` : b2`<ion-searchbar .value=${this.q} placeholder=${this.searchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>`;
+    const setPageSize = (n6) => {
+      if (this.serverSide) this.emit("pageSizeChange", n6);
+      else {
+        this.clientPageSize = n6;
+        this.clientPage = 0;
+      }
+    };
+    const searchbar = this.serverSide ? b2`<ion-searchbar class="ion-no-border" placeholder=${this.effSearchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>` : b2`<ion-searchbar class="ion-no-border" .value=${this.q} placeholder=${this.effSearchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>`;
+    const selCount = this.selection.size;
+    const showTopbar = !!this.title || this.hasSearch || this.viewToggle || this.effColumnPicker || this.effExport || this.effImport || this.hasFilterRow || this.addable || !!this.primaryAction;
     return b2`
       <div class="card">
-        <div class="bar">
-          <div class="search">${this.hasSearch ? searchbar : b2`<span></span>`}</div>
-          <!-- El módulo proyecta aquí su botón "Nuevo"/acciones globales. -->
-          <slot name="toolbar"></slot>
-        </div>
-
-        <div class="scroll">
-          <table>
-            <thead>
-              <tr>
-                ${this.columns.map((c5) => {
-      const active = this.serverSide && c5.sortable && this.sort === c5.key;
-      const cls = `${c5.align ?? "left"}${this.serverSide && c5.sortable ? " sortable" : ""}`;
-      return b2`
-                    <th class=${cls} @click=${() => this.onHeaderClick(c5)}>
-                      ${c5.header}
-                      ${this.serverSide && c5.sortable ? b2`<span class=${`caret${active ? " on" : ""}`}>${active && this.sortDir === "desc" ? "\u25BC" : "\u25B2"}</span>` : A}
-                    </th>
-                  `;
-    })}
-                ${this.actions.length ? b2`<th class="right"></th>` : A}
-              </tr>
-              ${this.hasFilterRow ? b2`
-                    <tr class="filters">
-                      ${this.columns.map(
-      (c5) => b2`<th class=${c5.align ?? "left"}>${this.renderFilterControl(c5)}</th>`
-    )}
-                      ${this.actions.length ? b2`<th></th>` : A}
-                    </tr>
-                  ` : A}
-            </thead>
-            <tbody>
-              ${visible.length === 0 ? b2`<tr><td class="empty" colspan=${colSpan}>${this.emptyMessage}</td></tr>` : c4(
-      visible,
-      (row) => String(row[this.rowKeyField] ?? ""),
-      (row) => b2`
-                      <tr>
-                        ${this.columns.map(
-        (c5) => b2`<td class=${c5.align ?? "left"}>${this.cell(c5, row)}</td>`
-      )}
-                        ${this.actions.length ? b2`
-                              <td class="right">
-                                <div class="actions">
-                                  ${this.actions.map(
-        (a3) => b2`
-                                      <ion-button
-                                        size="small"
-                                        fill="clear"
-                                        color=${a3.color ?? "medium"}
-                                        @click=${() => this.emit("rowAction", { actionId: a3.id, row })}
-                                      >
-                                        ${a3.icon ? b2`<ion-icon name=${a3.icon} slot="icon-only"></ion-icon>` : a3.label}
-                                      </ion-button>
-                                    `
-      )}
-                                </div>
-                              </td>
-                            ` : A}
-                      </tr>
-                    `
-    )}
-            </tbody>
-          </table>
-        </div>
-
-        ${pages > 1 ? b2`
-              <div class="pager">
-                <span>${count} resultados</span>
-                <div class="nav">
-                  <ion-button size="small" fill="clear" ?disabled=${current === 0} @click=${() => goTo(current - 1)}>
-                    <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
-                  </ion-button>
-                  <span>${current + 1} / ${pages}</span>
-                  <ion-button size="small" fill="clear" ?disabled=${current >= pages - 1} @click=${() => goTo(current + 1)}>
-                    <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
-                  </ion-button>
+        ${showTopbar ? b2`
+              <div class="bar">
+                <div class="bar-main">
+                  ${this.title ? b2`<div class="title-wrap"><h2 class="title">${this.title}</h2><span class="title-count">${count}</span></div>` : A}
+                  ${this.hasSearch ? b2`<div class="search">${searchbar}</div>` : this.title ? A : b2`<span style="margin-right:auto"></span>`}
+                  ${this.inlineFilters ? this.renderInlineFilters() : A}
+                  <div class="bar-end">
+                    ${this.effPageSizes.length ? b2`
+                          <ion-select
+                            class="tk-psize"
+                            interface="popover"
+                            aria-label=${this.t.rowsPerPage}
+                            .value=${ps}
+                            @ionChange=${(e5) => setPageSize(Number(e5.detail.value))}
+                          >
+                            ${this.effPageSizes.map((n6) => b2`<ion-select-option .value=${n6}>${n6}</ion-select-option>`)}
+                          </ion-select>
+                        ` : A}
+                    ${this.viewToggle ? b2`
+                          <span class="viewseg">
+                            ${this.toolButton("list-outline", this.viewMode === "table", () => this.setViewMode("table"), this.t.viewList)}
+                            ${this.toolButton("grid-outline", this.viewMode === "cards", () => this.setViewMode("cards"), this.t.viewCards)}
+                          </span>
+                        ` : A}
+                    ${this.effColumnPicker ? b2`
+                          <ion-select
+                            class="tk-cols"
+                            multiple
+                            interface="popover"
+                            aria-label=${this.t.columnsVisible}
+                            .value=${this.visibleColumns.map((c5) => c5.key)}
+                            .selectedText=${this.t.columns}
+                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
+                          >
+                            ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
+                          </ion-select>
+                        ` : A}
+                    ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
+                    ${this.effImport ? b2`
+                          ${this.toolButton("cloud-upload-outline", false, () => this.renderRoot.querySelector(".tk-file")?.click(), this.t.importCsv)}
+                          <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e5) => this.onImportFile(e5)} />
+                        ` : A}
+                    ${this.effExport ? this.toolButton("download-outline", false, () => this.exportCsv(), this.t.exportCsv) : A}
+                    ${this.addable ? this.toolButton("add", this.panel === "create", () => this.toggle("create"), this.t.add) : A}
+                    ${this.renderOverflowMenu()}
+                    ${this.primaryAction ? b2`
+                          <ion-button
+                            class="primary-btn"
+                            size="small"
+                            title=${this.primaryAction.label}
+                            aria-label=${this.primaryAction.label}
+                            @click=${() => this.emit("primaryAction", {})}
+                          ><ion-icon slot="icon-only" name=${this.primaryAction.icon ?? "add"}></ion-icon></ion-button>
+                        ` : A}
+                    <!-- El módulo proyecta aquí acciones globales adicionales. -->
+                    <slot name="toolbar"></slot>
+                  </div>
                 </div>
+                ${this.selectable && selCount > 0 ? b2`
+                      <div class="selbar">
+                        <strong>${this.t.selected.replace("{n}", String(selCount))}</strong>
+                        <button class="sel-clear" @click=${() => this.setSelection(/* @__PURE__ */ new Set())}>
+                          <ion-icon name="close" style="font-size:14px"></ion-icon> ${this.t.clear}
+                        </button>
+                      </div>
+                    ` : A}
               </div>
             ` : A}
+
+        ${this.viewMode === "cards" && this.cardViewEnabled ? this.renderCards(visible) : this.renderTable(visible)}
+
+        ${pages > 1 || this.effPageSizes.length ? b2`
+              <div class="pager">
+                <div class="left">
+                  <span>
+                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(current * ps + 1)).replace("{to}", String(Math.min((current + 1) * ps, count)))} ` : A}
+                    <span class="strong">${count}</span> ${count === 1 ? this.t.recordSingular : this.t.recordPlural}
+                  </span>
+                  ${!showTopbar && this.effPageSizes.length ? b2`
+                        <select class="psize" @change=${(e5) => setPageSize(Number(e5.target.value))}>
+                          ${this.effPageSizes.map((n6) => b2`<option value=${n6} ?selected=${n6 === ps}>${this.t.perPageShort.replace("{n}", String(n6))}</option>`)}
+                        </select>
+                      ` : A}
+                </div>
+                ${pages > 1 ? b2`
+                      <div class="nav">
+                        <ion-button size="small" fill="clear" ?disabled=${current === 0} @click=${() => goTo(current - 1)}><ion-icon slot="icon-only" name="chevron-back"></ion-icon></ion-button>
+                        ${this.pageList(current + 1, pages).map(
+      (p4) => p4 === "\u2026" ? b2`<span class="pgap">…</span>` : b2`<button class=${`pnum${p4 === current + 1 ? " on" : ""}`} @click=${() => goTo(p4 - 1)}>${p4}</button>`
+    )}
+                        <ion-button size="small" fill="clear" ?disabled=${current >= pages - 1} @click=${() => goTo(current + 1)}><ion-icon slot="icon-only" name="chevron-forward"></ion-icon></ion-button>
+                      </div>
+                    ` : A}
+              </div>
+            ` : A}
+
+        ${this.panel !== "none" ? this.renderDrawer() : A}
+      </div>
+    `;
+  }
+  // Panel lateral derecho DENTRO de la tabla (no empuja contenido; igual en lista y tarjetas).
+  renderDrawer() {
+    const isFilters = this.panel === "filters";
+    const clientFilters = isFilters && !this.serverSide;
+    return b2`
+      <div class="tk-scrim" @click=${() => this.close()}></div>
+      <aside class="drawer" role="dialog" aria-label=${isFilters ? this.t.filters : this.t.form}>
+        <header class="dh">
+          <strong>${isFilters ? this.t.filters : this.t.newRecord}</strong>
+          <ion-button fill="clear" size="small" aria-label=${this.t.close} @click=${() => this.close()}><ion-icon slot="icon-only" name="close"></ion-icon></ion-button>
+        </header>
+        <div class="db">
+          ${isFilters ? clientFilters ? this.filterColumns.map((c5) => this.renderClientFilter(c5)) : this.filterColumns.map((c5) => b2`<div class="fblock">${this.renderFilterControl(c5)}</div>`) : b2`<slot name="create"></slot>`}
+        </div>
+        ${clientFilters ? b2`
+              <footer class="df">
+                <button class="sel-clear df-clear" ?disabled=${Object.keys(this.filterDraft).length === 0} @click=${() => this.clearFilters()}>${this.t.clear}</button>
+                <ion-button class="primary-btn" size="small" @click=${() => this.applyFilters()}>${this.t.apply}</ion-button>
+              </footer>
+            ` : A}
+      </aside>
+    `;
+  }
+  // Control de filtro CLIENTE de una columna: chips multi-select (select) o rango de fechas.
+  renderClientFilter(col) {
+    const label = col.header;
+    if (col.filterType === "daterange" || col.filterType === "date") {
+      const f3 = this.filterDraft[col.key] ?? {};
+      return b2`
+        <div class="fblock">
+          <span class="flabel">${label}</span>
+          <div class="daterange">
+            <ion-input type="date" label=${this.t.from} label-placement="stacked" fill="outline" .value=${f3.from ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "from", e5.detail.value ?? "")}></ion-input>
+            <ion-input type="date" label=${this.t.to} label-placement="stacked" fill="outline" .value=${f3.to ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "to", e5.detail.value ?? "")}></ion-input>
+          </div>
+        </div>
+      `;
+    }
+    const distinct = this.distinctValues(col);
+    const selected = this.filterDraft[col.key]?.values ?? /* @__PURE__ */ new Set();
+    return b2`
+      <div class="fblock">
+        <span class="flabel">${label}</span>
+        <div class="chips">
+          ${distinct.length === 0 ? b2`<span class="chip-empty">${this.t.noValues}</span>` : distinct.map((v3) => {
+      const on = selected.has(v3);
+      return b2`
+                  <button class=${`chip${on ? " on" : ""}`} @click=${() => this.toggleFilterValue(col.key, v3)}>
+                    ${on ? b2`<ion-icon name="checkmark-outline"></ion-icon>` : A}${v3}
+                  </button>
+                `;
+    })}
+        </div>
+      </div>
+    `;
+  }
+  emptyState() {
+    return b2`
+      <div class="empty">
+        <span class="empty-ic"><ion-icon name="file-tray-outline"></ion-icon></span>
+        <span>${this.effEmptyMessage}</span>
+      </div>
+    `;
+  }
+  // Vista LISTA en CSS GRID (no <table>): permite ancho por columna y cabecera sticky.
+  renderTable(visible) {
+    if (visible.length === 0) return this.emptyState();
+    const cols = this.visibleColumns;
+    const tpl = { gridTemplateColumns: this.gridTemplate() };
+    const allOn = this.selectable && visible.length > 0 && visible.every((r6) => this.selection.has(this.keyOf(r6)));
+    const alignCls = (a3) => a3 === "right" ? "right" : a3 === "center" ? "center" : "left";
+    return b2`
+      <div class="scroll">
+        <div class="grid" role="table">
+          <!-- Cabecera -->
+          <div class="grow ghead" role="row" style=${o6(tpl)}>
+            ${this.selectable ? b2`<span class="selcb"><ion-checkbox .checked=${allOn} aria-label=${this.t.selectAll} @ionChange=${() => this.toggleAll(visible)}></ion-checkbox></span>` : A}
+            ${cols.map((c5) => {
+      const sortable = this.isSortable(c5);
+      const active = sortable && (this.serverSide ? this.sort === c5.key : this.clientSort === c5.key);
+      const dir = this.serverSide ? this.sortDir : this.clientSortDir;
+      const caretIcon = !active ? "swap-vertical-outline" : dir === "asc" ? "chevron-up-outline" : "chevron-down-outline";
+      return b2`
+                <div
+                  class=${`gcell gh ${alignCls(c5.align)}${sortable ? " sortable" : ""}`}
+                  role="columnheader"
+                  @click=${() => this.onHeaderClick(c5)}
+                >
+                  <span>${c5.header}</span>
+                  ${sortable ? b2`<span class=${`caret${active ? " on" : ""}`}><ion-icon name=${caretIcon}></ion-icon></span>` : A}
+                </div>
+              `;
+    })}
+            ${this.actions.length ? b2`<div class="gcell gh right" role="columnheader">${this.t.actions}</div>` : A}
+          </div>
+
+          <!-- Filas -->
+          ${c4(
+      visible,
+      (row) => this.keyOf(row),
+      (row) => {
+        const key = this.keyOf(row);
+        const selected = this.selectable && this.selection.has(key);
+        return b2`
+                <div class=${`grow grow-data${selected ? " selected" : ""}`} role="row" style=${o6(tpl)}>
+                  ${this.selectable ? b2`<span class="selcb"><ion-checkbox .checked=${selected} aria-label=${this.t.selectRow} @ionChange=${() => this.toggleRow(key)}></ion-checkbox></span>` : A}
+                  ${cols.map(
+          (c5) => b2`<div class=${`gcell ${alignCls(c5.align)}`} role="cell">${c5.render ? c5.render(row) : b2`<span>${this.cell(c5, row)}</span>`}</div>`
+        )}
+                  ${this.actions.length ? b2`<div class="gcell right" role="cell">${this.actionButtons(row)}</div>` : A}
+                </div>
+              `;
+      }
+    )}
+        </div>
+      </div>
+    `;
+  }
+  renderCards(visible) {
+    if (visible.length === 0) return this.emptyState();
+    const hasHead = !!this.cardTitle || !!this.cardIcon || this.selectable;
+    return b2`
+      <div class="cards-grid">
+        ${c4(
+      visible,
+      (row) => this.keyOf(row),
+      (row) => {
+        const key = this.keyOf(row);
+        const selected = this.selectable && this.selection.has(key);
+        const icon = this.cardIcon?.(row);
+        return b2`
+              <div class=${`rcard${selected ? " selected" : ""}`}>
+                ${hasHead ? b2`
+                      <header class="rcard-head">
+                        ${icon != null && icon !== "" ? b2`<span class="rc-icon">${typeof icon === "string" ? b2`<ion-icon name=${icon}></ion-icon>` : icon}</span>` : A}
+                        <span class="rc-title">${this.cardTitle ? this.cardTitle(row) : A}</span>
+                        ${this.selectable ? b2`<ion-checkbox .checked=${selected} aria-label=${this.t.select} @ionChange=${() => this.toggleRow(key)}></ion-checkbox>` : A}
+                      </header>
+                    ` : A}
+                <div class="rcard-body">
+                  ${this.renderCard ? this.renderCard(row) : this.visibleColumns.map(
+          (c5) => b2`<div class="rrow"><span class="rk">${c5.header}</span><span class="rv">${c5.render ? c5.render(row) : this.cell(c5, row)}</span></div>`
+        )}
+                </div>
+                ${this.actions.length ? b2`<div class="ractions">${this.actionButtons(row)}</div>` : A}
+              </div>
+            `;
+      }
+    )}
       </div>
     `;
   }
@@ -980,6 +2537,9 @@ __decorateClass2([
   n4({ attribute: "row-key-field" })
 ], OkDataTable.prototype, "rowKeyField");
 __decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "rowKey");
+__decorateClass2([
   n4({ type: Number, attribute: "page-size" })
 ], OkDataTable.prototype, "pageSize");
 __decorateClass2([
@@ -990,7 +2550,28 @@ __decorateClass2([
 ], OkDataTable.prototype, "searchPlaceholder");
 __decorateClass2([
   n4({ attribute: false })
+], OkDataTable.prototype, "labels");
+__decorateClass2([
+  n4({ attribute: false })
 ], OkDataTable.prototype, "actions");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "addable");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "pageSizeOptions");
+__decorateClass2([
+  n4({ type: Boolean, reflect: true })
+], OkDataTable.prototype, "fill");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "columnPicker");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "csv");
+__decorateClass2([
+  n4({ attribute: "csv-name" })
+], OkDataTable.prototype, "csvName");
 __decorateClass2([
   n4({ type: Boolean, attribute: "server-side" })
 ], OkDataTable.prototype, "serverSide");
@@ -1010,14 +2591,86 @@ __decorateClass2([
   n4({ attribute: "sort-dir" })
 ], OkDataTable.prototype, "sortDir");
 __decorateClass2([
+  n4()
+], OkDataTable.prototype, "title");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "views");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "exportable");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "importable");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "columnSelector");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "pageSizes");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "selectable");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "selectedKeys");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "primaryAction");
+__decorateClass2([
+  n4({ type: Boolean })
+], OkDataTable.prototype, "inlineFilters");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "menuActions");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "cardTitle");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "cardIcon");
+__decorateClass2([
+  n4({ attribute: false })
+], OkDataTable.prototype, "renderCard");
+__decorateClass2([
   r5()
 ], OkDataTable.prototype, "q");
 __decorateClass2([
   r5()
 ], OkDataTable.prototype, "clientPage");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "clientPageSize");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "clientSort");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "clientSortDir");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "clientFilters");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "filterDraft");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "panel");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "viewMode");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "hiddenKeys");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "internalSelection");
+__decorateClass2([
+  r5()
+], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../module-sdk/src/index.ts
+// ../../../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -1067,11 +2720,11 @@ var ListController = class {
       if (mySeq !== this.seq) return;
       this.rows = page.rows ?? [];
       this.total = page.total ?? this.rows.length;
-    } catch (e6) {
+    } catch (e5) {
       if (mySeq !== this.seq) return;
       this.rows = [];
       this.total = 0;
-      this.error = e6 instanceof Error ? e6.message : "Error cargando datos";
+      this.error = e5 instanceof Error ? e5.message : "Error cargando datos";
     } finally {
       if (mySeq === this.seq) {
         this.loading = false;
@@ -1091,6 +2744,12 @@ var ListController = class {
   }
   setSearch(search) {
     this.state.search = search;
+    this.state.page = 0;
+    void this.load();
+  }
+  /** Cambia el nº de filas por página y recarga desde la página 0. */
+  setPageSize(pageSize) {
+    this.state.pageSize = Math.max(1, pageSize);
     this.state.page = 0;
     void this.load();
   }
@@ -1129,16 +2788,40 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// ../../modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
+var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
 function erplora() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
 }
-var ErpCashRegisterDashboard = class extends i4 {
+function sessionNumber() {
+  const d3 = /* @__PURE__ */ new Date();
+  const p4 = (n6, l3 = 2) => String(n6).padStart(l3, "0");
+  return `S-${p4(d3.getFullYear() % 100)}${p4(d3.getMonth() + 1)}${p4(d3.getDate())}-${p4(d3.getHours())}${p4(d3.getMinutes())}${p4(d3.getSeconds())}`;
+}
+var ErpCashRegisterDashboard = class extends i3 {
   constructor() {
     super(...arguments);
     this.tick = 0;
+    this.formError = "";
+    this.formMsg = "";
+    this.saving = false;
+    this.panel = null;
+    this.target = null;
+    this.openRegisterId = "";
+    this.openBalance = "0";
+    this.openNotes = "";
+    this.closeBalance = "";
+    this.closeNotes = "";
+    this.movType = "in";
+    this.movAmount = "";
+    this.movDescription = "";
+    this.countType = "closing";
+    this.countNotes = "";
+    this.denomCounts = {};
+    this.registers = [];
     this.columns = [
       { key: "session_number", header: "Sesi\xF3n", sortable: true, filterable: true, filterType: "text" },
       { key: "status", header: "Estado", sortable: true, filterable: true, filterType: "text" },
@@ -1147,18 +2830,28 @@ var ErpCashRegisterDashboard = class extends i4 {
       { key: "closing_balance", header: "Contado", align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
       { key: "difference", header: "Diferencia", align: "right", sortable: true, filterable: true, filterType: "text", format: (r6) => this.fmt(r6.difference) }
     ];
+    this.rowActions = [
+      { id: "movement", label: "Movimiento" },
+      { id: "count", label: "Arqueo" },
+      { id: "close", label: "Cerrar", color: "danger" }
+    ];
   }
   static {
     this.styles = i`
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
+    h3 { margin:.25rem 0 .5rem; font-size:1rem; }
+    .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; margin:0 0 1rem; background:var(--surface-2,#faf8f2); }
+    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }
+    .form ion-input, .form ion-select { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:9rem; }
+    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.35rem; margin:.5rem 0; }
+    .denoms ion-input { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; }
+    .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
+    .ok { color:#2b8a3e; font-weight:600; }
   `;
   }
-  // TODO-LIT: componentWillLoad → connectedCallback. Recuerda: connectedCallback se dispara
-  // en CADA reconexión al DOM (no solo en el primer montaje). Si la init debe correr una
-  // sola vez tras el primer render, considera firstUpdated() en su lugar.
   async connectedCallback() {
     super.connectedCallback();
     this.ctrl = createListController(erplora(), "cash_register.sessions.list", () => this.requestUpdate(), {
@@ -1166,7 +2859,7 @@ var ErpCashRegisterDashboard = class extends i4 {
       sort: "id",
       dir: "asc"
     });
-    await this.ctrl.load();
+    await Promise.all([this.ctrl.load(), this.loadRegisters()]);
     try {
       const a3 = erplora().on("cash_register.session_opened", () => this.ctrl.load());
       const b3 = erplora().on("cash_register.session_closed", () => this.ctrl.load());
@@ -1181,22 +2874,305 @@ var ErpCashRegisterDashboard = class extends i4 {
     super.disconnectedCallback();
     this.unsub?.();
   }
-  fmt(n5) {
-    return n5 == null ? "\u2014" : Number(n5).toFixed(2);
+  fmt(n6) {
+    return n6 == null ? "\u2014" : Number(n6).toFixed(2);
+  }
+  async loadRegisters() {
+    try {
+      const page = await erplora().queryPage("cash_register.registers.list", { page: 0, page_size: 50 });
+      this.registers = page?.rows ?? [];
+    } catch {
+    }
+  }
+  resetPanel() {
+    this.panel = null;
+    this.target = null;
+    this.formError = "";
+  }
+  openPanel(panel, session) {
+    if (session.status !== "open") {
+      this.formMsg = "";
+      this.formError = `La sesi\xF3n ${session.session_number} no est\xE1 abierta`;
+      return;
+    }
+    this.target = session;
+    this.panel = panel;
+    this.formError = "";
+    this.formMsg = "";
+  }
+  onRowAction(ev) {
+    const session = ev.detail.row;
+    const id = ev.detail.actionId;
+    if (id === "close" || id === "movement" || id === "count") this.openPanel(id, session);
+  }
+  // — Abrir sesión → cash_register.session.open —
+  async openSession(ev) {
+    ev.preventDefault();
+    this.saving = true;
+    this.formError = "";
+    this.formMsg = "";
+    try {
+      await erplora().command("cash_register.session.open", {
+        register_id: this.openRegisterId || null,
+        session_number: sessionNumber(),
+        opening_balance: Number(this.openBalance) || 0,
+        opening_notes: this.openNotes.trim()
+      });
+      this.openRegisterId = "";
+      this.openBalance = "0";
+      this.openNotes = "";
+      this.resetPanel();
+      this.formMsg = "Sesi\xF3n abierta";
+      await this.ctrl.load();
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : "No se pudo abrir la sesi\xF3n";
+    } finally {
+      this.saving = false;
+    }
+  }
+  // — Cerrar sesión → cash_register.session.close (reconcilia esperado/diferencia en SQL) —
+  async closeSession(ev) {
+    ev.preventDefault();
+    if (!this.target || this.closeBalance === "") return;
+    const sessionId = this.target.id;
+    this.saving = true;
+    this.formError = "";
+    this.formMsg = "";
+    try {
+      await erplora().command("cash_register.session.close", {
+        session_id: sessionId,
+        closing_balance: Number(this.closeBalance) || 0,
+        closing_notes: this.closeNotes.trim()
+      });
+      this.closeBalance = "";
+      this.closeNotes = "";
+      this.resetPanel();
+      await this.ctrl.load();
+      const row = (this.ctrl.rows ?? []).find((r6) => String(r6.id) === String(sessionId));
+      this.formMsg = row ? `Sesi\xF3n ${row.session_number} cerrada \xB7 esperado ${this.fmt(row.expected_balance)} \xB7 contado ${this.fmt(row.closing_balance)} \xB7 diferencia ${this.fmt(row.difference)}` : "Sesi\xF3n cerrada";
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : "No se pudo cerrar la sesi\xF3n";
+    } finally {
+      this.saving = false;
+    }
+  }
+  // — Movimiento manual → cash_register.movement.add (out se registra en negativo) —
+  async addMovement(ev) {
+    ev.preventDefault();
+    if (!this.target || !this.movAmount) return;
+    const amount = Math.abs(Number(this.movAmount) || 0);
+    if (amount <= 0) {
+      this.formError = "Importe inv\xE1lido";
+      return;
+    }
+    this.saving = true;
+    this.formError = "";
+    this.formMsg = "";
+    try {
+      await erplora().command("cash_register.movement.add", {
+        session_id: this.target.id,
+        movement_type: this.movType,
+        amount: this.movType === "out" ? -amount : amount,
+        payment_method: "cash",
+        sale_reference: "",
+        description: this.movDescription.trim()
+      });
+      const msg = `Movimiento ${this.movType === "in" ? "de entrada" : "de salida"} registrado (${amount.toFixed(2)})`;
+      this.movAmount = "";
+      this.movDescription = "";
+      this.resetPanel();
+      this.formMsg = msg;
+      await this.ctrl.load();
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : "No se pudo registrar el movimiento";
+    } finally {
+      this.saving = false;
+    }
+  }
+  // — Arqueo → cash_register.count.add (el handler WASM calcula el total desde denominaciones) —
+  denominationsPayload() {
+    const pick = (keys) => {
+      const out = {};
+      for (const k2 of keys) {
+        const n6 = Number(this.denomCounts[k2] ?? 0);
+        if (n6 > 0) out[k2] = n6;
+      }
+      return out;
+    };
+    return { bills: pick(BILLS), coins: pick(COINS) };
+  }
+  countTotal() {
+    let total = 0;
+    for (const k2 of [...BILLS, ...COINS]) total += Number(k2) * (Number(this.denomCounts[k2] ?? 0) || 0);
+    return Math.round(total * 100) / 100;
+  }
+  async addCount(ev) {
+    ev.preventDefault();
+    if (!this.target) return;
+    this.saving = true;
+    this.formError = "";
+    this.formMsg = "";
+    try {
+      await erplora().command("cash_register.count.add", {
+        session_id: this.target.id,
+        count_type: this.countType,
+        denominations: this.denominationsPayload(),
+        notes: this.countNotes.trim()
+      });
+      const total = this.countTotal();
+      this.denomCounts = {};
+      this.countNotes = "";
+      this.resetPanel();
+      this.formMsg = `Arqueo registrado \xB7 total contado ${total.toFixed(2)}`;
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : "No se pudo registrar el arqueo";
+    } finally {
+      this.saving = false;
+    }
+  }
+  renderOpenPanel() {
+    return b2`<section class="panel">
+      <h3>Abrir sesión de caja</h3>
+      <form class="form" @submit=${(e5) => this.openSession(e5)}>
+        <ion-select label="Cajón" label-placement="stacked" placeholder="(opcional)" .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
+          ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
+        </ion-select>
+        <ion-input type="number" label="Fondo de apertura" label-placement="stacked" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
+        <ion-input label="Notas" label-placement="stacked" placeholder="(opcional)" .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? "Abriendo\u2026" : "Abrir sesi\xF3n"}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+      </form>
+    </section>`;
+  }
+  renderClosePanel() {
+    if (!this.target) return A;
+    return b2`<section class="panel">
+      <h3>Cerrar sesión · ${this.target.session_number}</h3>
+      <form class="form" @submit=${(e5) => this.closeSession(e5)}>
+        <ion-input type="number" label="Efectivo contado" label-placement="stacked" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
+        <ion-input label="Notas de cierre" label-placement="stacked" placeholder="(opcional)" .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? "Cerrando\u2026" : "Cerrar sesi\xF3n"}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+      </form>
+    </section>`;
+  }
+  renderMovementPanel() {
+    if (!this.target) return A;
+    return b2`<section class="panel">
+      <h3>Movimiento de caja · ${this.target.session_number}</h3>
+      <form class="form" @submit=${(e5) => this.addMovement(e5)}>
+        <ion-select label="Tipo" label-placement="stacked" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
+          <ion-select-option value="in">Entrada</ion-select-option>
+          <ion-select-option value="out">Salida</ion-select-option>
+        </ion-select>
+        <ion-input type="number" label="Importe" label-placement="stacked" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
+        <ion-input label="Concepto" label-placement="stacked" placeholder="(opcional)" .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? "Guardando\u2026" : "Registrar"}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+      </form>
+    </section>`;
+  }
+  renderCountPanel() {
+    if (!this.target) return A;
+    const denomInput = (k2) => b2`<ion-input type="number" label=${`${k2} \u20AC`} label-placement="stacked" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e5) => this.denomCounts = { ...this.denomCounts, [k2]: e5.target.value }}></ion-input>`;
+    return b2`<section class="panel">
+      <h3>Arqueo de caja · ${this.target.session_number}</h3>
+      <form @submit=${(e5) => this.addCount(e5)}>
+        <div class="form">
+          <ion-select label="Tipo de arqueo" label-placement="stacked" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
+            <ion-select-option value="opening">Apertura</ion-select-option>
+            <ion-select-option value="closing">Cierre</ion-select-option>
+          </ion-select>
+          <ion-input label="Notas" label-placement="stacked" placeholder="(opcional)" .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
+        </div>
+        <h3>Billetes</h3>
+        <div class="denoms">${BILLS.map(denomInput)}</div>
+        <h3>Monedas</h3>
+        <div class="denoms">${COINS.map(denomInput)}</div>
+        <p class="total">Total contado: ${this.countTotal().toFixed(2)} €</p>
+        <div class="form">
+          <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? "Guardando\u2026" : "Registrar arqueo"}</ion-button>
+          <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+        </div>
+      </form>
+    </section>`;
   }
   render() {
     return b2`<div>
         <header>
           <h2>Caja</h2>
+          <ion-button size="small" @click=${() => {
+      this.panel = this.panel === "open" ? null : "open";
+      this.target = null;
+      this.formError = "";
+      this.formMsg = "";
+    }}>Abrir sesión</ion-button>
         </header>
+        ${this.panel === "open" ? this.renderOpenPanel() : A}
+        ${this.panel === "close" ? this.renderClosePanel() : A}
+        ${this.panel === "movement" ? this.renderMovementPanel() : A}
+        ${this.panel === "count" ? this.renderCountPanel() : A}
+        ${this.formMsg ? b2`<p class="ok">${this.formMsg}</p>` : A}
+        ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar sesi\xF3n o estado\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin sesiones de caja."} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar sesi\xF3n o estado\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin sesiones de caja."} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
 __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "tick", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "formError", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "formMsg", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "panel", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "target", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "openRegisterId", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "openBalance", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "openNotes", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "closeBalance", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "closeNotes", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "movType", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "movAmount", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "movDescription", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "countType", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "countNotes", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "denomCounts", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 export {
   ErpCashRegisterDashboard
