@@ -3,3 +3,5 @@ target/
 .stencil-out/
 *.log
 .DS_Store
+build/
+handler/target/
