@@ -27,7 +27,20 @@ pub fn record_sale(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Outpu
     Ok(Json(record_sale_pure(input.into_inner().into_value())))
 }
 
-fn round2(x: f64) -> f64 { (x * 100.0).round() / 100.0 }
+/// Redondea céntimos fraccionarios a céntimos enteros half-up. `x` ya en céntimos.
+fn round_cents(x: f64) -> i64 { (x + if x < 0.0 { -0.5 } else { 0.5 }).trunc() as i64 }
+/// Lee un importe **en céntimos** (`i64`): entero, string de entero, o (robustez) decimal
+/// como céntimos ya escalados. ADR-0007: el dinero viaja en céntimos.
+fn cents(v: &Value, d: i64) -> i64 {
+    match v {
+        Value::Number(n) => n.as_i64().or_else(|| n.as_f64().map(round_cents)).unwrap_or(d),
+        Value::String(s) => {
+            let s = s.trim();
+            s.parse::<i64>().ok().or_else(|| s.parse::<f64>().ok().map(round_cents)).unwrap_or(d)
+        }
+        _ => d,
+    }
+}
 fn f(v: &Value, d: f64) -> f64 {
     match v { Value::Number(n) => n.as_f64().unwrap_or(d), Value::String(s) => s.trim().parse().unwrap_or(d), _ => d }
 }
@@ -43,18 +56,21 @@ fn new_id(input: &Value, i: usize) -> Value {
         .and_then(|a| a.get(i)).cloned().unwrap_or(Value::Null)
 }
 
-/// Σ denom×count sobre bills y coins. Fiel a calculate_total_from_denominations.
-fn total_from_denoms(denoms: &Value) -> f64 {
-    let mut total = 0.0;
+/// Σ denom×count sobre bills y coins, en **céntimos** (ADR-0007). Las claves de
+/// denominación son etiquetas de EUROS de la moneda/billete físico ("50", "0.50"),
+/// así que se escalan a céntimos (×100). Fiel a calculate_total_from_denominations.
+fn total_from_denoms(denoms: &Value) -> i64 {
+    let mut total: i64 = 0; // céntimos
     for section in ["bills", "coins"] {
         if let Some(Value::Object(m)) = denoms.get(section) {
             for (denom, count) in m {
-                let d: f64 = denom.trim().parse().unwrap_or(0.0);
-                total += d * f(count, 0.0);
+                let euros: f64 = denom.trim().parse().unwrap_or(0.0);
+                let denom_cents = round_cents(euros * 100.0);
+                total += denom_cents * f(count, 0.0) as i64;
             }
         }
     }
-    round2(total)
+    total
 }
 
 /// add_count: payload { session_id, count_type, denominations?, total?, notes? }.
@@ -62,7 +78,7 @@ pub fn add_count_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let denoms = payload.get("denominations").cloned().unwrap_or(json!({}));
     let total = match payload.get("total") {
-        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => round2(f(v, 0.0)),
+        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => cents(v, 0), // céntimos
         _ => total_from_denoms(&denoms),
     };
     let mut p = Map::new();
@@ -80,8 +96,8 @@ pub fn add_count_pure(input: Value) -> Output {
 /// sesión abierta del empleado. El payload del evento trae total y (opcional) sale_id.
 pub fn record_sale_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
-    let total = round2(f(payload.get("total").unwrap_or(&Value::Null), 0.0));
-    if total <= 0.0 {
+    let total = cents(payload.get("total").unwrap_or(&Value::Null), 0); // céntimos (de sale.completed)
+    if total <= 0 {
         return Output { operations: vec![], events: vec![] };
     }
     let mut p = Map::new();
@@ -105,30 +121,32 @@ mod tests {
 
     #[test]
     fn count_total_from_denominations() {
-        // 2×50 + 5×20 + 10×1 = 100 + 100 + 10 = 210.
+        // 2×50€ + 5×20€ + 10×1€ = 100€ + 100€ + 10€ = 210€ = 21000 céntimos.
         let payload = json!({ "session_id": "sess1", "count_type": "opening",
             "denominations": { "bills": { "50": 2, "20": 5 }, "coins": { "1": 10 } } });
         let out = add_count_pure(inp(payload, 2));
         assert_eq!(out.operations.len(), 1);
         assert_eq!(out.operations[0].command, "cash_register._insert_count");
-        assert_eq!(out.operations[0].params["total"], json!(210.0));
+        assert_eq!(out.operations[0].params["total"], json!(21000));
         assert_eq!(out.operations[0].params["count_id"], json!("id-0"));
     }
 
     #[test]
     fn count_explicit_total_overrides() {
-        let payload = json!({ "session_id": "s", "count_type": "closing", "total": 333.0 });
+        // total explícito en céntimos: 333€ = 33300.
+        let payload = json!({ "session_id": "s", "count_type": "closing", "total": 33300 });
         let out = add_count_pure(inp(payload, 2));
-        assert_eq!(out.operations[0].params["total"], json!(333.0));
+        assert_eq!(out.operations[0].params["total"], json!(33300));
     }
 
     #[test]
     fn record_sale_creates_movement() {
-        let payload = json!({ "sale_id": "sale1", "total": 45.5, "payment_method_name": "card" });
+        // total del evento sale.completed en céntimos: 45.50€ = 4550.
+        let payload = json!({ "sale_id": "sale1", "total": 4550, "payment_method_name": "card" });
         let out = record_sale_pure(inp(payload, 2));
         assert_eq!(out.operations.len(), 1);
         assert_eq!(out.operations[0].command, "cash_register._movement_for_open_session");
-        assert_eq!(out.operations[0].params["amount"], json!(45.5));
+        assert_eq!(out.operations[0].params["amount"], json!(4550));
         assert_eq!(out.operations[0].params["movement_type"], json!("sale"));
         assert_eq!(out.operations[0].params["sale_reference"], json!("sale1"));
     }

@@ -36,12 +36,12 @@ CREATE TABLE IF NOT EXISTS cash_register_session (
     session_number   TEXT NOT NULL,
     status           TEXT NOT NULL DEFAULT 'open',   -- open|closed|suspended
     opened_at        TEXT,
-    opening_balance  NUMERIC NOT NULL DEFAULT 0,
+    opening_balance  INTEGER NOT NULL DEFAULT 0,  -- céntimos (ADR-0007)
     opening_notes    TEXT NOT NULL DEFAULT '',
     closed_at        TEXT,
-    closing_balance  NUMERIC,
-    expected_balance NUMERIC,
-    difference       NUMERIC,
+    closing_balance  INTEGER,  -- céntimos
+    expected_balance INTEGER,  -- céntimos
+    difference       INTEGER,  -- céntimos
     closing_notes    TEXT NOT NULL DEFAULT '',
     is_deleted INTEGER NOT NULL DEFAULT 0, deleted_at TEXT,
     created_by TEXT, updated_by TEXT, created_at TEXT, updated_at TEXT,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS cash_register_movement (
     hub_id         TEXT NOT NULL,
     session_id     TEXT NOT NULL,
     movement_type  TEXT NOT NULL,           -- sale|refund|in|out
-    amount         NUMERIC NOT NULL DEFAULT 0,
+    amount         INTEGER NOT NULL DEFAULT 0,  -- céntimos
     payment_method TEXT NOT NULL DEFAULT 'cash',
     sale_reference TEXT NOT NULL DEFAULT '',
     description    TEXT NOT NULL DEFAULT '',
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS cash_register_count (
     session_id    TEXT NOT NULL,
     count_type    TEXT NOT NULL,            -- opening|closing
     denominations TEXT NOT NULL DEFAULT '{}',
-    total         NUMERIC NOT NULL DEFAULT 0,
+    total         INTEGER NOT NULL DEFAULT 0,  -- céntimos
     notes         TEXT NOT NULL DEFAULT '',
     counted_at    TEXT,
     is_deleted INTEGER NOT NULL DEFAULT 0, deleted_at TEXT,
