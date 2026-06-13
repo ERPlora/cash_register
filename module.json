@@ -1,7 +1,7 @@
 {
   "id": "cash_register",
   "name": "Cash Register",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "agent": {
     "description": "Manages cash register sessions, cash movements, and drawer counts: open/close sessions, record cash in/out, perform cash counts, and list register activity.",
     "keywords": [
