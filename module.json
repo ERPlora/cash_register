@@ -55,7 +55,7 @@
     {
       "id": "cash_register",
       "label": "Cash Register",
-      "icon": "dollar-sign",
+      "icon": "cash-outline",
       "component": "erp-cashregister-dashboard"
     },
     {
