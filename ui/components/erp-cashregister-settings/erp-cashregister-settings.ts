@@ -1,10 +1,18 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
+// Catálogo i18n del módulo (ADR-0055): esbuild inlinea estos JSON en el `dist` del WC. Los textos
+// internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
+import esLocale from '../../../locales/es.json';
+import enLocale from '../../../locales/en.json';
+const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
+  /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
+  locale: string;
+  t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
 }
 
 /** Settings de caja (singleton por hub). Espejo de schemas/settings_update.json. */
@@ -31,13 +39,15 @@ const DEFAULT_SETTINGS: CashRegisterSettings = {
 
 type BoolKey = Exclude<keyof CashRegisterSettings, 'protected_pos_url'>;
 
-const TOGGLES: Array<{ key: BoolKey; label: string }> = [
-  { key: 'enable_cash_register', label: 'Caja activada' },
-  { key: 'require_opening_balance', label: 'Exigir fondo de apertura' },
-  { key: 'require_closing_balance', label: 'Exigir recuento al cierre' },
-  { key: 'allow_negative_balance', label: 'Permitir saldo negativo' },
-  { key: 'auto_open_session_on_login', label: 'Abrir sesión al iniciar sesión' },
-  { key: 'auto_close_session_on_logout', label: 'Cerrar sesión al salir' },
+// `labelKey` es una clave del catálogo `ui` (ADR-0055); el texto se resuelve en render con
+// `erplora.t()`, así reacciona al idioma activo del shell.
+const TOGGLES: Array<{ key: BoolKey; labelKey: string }> = [
+  { key: 'enable_cash_register', labelKey: 'ui.toggleEnable' },
+  { key: 'require_opening_balance', labelKey: 'ui.toggleRequireOpening' },
+  { key: 'require_closing_balance', labelKey: 'ui.toggleRequireClosing' },
+  { key: 'allow_negative_balance', labelKey: 'ui.toggleAllowNegative' },
+  { key: 'auto_open_session_on_login', labelKey: 'ui.toggleAutoOpen' },
+  { key: 'auto_close_session_on_logout', labelKey: 'ui.toggleAutoClose' },
 ];
 
 function erplora(): ErploraClientLike {
@@ -70,9 +80,19 @@ export class ErpCashRegisterSettings extends LitElement {
 
   @state() error = '';
 
+  // Re-render al cambiar el idioma del shell (ADR-0055): los labels y el texto del template se
+  // re-evalúan con el nuevo `erplora.locale`.
+  private readonly onLocaleChange = (): void => this.requestUpdate();
+
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener('erplora:locale-changed', this.onLocaleChange);
     await this.loadSettings();
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener('erplora:locale-changed', this.onLocaleChange);
+    super.disconnectedCallback();
   }
 
   private async loadSettings() {
@@ -93,7 +113,7 @@ export class ErpCashRegisterSettings extends LitElement {
         };
       }
     } catch (e) {
-      this.error = e instanceof Error ? e.message : 'No se pudieron cargar los ajustes';
+      this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errLoadSettings');
     } finally {
       this.loading = false;
     }
@@ -106,9 +126,9 @@ export class ErpCashRegisterSettings extends LitElement {
     this.error = '';
     try {
       await erplora().command('cash_register.settings.update', { ...this.settings });
-      this.msg = 'Ajustes guardados';
+      this.msg = erplora().t(CATALOG, 'ui.msgSettingsSaved');
     } catch (e) {
-      this.error = e instanceof Error ? e.message : 'No se pudieron guardar los ajustes';
+      this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errSaveSettings');
     } finally {
       this.saving = false;
     }
@@ -119,21 +139,22 @@ export class ErpCashRegisterSettings extends LitElement {
   }
 
   render() {
+    const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div>
       <header>
-        <h2>Ajustes de caja</h2>
+        <h2>${t('ui.settingsTitle')}</h2>
       </header>
       <form class="panel" @submit=${(e: Event) => this.save(e)}>
         <div class="grid">
           ${TOGGLES.map(
-            (f) => html`<ion-toggle .checked=${this.settings[f.key]} ?disabled=${this.loading} @ionChange=${(e: any) => this.setBool(f.key, e.detail.checked)}>${f.label}</ion-toggle>`,
+            (f) => html`<ion-toggle .checked=${this.settings[f.key]} ?disabled=${this.loading} @ionChange=${(e: any) => this.setBool(f.key, e.detail.checked)}>${t(f.labelKey)}</ion-toggle>`,
           )}
         </div>
         <div class="url">
-          <ion-input label="URL del POS protegida" label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e: any) => (this.settings = { ...this.settings, protected_pos_url: e.target.value })}></ion-input>
+          <ion-input label=${t('ui.labelProtectedPosUrl')} label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e: any) => (this.settings = { ...this.settings, protected_pos_url: e.target.value })}></ion-input>
         </div>
         <footer>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? 'Guardando…' : 'Guardar ajustes'}</ion-button>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? t('ui.saving') : t('ui.saveSettings')}</ion-button>
           ${this.msg ? html`<span class="ok">${this.msg}</span>` : nothing}
           ${this.error ? html`<span class="err">${this.error}</span>` : nothing}
         </footer>

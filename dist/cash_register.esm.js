@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
+// node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
+// node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
+// node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
+// node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// ../../node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
+// node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
+// node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
+// node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../../node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/define.js
+// ../outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+// node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+// node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
+// node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
+// node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// ../../node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-data-table.js
+// ../outfitkit/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -1571,12 +1571,15 @@ var OkDataTable = class extends i3 {
 
     /* ── Topbar / cabecera (relieve) ─────────────────────────────────────────────────────── */
     .bar { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
-    /* Toolbar CONSOLIDADA: TODOS los controles (buscador, filtros, page-size, vistas, columnas,
-     * CSV, ⋮, alta) son hijos directos de UNA sola fila flex que envuelve ELEMENTO A ELEMENTO
-     * (no por bloques): caben en una línea → una línea; los que no caben bajan a la(s) línea(s)
-     * que hagan falta. El cluster derecho se empuja al borde con .tk-spacer (hueco flexible)
-     * solo cuando todo cabe en una línea; al envolver, el spacer se oculta y todo se apila a la
-     * izquierda. */
+    /* Toolbar CONSOLIDADA: TODOS los controles son hijos directos de UNA sola fila flex que
+     * envuelve ELEMENTO A ELEMENTO (no por bloques): caben en una línea → una línea; los que no
+     * caben bajan a la(s) línea(s) que hagan falta. El cluster derecho se empuja al borde con
+     * .tk-spacer (hueco flexible) solo cuando todo cabe en una línea; al envolver, el spacer se
+     * oculta y todo se apila a la izquierda.
+     * ORDEN CANÓNICO (2026-06-22, izquierda→derecha): [buscador] · [filtros en línea] · ‹spacer› ·
+     * [SELECTORES: columnas → filas/página] · [BOTONES: vistas → filtros(funnel) → import → export →
+     * alta → ⋮ → acción primaria]. Es decir: buscador al inicio, filtros en medio, y al final los
+     * selectores (columnas, luego «N por página») seguidos de los botones de acción. */
     .bar-main { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
     .bar-main > ion-button { --padding-start: 0.5rem; --padding-end: 0.5rem; margin: 0; }
     /* Spacer que absorbe el hueco libre en pantallas anchas (empuja el cluster derecho al borde).
@@ -2287,6 +2290,19 @@ var OkDataTable = class extends i3 {
                   ${this.hasSearch ? b2`<div class="search">${searchbar}</div>` : A}
                   ${this.inlineFilters ? this.renderInlineFilters() : A}
                   <span class="tk-spacer"></span>
+                    ${this.effColumnPicker ? b2`
+                          <ion-select
+                            class="tk-cols"
+                            multiple
+                            interface="popover"
+                            aria-label=${this.t.columnsVisible}
+                            .value=${this.visibleColumns.map((c5) => c5.key)}
+                            .selectedText=${this.t.columns}
+                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
+                          >
+                            ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
+                          </ion-select>
+                        ` : A}
                     ${this.effPageSizes.length ? b2`
                           <ion-select
                             class="tk-psize"
@@ -2303,19 +2319,6 @@ var OkDataTable = class extends i3 {
                             ${this.toolButton("list-outline", this.viewMode === "table", () => this.setViewMode("table"), this.t.viewList)}
                             ${this.toolButton("grid-outline", this.viewMode === "cards", () => this.setViewMode("cards"), this.t.viewCards)}
                           </span>
-                        ` : A}
-                    ${this.effColumnPicker ? b2`
-                          <ion-select
-                            class="tk-cols"
-                            multiple
-                            interface="popover"
-                            aria-label=${this.t.columnsVisible}
-                            .value=${this.visibleColumns.map((c5) => c5.key)}
-                            .selectedText=${this.t.columns}
-                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
-                          >
-                            ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
-                          </ion-select>
                         ` : A}
                     ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
                     ${this.effImport ? b2`
@@ -2678,7 +2681,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../../node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
+// ../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2796,7 +2799,170 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// ../modules-workspace/modules/cash_register/locales/es.json
+var es_default = {
+  name: "Caja",
+  navigation: {
+    cash_register: {
+      label: "Caja"
+    },
+    settings: {
+      label: "Ajustes"
+    }
+  },
+  ui: {
+    title: "Caja",
+    openSession: "Abrir sesi\xF3n",
+    opening: "Abriendo\u2026",
+    closeSession: "Cerrar sesi\xF3n",
+    closing: "Cerrando\u2026",
+    register: "Registrar",
+    saving: "Guardando\u2026",
+    cancel: "Cancelar",
+    optional: "(opcional)",
+    loading: "Cargando\u2026",
+    noSessions: "Sin sesiones de caja.",
+    searchPlaceholder: "Buscar sesi\xF3n o estado\u2026",
+    colSession: "Sesi\xF3n",
+    colStatus: "Estado",
+    colOpening: "Apertura",
+    colExpected: "Esperado",
+    colCounted: "Contado",
+    colDifference: "Diferencia",
+    actionMovement: "Movimiento",
+    actionCount: "Arqueo",
+    actionClose: "Cerrar",
+    openSessionTitle: "Abrir sesi\xF3n de caja",
+    labelRegister: "Caj\xF3n",
+    labelOpeningBalance: "Fondo de apertura",
+    labelNotes: "Notas",
+    closeSessionTitle: "Cerrar sesi\xF3n",
+    labelCountedCash: "Efectivo contado",
+    labelClosingNotes: "Notas de cierre",
+    movementTitle: "Movimiento de caja",
+    labelType: "Tipo",
+    movementIn: "Entrada",
+    movementOut: "Salida",
+    labelAmount: "Importe",
+    labelConcept: "Concepto",
+    countTitle: "Arqueo de caja",
+    labelCountType: "Tipo de arqueo",
+    countOpening: "Apertura",
+    countClosing: "Cierre",
+    bills: "Billetes",
+    coins: "Monedas",
+    totalCounted: "Total contado",
+    registerCount: "Registrar arqueo",
+    msgSessionOpened: "Sesi\xF3n abierta",
+    msgSessionClosed: "Sesi\xF3n cerrada",
+    msgSessionClosedDetail: "Sesi\xF3n {session} cerrada \xB7 esperado {expected} \xB7 contado {counted} \xB7 diferencia {difference}",
+    msgMovementIn: "Movimiento de entrada registrado ({amount})",
+    msgMovementOut: "Movimiento de salida registrado ({amount})",
+    msgCountAdded: "Arqueo registrado \xB7 total contado {total}",
+    errSessionNotOpen: "La sesi\xF3n {session} no est\xE1 abierta",
+    errOpenSession: "No se pudo abrir la sesi\xF3n",
+    errCloseSession: "No se pudo cerrar la sesi\xF3n",
+    errInvalidAmount: "Importe inv\xE1lido",
+    errAddMovement: "No se pudo registrar el movimiento",
+    errAddCount: "No se pudo registrar el arqueo",
+    settingsTitle: "Ajustes de caja",
+    toggleEnable: "Caja activada",
+    toggleRequireOpening: "Exigir fondo de apertura",
+    toggleRequireClosing: "Exigir recuento al cierre",
+    toggleAllowNegative: "Permitir saldo negativo",
+    toggleAutoOpen: "Abrir sesi\xF3n al iniciar sesi\xF3n",
+    toggleAutoClose: "Cerrar sesi\xF3n al salir",
+    labelProtectedPosUrl: "URL del POS protegida",
+    saveSettings: "Guardar ajustes",
+    msgSettingsSaved: "Ajustes guardados",
+    errLoadSettings: "No se pudieron cargar los ajustes",
+    errSaveSettings: "No se pudieron guardar los ajustes"
+  }
+};
+
+// ../modules-workspace/modules/cash_register/locales/en.json
+var en_default = {
+  name: "Cash Register",
+  navigation: {
+    cash_register: {
+      label: "Cash Register"
+    },
+    settings: {
+      label: "Settings"
+    }
+  },
+  ui: {
+    title: "Cash Register",
+    openSession: "Open session",
+    opening: "Opening\u2026",
+    closeSession: "Close session",
+    closing: "Closing\u2026",
+    register: "Record",
+    saving: "Saving\u2026",
+    cancel: "Cancel",
+    optional: "(optional)",
+    loading: "Loading\u2026",
+    noSessions: "No cash sessions.",
+    searchPlaceholder: "Search session or status\u2026",
+    colSession: "Session",
+    colStatus: "Status",
+    colOpening: "Opening",
+    colExpected: "Expected",
+    colCounted: "Counted",
+    colDifference: "Difference",
+    actionMovement: "Movement",
+    actionCount: "Count",
+    actionClose: "Close",
+    openSessionTitle: "Open cash session",
+    labelRegister: "Register",
+    labelOpeningBalance: "Opening float",
+    labelNotes: "Notes",
+    closeSessionTitle: "Close session",
+    labelCountedCash: "Counted cash",
+    labelClosingNotes: "Closing notes",
+    movementTitle: "Cash movement",
+    labelType: "Type",
+    movementIn: "In",
+    movementOut: "Out",
+    labelAmount: "Amount",
+    labelConcept: "Concept",
+    countTitle: "Cash count",
+    labelCountType: "Count type",
+    countOpening: "Opening",
+    countClosing: "Closing",
+    bills: "Bills",
+    coins: "Coins",
+    totalCounted: "Total counted",
+    registerCount: "Record count",
+    msgSessionOpened: "Session opened",
+    msgSessionClosed: "Session closed",
+    msgSessionClosedDetail: "Session {session} closed \xB7 expected {expected} \xB7 counted {counted} \xB7 difference {difference}",
+    msgMovementIn: "Cash-in movement recorded ({amount})",
+    msgMovementOut: "Cash-out movement recorded ({amount})",
+    msgCountAdded: "Count recorded \xB7 total counted {total}",
+    errSessionNotOpen: "Session {session} is not open",
+    errOpenSession: "Could not open the session",
+    errCloseSession: "Could not close the session",
+    errInvalidAmount: "Invalid amount",
+    errAddMovement: "Could not record the movement",
+    errAddCount: "Could not record the count",
+    settingsTitle: "Cash register settings",
+    toggleEnable: "Cash register enabled",
+    toggleRequireOpening: "Require opening float",
+    toggleRequireClosing: "Require closing count",
+    toggleAllowNegative: "Allow negative balance",
+    toggleAutoOpen: "Open session on login",
+    toggleAutoClose: "Close session on logout",
+    labelProtectedPosUrl: "Protected POS URL",
+    saveSettings: "Save settings",
+    msgSettingsSaved: "Settings saved",
+    errLoadSettings: "Could not load settings",
+    errSaveSettings: "Could not save settings"
+  }
+};
+
+// ../modules-workspace/modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+var CATALOG = { es: es_default, en: en_default };
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
 function erplora() {
@@ -2830,19 +2996,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.countNotes = "";
     this.denomCounts = {};
     this.registers = [];
-    this.columns = [
-      { key: "session_number", header: "Sesi\xF3n", sortable: true, filterable: true, filterType: "text" },
-      { key: "status", header: "Estado", sortable: true, filterable: true, filterType: "text" },
-      { key: "opening_balance", header: "Apertura", align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
-      { key: "expected_balance", header: "Esperado", align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
-      { key: "closing_balance", header: "Contado", align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
-      { key: "difference", header: "Diferencia", align: "right", sortable: true, filterable: true, filterType: "text", format: (r6) => this.fmt(r6.difference) }
-    ];
-    this.rowActions = [
-      { id: "movement", label: "Movimiento" },
-      { id: "count", label: "Arqueo" },
-      { id: "close", label: "Cerrar", color: "danger" }
-    ];
+    // Re-render al cambiar el idioma del shell (ADR-0055): los getters `columns`/`rowActions` y el
+    // texto del template se re-evalúan con el nuevo `erplora.locale`.
+    this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
@@ -2860,8 +3016,30 @@ var ErpCashRegisterDashboard = class extends i3 {
     .ok { color:#2b8a3e; font-weight:600; }
   `;
   }
+  // Getter (no campo): se re-evalúa en cada render, así los textos cambian con el idioma activo
+  // (ADR-0055). `connectedCallback` re-renderiza al recibir `erplora:locale-changed`.
+  get columns() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { key: "session_number", header: t5("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
+      { key: "status", header: t5("ui.colStatus"), sortable: true, filterable: true, filterType: "text" },
+      { key: "opening_balance", header: t5("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
+      { key: "expected_balance", header: t5("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
+      { key: "closing_balance", header: t5("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
+      { key: "difference", header: t5("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "text", format: (r6) => this.fmt(r6.difference) }
+    ];
+  }
+  get rowActions() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { id: "movement", label: t5("ui.actionMovement") },
+      { id: "count", label: t5("ui.actionCount") },
+      { id: "close", label: t5("ui.actionClose"), color: "danger" }
+    ];
+  }
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora(), "cash_register.sessions.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "id",
@@ -2879,6 +3057,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     }
   }
   disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -2900,7 +3079,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   openPanel(panel, session) {
     if (session.status !== "open") {
       this.formMsg = "";
-      this.formError = `La sesi\xF3n ${session.session_number} no est\xE1 abierta`;
+      this.formError = erplora().t(CATALOG, "ui.errSessionNotOpen", { session: session.session_number });
       return;
     }
     this.target = session;
@@ -2930,10 +3109,10 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.openBalance = "0";
       this.openNotes = "";
       this.resetPanel();
-      this.formMsg = "Sesi\xF3n abierta";
+      this.formMsg = erplora().t(CATALOG, "ui.msgSessionOpened");
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo abrir la sesi\xF3n";
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errOpenSession");
     } finally {
       this.saving = false;
     }
@@ -2957,9 +3136,14 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.resetPanel();
       await this.ctrl.load();
       const row = (this.ctrl.rows ?? []).find((r6) => String(r6.id) === String(sessionId));
-      this.formMsg = row ? `Sesi\xF3n ${row.session_number} cerrada \xB7 esperado ${this.fmt(row.expected_balance)} \xB7 contado ${this.fmt(row.closing_balance)} \xB7 diferencia ${this.fmt(row.difference)}` : "Sesi\xF3n cerrada";
+      this.formMsg = row ? erplora().t(CATALOG, "ui.msgSessionClosedDetail", {
+        session: row.session_number,
+        expected: this.fmt(row.expected_balance),
+        counted: this.fmt(row.closing_balance),
+        difference: this.fmt(row.difference)
+      }) : erplora().t(CATALOG, "ui.msgSessionClosed");
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo cerrar la sesi\xF3n";
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCloseSession");
     } finally {
       this.saving = false;
     }
@@ -2970,7 +3154,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     if (!this.target || !this.movAmount) return;
     const amount = Math.abs(Number(this.movAmount) || 0);
     if (amount <= 0) {
-      this.formError = "Importe inv\xE1lido";
+      this.formError = erplora().t(CATALOG, "ui.errInvalidAmount");
       return;
     }
     this.saving = true;
@@ -2985,14 +3169,16 @@ var ErpCashRegisterDashboard = class extends i3 {
         sale_reference: "",
         description: this.movDescription.trim()
       });
-      const msg = `Movimiento ${this.movType === "in" ? "de entrada" : "de salida"} registrado (${amount.toFixed(2)})`;
+      const msg = erplora().t(CATALOG, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
+        amount: amount.toFixed(2)
+      });
       this.movAmount = "";
       this.movDescription = "";
       this.resetPanel();
       this.formMsg = msg;
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo registrar el movimiento";
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddMovement");
     } finally {
       this.saving = false;
     }
@@ -3031,90 +3217,95 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = `Arqueo registrado \xB7 total contado ${total.toFixed(2)}`;
+      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: total.toFixed(2) });
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo registrar el arqueo";
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddCount");
     } finally {
       this.saving = false;
     }
   }
   renderOpenPanel() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<section class="panel">
-      <h3>Abrir sesión de caja</h3>
+      <h3>${t5("ui.openSessionTitle")}</h3>
       <form class="form" @submit=${(e5) => this.openSession(e5)}>
-        <ion-select label="Cajón" label-placement="stacked" placeholder="(opcional)" .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
+        <ion-select label=${t5("ui.labelRegister")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input type="number" label="Fondo de apertura" label-placement="stacked" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
-        <ion-input label="Notas" label-placement="stacked" placeholder="(opcional)" .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
-        <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? "Abriendo\u2026" : "Abrir sesi\xF3n"}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+        <ion-input type="number" label=${t5("ui.labelOpeningBalance")} label-placement="stacked" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
+        <ion-input label=${t5("ui.labelNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderClosePanel() {
     if (!this.target) return A;
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<section class="panel">
-      <h3>Cerrar sesión · ${this.target.session_number}</h3>
+      <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e5) => this.closeSession(e5)}>
-        <ion-input type="number" label="Efectivo contado" label-placement="stacked" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
-        <ion-input label="Notas de cierre" label-placement="stacked" placeholder="(opcional)" .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
-        <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? "Cerrando\u2026" : "Cerrar sesi\xF3n"}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+        <ion-input type="number" label=${t5("ui.labelCountedCash")} label-placement="stacked" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
+        <ion-input label=${t5("ui.labelClosingNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? t5("ui.closing") : t5("ui.closeSession")}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderMovementPanel() {
     if (!this.target) return A;
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<section class="panel">
-      <h3>Movimiento de caja · ${this.target.session_number}</h3>
+      <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e5) => this.addMovement(e5)}>
-        <ion-select label="Tipo" label-placement="stacked" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
-          <ion-select-option value="in">Entrada</ion-select-option>
-          <ion-select-option value="out">Salida</ion-select-option>
+        <ion-select label=${t5("ui.labelType")} label-placement="stacked" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
+          <ion-select-option value="in">${t5("ui.movementIn")}</ion-select-option>
+          <ion-select-option value="out">${t5("ui.movementOut")}</ion-select-option>
         </ion-select>
-        <ion-input type="number" label="Importe" label-placement="stacked" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
-        <ion-input label="Concepto" label-placement="stacked" placeholder="(opcional)" .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
-        <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? "Guardando\u2026" : "Registrar"}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+        <ion-input type="number" label=${t5("ui.labelAmount")} label-placement="stacked" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
+        <ion-input label=${t5("ui.labelConcept")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
+        <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
+        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderCountPanel() {
     if (!this.target) return A;
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     const denomInput = (k2) => b2`<ion-input type="number" label=${`${k2} \u20AC`} label-placement="stacked" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e5) => this.denomCounts = { ...this.denomCounts, [k2]: e5.target.value }}></ion-input>`;
     return b2`<section class="panel">
-      <h3>Arqueo de caja · ${this.target.session_number}</h3>
+      <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
       <form @submit=${(e5) => this.addCount(e5)}>
         <div class="form">
-          <ion-select label="Tipo de arqueo" label-placement="stacked" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
-            <ion-select-option value="opening">Apertura</ion-select-option>
-            <ion-select-option value="closing">Cierre</ion-select-option>
+          <ion-select label=${t5("ui.labelCountType")} label-placement="stacked" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
+            <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
+            <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input label="Notas" label-placement="stacked" placeholder="(opcional)" .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
+          <ion-input label=${t5("ui.labelNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
         </div>
-        <h3>Billetes</h3>
+        <h3>${t5("ui.bills")}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
-        <h3>Monedas</h3>
+        <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">Total contado: ${this.countTotal().toFixed(2)} €</p>
+        <p class="total">${t5("ui.totalCounted")}: ${this.countTotal().toFixed(2)} €</p>
         <div class="form">
-          <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? "Guardando\u2026" : "Registrar arqueo"}</ion-button>
-          <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>Cancelar</ion-button>
+          <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
+          <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
         </div>
       </form>
     </section>`;
   }
   render() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<div>
         <header>
-          <h2>Caja</h2>
+          <h2>${t5("ui.title")}</h2>
           <ion-button size="small" @click=${() => {
       this.panel = this.panel === "open" ? null : "open";
       this.target = null;
       this.formError = "";
       this.formMsg = "";
-    }}>Abrir sesión</ion-button>
+    }}>${t5("ui.openSession")}</ion-button>
         </header>
         ${this.panel === "open" ? this.renderOpenPanel() : A}
         ${this.panel === "close" ? this.renderClosePanel() : A}
@@ -3123,7 +3314,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.formMsg ? b2`<p class="ok">${this.formMsg}</p>` : A}
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar sesi\xF3n o estado\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin sesiones de caja."} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -3183,7 +3374,8 @@ __decorateClass([
 ], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
-// ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
+// ../modules-workspace/modules/cash_register/ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
+var CATALOG2 = { es: es_default, en: en_default };
 var DEFAULT_SETTINGS = {
   enable_cash_register: true,
   require_opening_balance: false,
@@ -3194,12 +3386,12 @@ var DEFAULT_SETTINGS = {
   protected_pos_url: "/m/sales/pos/"
 };
 var TOGGLES = [
-  { key: "enable_cash_register", label: "Caja activada" },
-  { key: "require_opening_balance", label: "Exigir fondo de apertura" },
-  { key: "require_closing_balance", label: "Exigir recuento al cierre" },
-  { key: "allow_negative_balance", label: "Permitir saldo negativo" },
-  { key: "auto_open_session_on_login", label: "Abrir sesi\xF3n al iniciar sesi\xF3n" },
-  { key: "auto_close_session_on_logout", label: "Cerrar sesi\xF3n al salir" }
+  { key: "enable_cash_register", labelKey: "ui.toggleEnable" },
+  { key: "require_opening_balance", labelKey: "ui.toggleRequireOpening" },
+  { key: "require_closing_balance", labelKey: "ui.toggleRequireClosing" },
+  { key: "allow_negative_balance", labelKey: "ui.toggleAllowNegative" },
+  { key: "auto_open_session_on_login", labelKey: "ui.toggleAutoOpen" },
+  { key: "auto_close_session_on_logout", labelKey: "ui.toggleAutoClose" }
 ];
 function erplora2() {
   const c5 = globalThis.erplora;
@@ -3214,6 +3406,9 @@ var ErpCashRegisterSettings = class extends i3 {
     this.saving = false;
     this.msg = "";
     this.error = "";
+    // Re-render al cambiar el idioma del shell (ADR-0055): los labels y el texto del template se
+    // re-evalúan con el nuevo `erplora.locale`.
+    this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
@@ -3231,7 +3426,12 @@ var ErpCashRegisterSettings = class extends i3 {
   }
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     await this.loadSettings();
+  }
+  disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
+    super.disconnectedCallback();
   }
   async loadSettings() {
     this.loading = true;
@@ -3251,7 +3451,7 @@ var ErpCashRegisterSettings = class extends i3 {
         };
       }
     } catch (e5) {
-      this.error = e5 instanceof Error ? e5.message : "No se pudieron cargar los ajustes";
+      this.error = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errLoadSettings");
     } finally {
       this.loading = false;
     }
@@ -3263,9 +3463,9 @@ var ErpCashRegisterSettings = class extends i3 {
     this.error = "";
     try {
       await erplora2().command("cash_register.settings.update", { ...this.settings });
-      this.msg = "Ajustes guardados";
+      this.msg = erplora2().t(CATALOG2, "ui.msgSettingsSaved");
     } catch (e5) {
-      this.error = e5 instanceof Error ? e5.message : "No se pudieron guardar los ajustes";
+      this.error = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errSaveSettings");
     } finally {
       this.saving = false;
     }
@@ -3274,21 +3474,22 @@ var ErpCashRegisterSettings = class extends i3 {
     this.settings = { ...this.settings, [key]: value };
   }
   render() {
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div>
       <header>
-        <h2>Ajustes de caja</h2>
+        <h2>${t5("ui.settingsTitle")}</h2>
       </header>
       <form class="panel" @submit=${(e5) => this.save(e5)}>
         <div class="grid">
           ${TOGGLES.map(
-      (f3) => b2`<ion-toggle .checked=${this.settings[f3.key]} ?disabled=${this.loading} @ionChange=${(e5) => this.setBool(f3.key, e5.detail.checked)}>${f3.label}</ion-toggle>`
+      (f3) => b2`<ion-toggle .checked=${this.settings[f3.key]} ?disabled=${this.loading} @ionChange=${(e5) => this.setBool(f3.key, e5.detail.checked)}>${t5(f3.labelKey)}</ion-toggle>`
     )}
         </div>
         <div class="url">
-          <ion-input label="URL del POS protegida" label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
+          <ion-input label=${t5("ui.labelProtectedPosUrl")} label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
         </div>
         <footer>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? "Guardando\u2026" : "Guardar ajustes"}</ion-button>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? t5("ui.saving") : t5("ui.saveSettings")}</ion-button>
           ${this.msg ? b2`<span class="ok">${this.msg}</span>` : A}
           ${this.error ? b2`<span class="err">${this.error}</span>` : A}
         </footer>
