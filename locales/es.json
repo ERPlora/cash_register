@@ -1,0 +1,11 @@
+{
+  "name": "Caja",
+  "navigation": {
+    "cash_register": {
+      "label": "Caja"
+    },
+    "settings": {
+      "label": "Ajustes"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Cash Register",
+  "navigation": {
+    "cash_register": {
+      "label": "Cash Register"
+    },
+    "settings": {
+      "label": "Settings"
+    }
+  }
+}
