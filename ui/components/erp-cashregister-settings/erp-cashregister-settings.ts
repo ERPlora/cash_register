@@ -64,7 +64,7 @@ export class ErpCashRegisterSettings extends LitElement {
     .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--surface-2,#faf8f2); }
     .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(16rem, 1fr)); gap:.25rem .75rem; }
     .url { margin-top:.5rem; }
-    .url ion-input { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; max-width:24rem; }
+    .url ion-input { max-width:24rem; }
     footer { display:flex; gap:.5rem; align-items:center; margin-top:.75rem; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
@@ -151,7 +151,7 @@ export class ErpCashRegisterSettings extends LitElement {
           )}
         </div>
         <div class="url">
-          <ion-input label=${t('ui.labelProtectedPosUrl')} label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e: any) => (this.settings = { ...this.settings, protected_pos_url: e.target.value })}></ion-input>
+          <ion-input fill="outline" label=${t('ui.labelProtectedPosUrl')} label-placement="floating" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e: any) => (this.settings = { ...this.settings, protected_pos_url: e.target.value })}></ion-input>
         </div>
         <footer>
           <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? t('ui.saving') : t('ui.saveSettings')}</ion-button>

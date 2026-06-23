@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// node_modules/@lit-labs/ssr-dom-shim/index.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// node_modules/@lit/reactive-element/node/css-tag.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// node_modules/@lit/reactive-element/node/reactive-element.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// node_modules/lit-html/lit-html.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// node_modules/lit-element/lit-element.js
+// node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// node_modules/@lit/reactive-element/node/decorators/property.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// node_modules/@lit/reactive-element/node/decorators/state.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../outfitkit/dist/define.js
+// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// node_modules/lit-html/directive.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// node_modules/lit-html/directive-helpers.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// node_modules/lit-html/directives/repeat.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// node_modules/lit-html/directives/style-map.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// ../outfitkit/dist/ok-data-table.js
+// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -2681,7 +2681,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../hub/packages/module-sdk/src/index.ts
+// node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2799,7 +2799,7 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// ../modules-workspace/modules/cash_register/locales/es.json
+// modules/cash_register/locales/es.json
 var es_default = {
   name: "Caja",
   navigation: {
@@ -2880,7 +2880,7 @@ var es_default = {
   }
 };
 
-// ../modules-workspace/modules/cash_register/locales/en.json
+// modules/cash_register/locales/en.json
 var en_default = {
   name: "Cash Register",
   navigation: {
@@ -2961,7 +2961,7 @@ var en_default = {
   }
 };
 
-// ../modules-workspace/modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG = { es: es_default, en: en_default };
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
@@ -3007,10 +3007,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     h2 { margin:0; font-size:1.15rem; flex:1; }
     h3 { margin:.25rem 0 .5rem; font-size:1rem; }
     .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; margin:0 0 1rem; background:var(--surface-2,#faf8f2); }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }
-    .form ion-input, .form ion-select { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:9rem; }
-    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.35rem; margin:.5rem 0; }
-    .denoms ion-input { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
@@ -3229,11 +3228,11 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.openSessionTitle")}</h3>
       <form class="form" @submit=${(e5) => this.openSession(e5)}>
-        <ion-select label=${t5("ui.labelRegister")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
+        <ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input type="number" label=${t5("ui.labelOpeningBalance")} label-placement="stacked" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
-        <ion-input label=${t5("ui.labelNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
+        <ion-input fill="outline" type="number" label=${t5("ui.labelOpeningBalance")} label-placement="floating" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
         <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3245,8 +3244,8 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e5) => this.closeSession(e5)}>
-        <ion-input type="number" label=${t5("ui.labelCountedCash")} label-placement="stacked" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
-        <ion-input label=${t5("ui.labelClosingNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
+        <ion-input fill="outline" type="number" label=${t5("ui.labelCountedCash")} label-placement="floating" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
         <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? t5("ui.closing") : t5("ui.closeSession")}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3258,12 +3257,12 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e5) => this.addMovement(e5)}>
-        <ion-select label=${t5("ui.labelType")} label-placement="stacked" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
+        <ion-select fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
           <ion-select-option value="in">${t5("ui.movementIn")}</ion-select-option>
           <ion-select-option value="out">${t5("ui.movementOut")}</ion-select-option>
         </ion-select>
-        <ion-input type="number" label=${t5("ui.labelAmount")} label-placement="stacked" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
-        <ion-input label=${t5("ui.labelConcept")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
+        <ion-input fill="outline" type="number" label=${t5("ui.labelAmount")} label-placement="floating" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
         <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3272,16 +3271,16 @@ var ErpCashRegisterDashboard = class extends i3 {
   renderCountPanel() {
     if (!this.target) return A;
     const t5 = (k2) => erplora().t(CATALOG, k2);
-    const denomInput = (k2) => b2`<ion-input type="number" label=${`${k2} \u20AC`} label-placement="stacked" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e5) => this.denomCounts = { ...this.denomCounts, [k2]: e5.target.value }}></ion-input>`;
+    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${`${k2} \u20AC`} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e5) => this.denomCounts = { ...this.denomCounts, [k2]: e5.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
       <form @submit=${(e5) => this.addCount(e5)}>
         <div class="form">
-          <ion-select label=${t5("ui.labelCountType")} label-placement="stacked" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
+          <ion-select fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
             <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
             <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input label=${t5("ui.labelNotes")} label-placement="stacked" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
+          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
         </div>
         <h3>${t5("ui.bills")}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
@@ -3374,7 +3373,7 @@ __decorateClass([
 ], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
-// ../modules-workspace/modules/cash_register/ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
+// modules/cash_register/ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
 var CATALOG2 = { es: es_default, en: en_default };
 var DEFAULT_SETTINGS = {
   enable_cash_register: true,
@@ -3418,7 +3417,7 @@ var ErpCashRegisterSettings = class extends i3 {
     .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--surface-2,#faf8f2); }
     .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(16rem, 1fr)); gap:.25rem .75rem; }
     .url { margin-top:.5rem; }
-    .url ion-input { --background:#fff; border:1px solid var(--line,#e7e2d6); border-radius:8px; max-width:24rem; }
+    .url ion-input { max-width:24rem; }
     footer { display:flex; gap:.5rem; align-items:center; margin-top:.75rem; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
@@ -3486,7 +3485,7 @@ var ErpCashRegisterSettings = class extends i3 {
     )}
         </div>
         <div class="url">
-          <ion-input label=${t5("ui.labelProtectedPosUrl")} label-placement="stacked" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
+          <ion-input fill="outline" label=${t5("ui.labelProtectedPosUrl")} label-placement="floating" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
         </div>
         <footer>
           <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? t5("ui.saving") : t5("ui.saveSettings")}</ion-button>
