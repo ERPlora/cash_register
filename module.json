@@ -346,6 +346,7 @@
       "sql": [
         "commands/open_session.sql"
       ],
+      "schema": "schemas/open_session.json",
       "emit": [
         "cash_register.session_opened"
       ],
