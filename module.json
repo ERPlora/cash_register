@@ -1,7 +1,7 @@
 {
   "id": "cash_register",
   "name": "Cash Register",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "agent": {
     "description": "Manages cash register sessions, cash movements, and drawer counts: open/close sessions, record cash in/out, perform cash counts, and list register activity.",
     "keywords": [
@@ -251,6 +251,68 @@
       "ai": {
         "description": "Lists the available cash registers configured in the system"
       }
+    },
+    "cash_register.current_session": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/current_session.sql",
+      "ai": {
+        "description": "Returns the currently open cash register session for the hub with its expected cash total (opening balance + net movements). Empty if no session is open."
+      }
+    }
+  },
+  "widgets": {
+    "cash_register.current_session": {
+      "title": "Caja (sesión actual)",
+      "icon": "cash-outline",
+      "category": "Caja",
+      "size": "sm",
+      "permission": "cash_register.view_session",
+      "sectors": [
+        "retail",
+        "hosteleria"
+      ],
+      "default": true,
+      "kind": "kpi",
+      "query": "cash_register.current_session",
+      "map": {
+        "value": "expected_total"
+      },
+      "options": {
+        "label": "Efectivo esperado en caja",
+        "icon": "cash-outline",
+        "format": "currency",
+        "currency": "EUR",
+        "locale": "es-ES"
+      }
+    },
+    "cash_register.recent_sessions": {
+      "title": "Descuadres recientes",
+      "icon": "swap-vertical-outline",
+      "category": "Caja",
+      "size": "md",
+      "permission": "cash_register.view_reports",
+      "sectors": [
+        "retail",
+        "hosteleria"
+      ],
+      "default": false,
+      "kind": "bar-list",
+      "query": "cash_register.sessions.list",
+      "params": {
+        "status": "closed",
+        "sort": "closed_at",
+        "dir": "desc",
+        "limit": 8
+      },
+      "map": {
+        "label": "session_number",
+        "value": "difference"
+      },
+      "options": {
+        "valueFormat": "currency",
+        "currency": "EUR",
+        "locale": "es-ES"
+      }
     }
   },
   "commands": {
@@ -348,12 +410,22 @@
       "sql": [
         "commands/_movement_for_open_session.sql"
       ]
+    },
+    "cash_register._reverse_sale": {
+      "permission": "cash_register.add_movement",
+      "transaction": true,
+      "sql": [
+        "commands/_reverse_sale.sql"
+      ]
     }
   },
   "events": {
     "listen": {
       "sale.completed": {
         "command": "cash_register.record_sale"
+      },
+      "sale.voided": {
+        "command": "cash_register._reverse_sale"
       }
     }
   },

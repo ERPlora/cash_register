@@ -1550,13 +1550,7 @@ var OkDataTable = class extends i3 {
     .fblock { display: flex; flex-direction: column; gap: 0.45rem; }
     .flabel { font-size: 13px; font-weight: 500; color: var(--color); }
     .frange { display: flex; gap: 0.5rem; }
-    /* Filtros cliente: chips multi-select (estilo Hub) + rango de fechas. */
-    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.6rem; border: 1px solid var(--border-color); border-radius: 999px; background: var(--background); color: var(--color-muted); font-size: 12px; cursor: pointer; transition: color 0.12s, background 0.12s, border-color 0.12s; }
-    .chip:hover { color: var(--color); }
-    .chip.on { border-color: var(--primary); color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, transparent); }
-    .chip ion-icon { font-size: 12px; }
-    .chip-empty { font-size: 12px; color: var(--color-muted); }
+    /* Filtros cliente: multi-select con ion-select (ventana flotante de Ionic) + rango de fechas. */
     .daterange { display: flex; gap: 0.6rem; }
     .daterange ion-input { flex: 1; }
     /* Pie del drawer de filtros: Limpiar / Aplicar. */
@@ -1568,6 +1562,10 @@ var OkDataTable = class extends i3 {
     :host([fill]) .card { flex: 1 1 auto; min-height: 0; }
     :host([fill]) .bar, :host([fill]) .panel, :host([fill]) .pager { flex: 0 0 auto; }
     :host([fill]) .scroll, :host([fill]) .cards-grid { flex: 1 1 auto; min-height: 0; overflow: auto; }
+    /* Sin filas, renderTable/renderCards devuelven SOLO el bloque .empty (sin .scroll). En modo
+       fill hay que estirarlo para que ocupe el hueco entre toolbar y pager y centre su contenido
+       (icono + mensaje) en vertical; si no, queda pegado arriba con el pager a media altura. */
+    :host([fill]) .empty { flex: 1 1 auto; min-height: 0; }
 
     /* ── Topbar / cabecera (relieve) ─────────────────────────────────────────────────────── */
     .bar { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
@@ -1672,27 +1670,35 @@ var OkDataTable = class extends i3 {
     .range { display: flex; gap: 0.25rem; }
 
     /* ── Vista tarjetas ──────────────────────────────────────────────────────────────────── */
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.75rem; padding: 1rem; }
-    /* Flat: sin borde ni elevación — las tarjetas se delimitan por la superficie (no por sombra). */
-    .rcard { display: flex; flex-direction: column; border: 0; border-radius: 12px; overflow: hidden; background: var(--header-background); box-shadow: none; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
-    @media (hover: hover) {
-      .rcard:hover { background: var(--row-hover); }
-    }
-    .rcard:active { transform: scale(0.995); }
+    /* Cada tarjeta mide SU contenido (no se estira al alto de la fila ni del contenedor):
+       - grid-auto-rows: max-content → cada fila implícita = alto de su contenido. CLAVE: sin esto,
+         en modo fill (grid de alto fijo + align-content:start) cuando las tarjetas no caben el
+         navegador encoge los tracks de fila y las tarjetas se solapan.
+       - align-content: start → empaqueta las filas arriba (no reparte el hueco sobrante estirando).
+       - align-items: start → en una fila multi-columna cada tarjeta mide su propio contenido.
+       En modo fill el grid es flex-child con overflow:auto → cuando las tarjetas no caben aparece el
+       scroll DENTRO de la tabla (no crece hacia fuera). */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.75rem; padding: 1rem; grid-auto-rows: max-content; align-content: start; align-items: start; }
+    /* Tarjeta = ion-card NATIVO de Ionic: su fondo, radio, elevación y padding son los de Ionic y NO
+       se sobrescriben. Aquí solo se ajusta lo que el contexto de rejilla exige (margin) y los huecos
+       que Ionic no trae (cabecera en fila, filas clave-valor, barra de acciones, resalte de selección). */
+    ion-card.rcard { margin: 0; } /* la rejilla aporta el gap → sin esto el margin por defecto de ion-card lo duplica */
+    ion-card.rcard.selected { outline: 2px solid var(--primary); outline-offset: -2px; }
     @media (prefers-reduced-motion: reduce) {
       .gh.sortable:hover, .gh.sortable:active,
-      .grow-data:hover, .grow-data:active,
-      .rcard:hover, .rcard:active { transform: none; }
+      .grow-data:hover, .grow-data:active { transform: none; }
     }
-    .rcard.selected { background: color-mix(in srgb, var(--primary) 12%, var(--header-background)); }
-    .rcard-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
+    /* Cabecera: ion-card-header en fila (icono + título + checkbox); se conserva su padding Ionic. */
+    ion-card-header.rcard-head { display: flex; align-items: center; gap: 0.5rem; }
     .rcard-head .rc-icon { display: inline-flex; color: var(--primary); }
     .rcard-head .rc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-    .rcard-body { flex: 1; padding: 0.6rem 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    /* Cuerpo: ion-card-content (padding Ionic por defecto) con las filas clave-valor apiladas. */
+    ion-card-content.rcard-body { display: flex; flex-direction: column; gap: 0.4rem; }
     .rrow { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 13px; }
     .rrow .rk { color: var(--color-muted); }
-    .rrow .rv { font-weight: 500; text-align: right; }
-    .ractions { display: flex; justify-content: flex-end; gap: 0.25rem; padding: 0.25rem 0.5rem; border-top: 1px solid var(--border-color-soft); background: var(--header-background); }
+    .rrow .rv { font-weight: 500; text-align: right; color: var(--color); }
+    /* Barra de acciones (Ionic no trae "card actions"): pie alineado a la derecha, fondo transparente. */
+    .ractions { display: flex; justify-content: flex-end; gap: 0.25rem; padding: 0 0.5rem 0.5rem; }
 
     /* ── Estado vacío ────────────────────────────────────────────────────────────────────── */
     .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; padding: 3.5rem 1rem; text-align: center; color: var(--color-muted); }
@@ -1866,12 +1872,12 @@ var OkDataTable = class extends i3 {
     }
     return out;
   }
-  toggleFilterValue(key, value) {
+  // Fija el conjunto de valores seleccionados de una columna (multi-select del drawer = ion-select).
+  setFilterValues(key, values) {
     const next = this.cloneFilters(this.filterDraft);
-    const values = new Set(next[key]?.values ?? []);
-    if (values.has(value)) values.delete(value);
-    else values.add(value);
-    next[key] = { ...next[key], values };
+    const clean = (values ?? []).filter((v3) => v3 != null && v3 !== "");
+    if (clean.length) next[key] = { ...next[key], values: new Set(clean) };
+    else next[key] = { ...next[key], values: void 0 };
     this.filterDraft = next;
   }
   setFilterRange(key, edge, value) {
@@ -2066,6 +2072,13 @@ var OkDataTable = class extends i3 {
     this.menuEv = ev;
     this.menuOpen = true;
   }
+  // Aplica la vista inicial declarada (`default-view`) una sola vez, tras el primer render. Es la
+  // forma robusta de arrancar en tarjetas sin depender de fijar `viewMode` por referencia (que
+  // falla si la tabla monta detrás de un `v-if`/loading y el ref aún es null).
+  firstUpdated() {
+    if (this.defaultView === "cards" && this.cardViewEnabled) this.viewMode = "cards";
+    else if (this.defaultView === "table") this.viewMode = "table";
+  }
   setViewMode(mode) {
     if (this.viewMode === mode) return;
     this.viewMode = mode;
@@ -2082,13 +2095,14 @@ var OkDataTable = class extends i3 {
         <ion-select
           label=${col.header}
           label-placement="stacked"
+          fill="outline"
           ?multiple=${multi}
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
-          placeholder=${col.header}
+          placeholder=${this.t.select}
           @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
         >
-          ${multi ? A : b2`<ion-select-option value="">${col.header}</ion-select-option>`}
+          ${multi ? A : b2`<ion-select-option value="">${this.t.select}</ion-select-option>`}
           ${opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
         </ion-select>
       `;
@@ -2420,21 +2434,23 @@ var OkDataTable = class extends i3 {
         </div>
       `;
     }
-    const distinct = this.distinctValues(col);
-    const selected = this.filterDraft[col.key]?.values ?? /* @__PURE__ */ new Set();
+    const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
+    const selected = [...this.filterDraft[col.key]?.values ?? /* @__PURE__ */ new Set()];
     return b2`
       <div class="fblock">
-        <span class="flabel">${label}</span>
-        <div class="chips">
-          ${distinct.length === 0 ? b2`<span class="chip-empty">${this.t.noValues}</span>` : distinct.map((v3) => {
-      const on = selected.has(v3);
-      return b2`
-                  <button class=${`chip${on ? " on" : ""}`} @click=${() => this.toggleFilterValue(col.key, v3)}>
-                    ${on ? b2`<ion-icon name="checkmark-outline"></ion-icon>` : A}${v3}
-                  </button>
-                `;
-    })}
-        </div>
+        <ion-select
+          label=${label}
+          label-placement="stacked"
+          fill="outline"
+          multiple
+          interface="modal"
+          .interfaceOptions=${{ cssClass: "ok-overlay" }}
+          placeholder=${this.t.select}
+          .value=${selected}
+          @ionChange=${(e5) => this.setFilterValues(col.key, e5.detail.value ?? [])}
+        >
+          ${opts.length === 0 ? b2`<ion-select-option .disabled=${true} value="">${this.t.noValues}</ion-select-option>` : opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+        </ion-select>
       </div>
     `;
   }
@@ -2513,21 +2529,21 @@ var OkDataTable = class extends i3 {
         const selected = this.selectable && this.selection.has(key);
         const icon = this.cardIcon?.(row);
         return b2`
-              <div class=${`rcard${selected ? " selected" : ""}`}>
+              <ion-card class=${`rcard${selected ? " selected" : ""}`}>
                 ${hasHead ? b2`
-                      <header class="rcard-head">
+                      <ion-card-header class="rcard-head">
                         ${icon != null && icon !== "" ? b2`<span class="rc-icon">${typeof icon === "string" ? b2`<ion-icon name=${icon}></ion-icon>` : icon}</span>` : A}
                         <span class="rc-title">${this.cardTitle ? this.cardTitle(row) : A}</span>
                         ${this.selectable ? b2`<ion-checkbox .checked=${selected} aria-label=${this.t.select} @ionChange=${() => this.toggleRow(key)}></ion-checkbox>` : A}
-                      </header>
+                      </ion-card-header>
                     ` : A}
-                <div class="rcard-body">
+                <ion-card-content class="rcard-body">
                   ${this.renderCard ? this.renderCard(row) : this.visibleColumns.map(
           (c5) => b2`<div class="rrow"><span class="rk">${c5.header}</span><span class="rv">${c5.render ? c5.render(row) : this.cell(c5, row)}</span></div>`
         )}
-                </div>
+                </ion-card-content>
                 ${this.actions.length ? b2`<div class="ractions">${this.actionButtons(row)}</div>` : A}
-              </div>
+              </ion-card>
             `;
       }
     )}
@@ -2607,6 +2623,9 @@ __decorateClass2([
 __decorateClass2([
   n4({ attribute: false })
 ], OkDataTable.prototype, "views");
+__decorateClass2([
+  n4({ attribute: "default-view" })
+], OkDataTable.prototype, "defaultView");
 __decorateClass2([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "exportable");
@@ -3006,7 +3025,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
     h3 { margin:.25rem 0 .5rem; font-size:1rem; }
-    .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; margin:0 0 1rem; background:var(--surface-2,#faf8f2); }
+    .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius:10px; padding:.75rem 1rem; margin:0 0 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
     .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; }
     .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
@@ -3060,8 +3079,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     super.disconnectedCallback();
     this.unsub?.();
   }
+  // Saldos en UNIDADES mayores → formateados con la MONEDA DEL HUB (ADR-0059). `null` → guion.
   fmt(n6) {
-    return n6 == null ? "\u2014" : Number(n6).toFixed(2);
+    return n6 == null ? "\u2014" : erplora().formatAmount(Number(n6));
   }
   async loadRegisters() {
     try {
@@ -3216,7 +3236,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: total.toFixed(2) });
+      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: erplora().formatAmount(total) });
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddCount");
     } finally {
@@ -3286,7 +3306,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${this.countTotal().toFixed(2)} €</p>
+        <p class="total">${t5("ui.totalCounted")}: ${erplora().formatAmount(this.countTotal())}</p>
         <div class="form">
           <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
@@ -3414,7 +3434,7 @@ var ErpCashRegisterSettings = class extends i3 {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .panel { border:1px solid var(--line,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--surface-2,#faf8f2); }
+    .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
     .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(16rem, 1fr)); gap:.25rem .75rem; }
     .url { margin-top:.5rem; }
     .url ion-input { max-width:24rem; }

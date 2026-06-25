@@ -13,6 +13,8 @@ SET status = 'closed',
         SELECT SUM(amount) FROM cash_register_movement m
         WHERE m.session_id = cash_register_session.id AND m.is_deleted = 0
     ), 0)),
-    closing_notes = :closing_notes,
+    -- GUARDARRAÍL QA (2026-06-25): sin schema que aplique defaults, las notas opcionales llegan
+    -- NULL → NOT NULL en closing_notes. COALESCE a '' para que el cierre sin notas funcione.
+    closing_notes = COALESCE(:closing_notes, ''),
     updated_by = :current_user_id, updated_at = :now
 WHERE id = :session_id AND hub_id = :hub_id AND status = 'open';

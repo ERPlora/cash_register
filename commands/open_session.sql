@@ -4,5 +4,6 @@ INSERT INTO cash_register_session
   (id, hub_id, user_id, register_id, session_number, status, opened_at, opening_balance, opening_notes,
    is_deleted, created_by, updated_by, created_at, updated_at)
 VALUES
-  (:new_id, :hub_id, :current_user_id, :register_id, :session_number, 'open', :now, :opening_balance, :opening_notes,
+  (:new_id, :hub_id, :current_user_id, :register_id, :session_number, 'open', :now,
+   COALESCE(:opening_balance, 0), COALESCE(:opening_notes, ''),
    0, :current_user_id, :current_user_id, :now, :now);
