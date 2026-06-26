@@ -57,14 +57,15 @@
       "label": "Cash Register",
       "icon": "cash-outline",
       "component": "erp-cashregister-dashboard"
-    },
-    {
-      "id": "settings",
-      "label": "Settings",
-      "icon": "settings-outline",
-      "component": "erp-cashregister-settings"
     }
   ],
+  "settings": {
+    "title": "Caja",
+    "icon": "cash-outline",
+    "schema": "schemas/settings_update.json",
+    "get": "cash_register.settings.get",
+    "set": "cash_register.settings.update"
+  },
   "migrations": {
     "sqlite": [
       "migrations/sqlite/001_init.sql"
