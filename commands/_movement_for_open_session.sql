@@ -4,10 +4,10 @@
 -- INSERT ... SELECT con guardia: solo inserta si existe sesión abierta.
 -- Runtime inyecta :movement_id, :hub_id, :current_user_id, :now; el resto los aporta el handler.
 INSERT INTO cash_register_movement
-  (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, employee_id,
+  (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, gift_total, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT
-  :movement_id, :hub_id, s.id, :movement_type, :amount, :payment_method, :sale_reference, :description, :current_user_id,
+  :movement_id, :hub_id, s.id, :movement_type, :amount, :payment_method, :sale_reference, :description, :gift_total, :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM cash_register_session s
 WHERE s.hub_id = :hub_id AND s.user_id = :current_user_id AND s.status = 'open'

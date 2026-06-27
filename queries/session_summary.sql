@@ -12,6 +12,7 @@ SELECT
   -COALESCE(SUM(CASE WHEN m.movement_type='refund' THEN m.amount ELSE 0 END),0)      AS total_refunds,
   COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN m.amount ELSE 0 END),0)      AS total_cash_in,
   -COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN m.amount ELSE 0 END),0)      AS total_cash_out,
+  COALESCE(SUM(m.gift_total),0) AS total_gifts,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
 LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0
