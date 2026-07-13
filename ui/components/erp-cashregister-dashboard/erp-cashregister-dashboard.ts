@@ -165,8 +165,11 @@ export class ErpCashRegisterDashboard extends LitElement {
 
   private async loadRegisters() {
     try {
-      const page = await erplora().queryAll<Register>('cash_register.registers.list');
-      this.registers = page?.rows ?? [];
+      // `queryAll` devuelve EL ARRAY, no el sobre `{rows,total}`. Leer `.rows` aquí daba `undefined`
+      // → la lista de cajas salía vacía y no se podía abrir sesión de caja. `Array.isArray` y no
+      // `?? []`: si la respuesta no es una lista, se degrada a vacío en vez de reventar el render.
+      const res = await erplora().queryAll<Register>('cash_register.registers.list');
+      this.registers = Array.isArray(res) ? res : [];
     } catch { /* lista de cajones opcional; el form sigue funcionando sin ella */ }
   }
 

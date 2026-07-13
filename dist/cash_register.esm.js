@@ -3243,8 +3243,8 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   async loadRegisters() {
     try {
-      const page = await erplora().queryAll("cash_register.registers.list");
-      this.registers = page?.rows ?? [];
+      const res = await erplora().queryAll("cash_register.registers.list");
+      this.registers = Array.isArray(res) ? res : [];
     } catch {
     }
   }
