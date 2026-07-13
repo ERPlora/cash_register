@@ -3,4 +3,4 @@
   "required": ["session_id","count_type"],
   "properties": {
     "session_id": {"type":"string"}, "count_type": {"type":"string","enum":["opening","closing"]},
-    "denominations": {"type":"object"}, "total": {"type":["number","string"]}, "notes": {"type":"string"} } }
+    "denominations": {"type":"object"}, "total": {"type":"integer","minimum":0}, "notes": {"type":"string"} } }
