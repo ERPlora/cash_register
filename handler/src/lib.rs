@@ -9,6 +9,9 @@
 //!    total de la venta a la sesión abierta del empleado. Como el guest no consulta la
 //!    BD, emite _movement_for_open_session, que resuelve la sesión abierta en SQL.
 
+use erplora_guest_sdk::money;
+use rust_decimal::Decimal;
+use std::str::FromStr;
 use erplora_guest_sdk::{Operation, Output};
 use serde_json::{json, Map, Value};
 
@@ -27,20 +30,7 @@ pub fn record_sale(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Outpu
     Ok(Json(record_sale_pure(input.into_inner().into_value())))
 }
 
-/// Redondea céntimos fraccionarios a céntimos enteros half-up. `x` ya en céntimos.
-fn round_cents(x: f64) -> i64 { (x + if x < 0.0 { -0.5 } else { 0.5 }).trunc() as i64 }
-/// Lee un importe **en céntimos** (`i64`): entero, string de entero, o (robustez) decimal
-/// como céntimos ya escalados. ADR-0007: el dinero viaja en céntimos.
-fn cents(v: &Value, d: i64) -> i64 {
-    match v {
-        Value::Number(n) => n.as_i64().or_else(|| n.as_f64().map(round_cents)).unwrap_or(d),
-        Value::String(s) => {
-            let s = s.trim();
-            s.parse::<i64>().ok().or_else(|| s.parse::<f64>().ok().map(round_cents)).unwrap_or(d)
-        }
-        _ => d,
-    }
-}
+// El DINERO lo calcula `erplora_guest_sdk::money` (ADR-0123): una sola implementación, HALF_UP.
 fn f(v: &Value, d: f64) -> f64 {
     match v { Value::Number(n) => n.as_f64().unwrap_or(d), Value::String(s) => s.trim().parse().unwrap_or(d), _ => d }
 }
@@ -64,8 +54,9 @@ fn total_from_denoms(denoms: &Value) -> i64 {
     for section in ["bills", "coins"] {
         if let Some(Value::Object(m)) = denoms.get(section) {
             for (denom, count) in m {
-                let euros: f64 = denom.trim().parse().unwrap_or(0.0);
-                let denom_cents = round_cents(euros * 100.0);
+                // La etiqueta del billete/moneda está en EUROS ("50", "0.50") → frontera CON NOMBRE.
+                let euros = Decimal::from_str(denom.trim()).unwrap_or(Decimal::ZERO);
+                let denom_cents = money::euros_to_cents(euros);
                 total += denom_cents * f(count, 0.0) as i64;
             }
         }
@@ -78,7 +69,7 @@ pub fn add_count_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let denoms = payload.get("denominations").cloned().unwrap_or(json!({}));
     let total = match payload.get("total") {
-        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => cents(v, 0), // céntimos
+        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => money::from_json(v, 0), // céntimos
         _ => total_from_denoms(&denoms),
     };
     let mut p = Map::new();
@@ -96,7 +87,7 @@ pub fn add_count_pure(input: Value) -> Output {
 /// sesión abierta del empleado. El payload del evento trae total y (opcional) sale_id.
 pub fn record_sale_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
-    let total = cents(payload.get("total").unwrap_or(&Value::Null), 0); // céntimos (de sale.completed)
+    let total = money::from_json(payload.get("total").unwrap_or(&Value::Null), 0); // céntimos (de sale.completed)
     if total <= 0 {
         return Output { operations: vec![], events: vec![] };
     }
