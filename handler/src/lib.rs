@@ -30,7 +30,9 @@ pub fn record_sale(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Outpu
     Ok(Json(record_sale_pure(input.into_inner().into_value())))
 }
 
-// El DINERO lo calcula `erplora_guest_sdk::money` (ADR-0123): una sola implementación, HALF_UP.
+// El DINERO lo calcula `erplora_guest_sdk::money` (ADR-0123): una sola implementación para todo el
+// hub, un solo modo de redondeo (HALF_UP). Este módulo tenía su propio `round_cents` (half-even
+// simulado con un épsilon sobre `f64`), copiado byte a byte de otros cuatro handlers.
 fn f(v: &Value, d: f64) -> f64 {
     match v { Value::Number(n) => n.as_f64().unwrap_or(d), Value::String(s) => s.trim().parse().unwrap_or(d), _ => d }
 }
@@ -88,13 +90,17 @@ pub fn add_count_pure(input: Value) -> Output {
 pub fn record_sale_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let total = money::from_json(payload.get("total").unwrap_or(&Value::Null), 0); // céntimos (de sale.completed)
-    if total <= 0 {
+    // Invitaciones (comp): coste de las líneas regalo de la venta (de sale.completed) → se acumula en
+    // el movimiento para el arqueo. Una venta TODA-invitación (total 0) igual registra el movimiento.
+    let gift_total = money::from_json(payload.get("gift_total").unwrap_or(&Value::Null), 0);
+    if total <= 0 && gift_total <= 0 {
         return Output { operations: vec![], events: vec![] };
     }
     let mut p = Map::new();
     p.insert("movement_id".into(), new_id(&input, 0));
     p.insert("movement_type".into(), json!("sale"));
     p.insert("amount".into(), json!(total));
+    p.insert("gift_total".into(), json!(gift_total));
     p.insert("payment_method".into(), json!(sor(&payload, "payment_method_name", "cash")));
     p.insert("sale_reference".into(), payload.get("sale_id").cloned().unwrap_or(json!("")));
     p.insert("description".into(), json!(format!("Sale {}", s(payload.get("sale_id").unwrap_or(&Value::Null)))));

@@ -19,6 +19,9 @@ interface ErploraClientLike extends ListClient {
   /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
   locale: string;
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
+  /** Moneda del hub + formateo de dinero (ADR-0059). */
+  currency: string;
+  formatAmount(units: number, opts?: { currency?: string; locale?: string }): string;
 }
 
 interface Session {
@@ -154,7 +157,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     window.removeEventListener('erplora:locale-changed', this.onLocaleChange);
     super.disconnectedCallback(); this.unsub?.(); }
 
-  private fmt(n: number | null): string { return n == null ? '—' : Number(n).toFixed(2); }
+  // Saldos en UNIDADES mayores → formateados con la MONEDA DEL HUB (ADR-0059). `null` → guion.
+  private fmt(n: number | null): string { return n == null ? '—' : erplora().formatAmount(Number(n)); }
 
   private async loadRegisters() {
     try {
@@ -316,7 +320,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.denomCounts = {};
       this.countNotes = '';
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: total.toFixed(2) });
+      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatAmount(total) });
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errAddCount');
     } finally {
@@ -390,7 +394,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t('ui.coins')}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t('ui.totalCounted')}: ${this.countTotal().toFixed(2)} €</p>
+        <p class="total">${t('ui.totalCounted')}: ${erplora().formatAmount(this.countTotal())}</p>
         <div class="form">
           <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
           <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>

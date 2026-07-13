@@ -3,5 +3,6 @@ INSERT INTO cash_register_movement
   (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 VALUES
-  (:new_id, :hub_id, :session_id, :movement_type, :amount, :payment_method, :sale_reference, :description, :current_user_id,
+  (:new_id, :hub_id, :session_id, :movement_type, :amount, COALESCE(:payment_method, 'cash'),
+   COALESCE(:sale_reference, ''), COALESCE(:description, ''), :current_user_id,
    0, :current_user_id, :current_user_id, :now, :now);

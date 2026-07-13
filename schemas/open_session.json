@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cash_register.session.open payload",
+  "description": "Abre una sesión de caja. Pensado para que el binder de defaults (ADR-0073) rellene los campos opcionales con NOT NULL cuando la API manda un payload mínimo. `session_number` es OPCIONAL: si la API no lo aporta, el SQL (`open_session.sql`) lo deriva de `:new_id` (el binder no genera valores; solo rellena literales estáticos).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [],
+  "properties": {
+    "register_id": { "type": ["string", "null"], "default": null },
+    "session_number": { "type": "string" },
+    "opening_balance": { "type": ["number", "string", "null"], "default": 0 },
+    "opening_notes": { "type": "string", "default": "" }
+  }
+}

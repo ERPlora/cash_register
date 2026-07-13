@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// ../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// ../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// ../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// ../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/index.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// ../../module-toolkit/node_modules/@lit/reactive-element/node/css-tag.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// ../../module-toolkit/node_modules/@lit/reactive-element/node/reactive-element.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// ../../module-toolkit/node_modules/lit-html/lit-html.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// ../../module-toolkit/node_modules/lit-element/lit-element.js
+// node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// ../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/property.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// ../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/state.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../../outfitkit/dist/define.js
+// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// ../../module-toolkit/node_modules/lit-html/directive.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// ../../module-toolkit/node_modules/lit-html/directive-helpers.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// ../../module-toolkit/node_modules/lit-html/directives/repeat.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// ../../module-toolkit/node_modules/lit-html/directives/style-map.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// ../../outfitkit/dist/shared/icons.js
+// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/shared/icons.js
 var rawAdd = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288m144-144H112"/></svg>';
 var rawAlertCircle = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="currentColor" d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208s208-93.31 208-208S370.69 48 256 48m0 319.91a20 20 0 1 1 20-20a20 20 0 0 1-20 20m21.72-201.15l-5.74 122a16 16 0 0 1-32 0l-5.74-121.94v-.05a21.74 21.74 0 1 1 43.44 0Z"/></svg>';
 var rawAlertCircleOutline = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32" d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192Z"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M250.26 166.05L256 288l5.73-121.95a5.74 5.74 0 0 0-5.79-6h0a5.74 5.74 0 0 0-5.68 6"/><path fill="currentColor" d="M256 367.91a20 20 0 1 1 20-20a20 20 0 0 1-20 20"/></svg>';
@@ -1551,7 +1551,7 @@ function okIcon(value) {
   return BY_NAME[value] ?? value;
 }
 
-// ../../outfitkit/dist/ok-data-table.js
+// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -2858,7 +2858,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../../hub/packages/module-sdk/src/index.ts
+// node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2976,7 +2976,7 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// cash_register/locales/es.json
+// modules/cash_register/locales/es.json
 var es_default = {
   name: "Caja",
   navigation: {
@@ -3057,7 +3057,7 @@ var es_default = {
   }
 };
 
-// cash_register/locales/en.json
+// modules/cash_register/locales/en.json
 var en_default = {
   name: "Cash Register",
   navigation: {
@@ -3138,7 +3138,7 @@ var en_default = {
   }
 };
 
-// cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG = { es: es_default, en: en_default };
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
@@ -3237,8 +3237,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     super.disconnectedCallback();
     this.unsub?.();
   }
+  // Saldos en UNIDADES mayores → formateados con la MONEDA DEL HUB (ADR-0059). `null` → guion.
   fmt(n6) {
-    return n6 == null ? "\u2014" : Number(n6).toFixed(2);
+    return n6 == null ? "\u2014" : erplora().formatAmount(Number(n6));
   }
   async loadRegisters() {
     try {
@@ -3393,7 +3394,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: total.toFixed(2) });
+      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: erplora().formatAmount(total) });
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddCount");
     } finally {
@@ -3463,7 +3464,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${this.countTotal().toFixed(2)} €</p>
+        <p class="total">${t5("ui.totalCounted")}: ${erplora().formatAmount(this.countTotal())}</p>
         <div class="form">
           <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
@@ -3549,143 +3550,6 @@ __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
-
-// cash_register/ui/components/erp-cashregister-settings/erp-cashregister-settings.ts
-var CATALOG2 = { es: es_default, en: en_default };
-var DEFAULT_SETTINGS = {
-  enable_cash_register: true,
-  require_opening_balance: false,
-  require_closing_balance: true,
-  allow_negative_balance: false,
-  auto_open_session_on_login: true,
-  auto_close_session_on_logout: true,
-  protected_pos_url: "/m/sales/pos/"
+export {
+  ErpCashRegisterDashboard
 };
-var TOGGLES = [
-  { key: "enable_cash_register", labelKey: "ui.toggleEnable" },
-  { key: "require_opening_balance", labelKey: "ui.toggleRequireOpening" },
-  { key: "require_closing_balance", labelKey: "ui.toggleRequireClosing" },
-  { key: "allow_negative_balance", labelKey: "ui.toggleAllowNegative" },
-  { key: "auto_open_session_on_login", labelKey: "ui.toggleAutoOpen" },
-  { key: "auto_close_session_on_logout", labelKey: "ui.toggleAutoClose" }
-];
-function erplora2() {
-  const c5 = globalThis.erplora;
-  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
-  return c5;
-}
-var ErpCashRegisterSettings = class extends i3 {
-  constructor() {
-    super(...arguments);
-    this.settings = { ...DEFAULT_SETTINGS };
-    this.loading = true;
-    this.saving = false;
-    this.msg = "";
-    this.error = "";
-    // Re-render al cambiar el idioma del shell (ADR-0055): los labels y el texto del template se
-    // re-evalúan con el nuevo `erplora.locale`.
-    this.onLocaleChange = () => this.requestUpdate();
-  }
-  static {
-    this.styles = i`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius:10px; padding:.75rem 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(16rem, 1fr)); gap:.25rem .75rem; }
-    .url { margin-top:.5rem; }
-    .url ion-input { max-width:24rem; }
-    footer { display:flex; gap:.5rem; align-items:center; margin-top:.75rem; }
-    .err { color:#d9480f; font-weight:600; }
-    .ok { color:#2b8a3e; font-weight:600; }
-  `;
-  }
-  async connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
-    await this.loadSettings();
-  }
-  disconnectedCallback() {
-    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
-    super.disconnectedCallback();
-  }
-  async loadSettings() {
-    this.loading = true;
-    this.error = "";
-    try {
-      const rows = await erplora2().query("cash_register.settings.get");
-      const row = rows?.[0];
-      if (row) {
-        this.settings = {
-          enable_cash_register: Boolean(Number(row.enable_cash_register)),
-          require_opening_balance: Boolean(Number(row.require_opening_balance)),
-          require_closing_balance: Boolean(Number(row.require_closing_balance)),
-          allow_negative_balance: Boolean(Number(row.allow_negative_balance)),
-          auto_open_session_on_login: Boolean(Number(row.auto_open_session_on_login)),
-          auto_close_session_on_logout: Boolean(Number(row.auto_close_session_on_logout)),
-          protected_pos_url: String(row.protected_pos_url ?? DEFAULT_SETTINGS.protected_pos_url)
-        };
-      }
-    } catch (e5) {
-      this.error = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errLoadSettings");
-    } finally {
-      this.loading = false;
-    }
-  }
-  async save(ev) {
-    ev.preventDefault();
-    this.saving = true;
-    this.msg = "";
-    this.error = "";
-    try {
-      await erplora2().command("cash_register.settings.update", { ...this.settings });
-      this.msg = erplora2().t(CATALOG2, "ui.msgSettingsSaved");
-    } catch (e5) {
-      this.error = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errSaveSettings");
-    } finally {
-      this.saving = false;
-    }
-  }
-  setBool(key, value) {
-    this.settings = { ...this.settings, [key]: value };
-  }
-  render() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
-    return b2`<div>
-      <header>
-        <h2>${t5("ui.settingsTitle")}</h2>
-      </header>
-      <form class="panel" @submit=${(e5) => this.save(e5)}>
-        <div class="grid">
-          ${TOGGLES.map(
-      (f3) => b2`<ion-toggle .checked=${this.settings[f3.key]} ?disabled=${this.loading} @ionChange=${(e5) => this.setBool(f3.key, e5.detail.checked)}>${t5(f3.labelKey)}</ion-toggle>`
-    )}
-        </div>
-        <div class="url">
-          <ion-input fill="outline" label=${t5("ui.labelProtectedPosUrl")} label-placement="floating" placeholder="/m/sales/pos/" .value=${this.settings.protected_pos_url} ?disabled=${this.loading} @ionInput=${(e5) => this.settings = { ...this.settings, protected_pos_url: e5.target.value }}></ion-input>
-        </div>
-        <footer>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || this.loading}>${this.saving ? t5("ui.saving") : t5("ui.saveSettings")}</ion-button>
-          ${this.msg ? b2`<span class="ok">${this.msg}</span>` : A}
-          ${this.error ? b2`<span class="err">${this.error}</span>` : A}
-        </footer>
-      </form>
-    </div>`;
-  }
-};
-__decorateClass([
-  r5()
-], ErpCashRegisterSettings.prototype, "settings", 2);
-__decorateClass([
-  r5()
-], ErpCashRegisterSettings.prototype, "loading", 2);
-__decorateClass([
-  r5()
-], ErpCashRegisterSettings.prototype, "saving", 2);
-__decorateClass([
-  r5()
-], ErpCashRegisterSettings.prototype, "msg", 2);
-__decorateClass([
-  r5()
-], ErpCashRegisterSettings.prototype, "error", 2);
-define("erp-cashregister-settings", ErpCashRegisterSettings);

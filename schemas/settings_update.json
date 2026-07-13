@@ -5,13 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "enable_cash_register": { "type": "boolean" },
-    "require_opening_balance": { "type": "boolean" },
-    "require_closing_balance": { "type": "boolean" },
-    "allow_negative_balance": { "type": "boolean" },
-    "auto_open_session_on_login": { "type": "boolean" },
-    "auto_close_session_on_logout": { "type": "boolean" },
-    "protected_pos_url": { "type": "string", "maxLength": 255 }
+    "enable_cash_register": { "type": "boolean", "title": "Activar caja", "description": "Habilita la gestión de caja (apertura/cierre de sesión)." },
+    "require_opening_balance": { "type": "boolean", "title": "Exigir saldo de apertura" },
+    "require_closing_balance": { "type": "boolean", "title": "Exigir saldo de cierre" },
+    "allow_negative_balance": { "type": "boolean", "title": "Permitir saldo negativo" },
+    "auto_open_session_on_login": { "type": "boolean", "title": "Abrir caja al iniciar sesión" },
+    "auto_close_session_on_logout": { "type": "boolean", "title": "Cerrar caja al cerrar sesión" },
+    "protected_pos_url": { "type": "string", "maxLength": 255, "title": "URL del POS protegido", "description": "Ruta del POS que exige tener la caja abierta." }
   },
   "required": [
     "enable_cash_register",
