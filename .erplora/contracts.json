@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "module": "cash_register",
+  "consumes": {
+    "queries": [
+      "cash_register.registers.list",
+      "cash_register.sessions.list"
+    ],
+    "optional_queries": [],
+    "commands": [
+      "cash_register.count.add",
+      "cash_register.movement.add",
+      "cash_register.session.close",
+      "cash_register.session.open"
+    ],
+    "events": [
+      "cash_register.session_closed",
+      "cash_register.session_opened"
+    ],
+    "slots": []
+  }
+}
