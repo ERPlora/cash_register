@@ -48,11 +48,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Subir el patch en module.json (y sincronizar package.json)
-        id: bump
+      # El bump se calcula SOBRE LA PUNTA DE main, no sobre el sha que disparó la run.
+      # Dos pushes seguidos a main (o dos eventos del mismo commit) lanzan dos runs; la
+      # concurrency las serializa, pero cada checkout se queda anclado a su sha. La segunda
+      # pushearía desde una base ya obsoleta → `[rejected] (fetch first)`, y encima repetiría
+      # la misma versión. Por eso: sincronizar con origin/main, y si otra run ya dejó el bump
+      # ahí, no hay nada que publicar.
+      - name: Bump del patch + push (dispara el sync del SaaS)
         run: |
           set -euo pipefail
-          NEW=$(python3 - <<'PY'
+          git config user.name  "erplora-bot"
+          git config user.email "bot@erplora.com"
+
+          for intento in 1 2 3; do
+            git fetch --quiet origin main
+            git reset --hard --quiet origin/main
+
+            if git log -1 --pretty=%s | grep -q '^chore(release)'; then
+              echo "→ main ya está bumpeado por otra run: $(git log -1 --pretty=%s). Nada que publicar."
+              exit 0
+            fi
+
+            NEW=$(python3 - <<'PY'
           import json, pathlib
           mj = pathlib.Path('module.json')
           d = json.loads(mj.read_text())
@@ -67,15 +84,18 @@ jobs:
               pj.write_text(json.dumps(p, indent=2, ensure_ascii=False) + '\n')
           print(new)
           PY
-          )
-          echo "version=$NEW" >> "$GITHUB_OUTPUT"
-          echo "→ v$NEW"
+            )
 
-      - name: Commit + push (dispara el sync del SaaS)
-        run: |
-          set -euo pipefail
-          git config user.name  "erplora-bot"
-          git config user.email "bot@erplora.com"
-          git add module.json package.json 2>/dev/null || git add module.json
-          git commit -m "chore(release): v${{ steps.bump.outputs.version }}"
-          git push
+            git add module.json package.json 2>/dev/null || git add module.json
+            git commit -m "chore(release): v$NEW"
+
+            if git push origin HEAD:main; then
+              echo "→ publicado v$NEW"
+              exit 0
+            fi
+
+            echo "→ main se movió durante el intento $intento; reintento sobre la nueva punta"
+          done
+
+          echo "::error::no se pudo pushear el bump tras 3 intentos"
+          exit 1

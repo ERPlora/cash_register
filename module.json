@@ -169,7 +169,7 @@
             "op": "eq"
           },
           "description": {
-            "op": "eq"
+            "op": "like"
           },
           "created_at": {
             "op": "range"
@@ -206,7 +206,7 @@
             "op": "eq"
           },
           "notes": {
-            "op": "eq"
+            "op": "like"
           },
           "counted_at": {
             "op": "range"
@@ -242,7 +242,7 @@
         "default_dir": "asc",
         "filters": {
           "name": {
-            "op": "eq"
+            "op": "like"
           },
           "is_active": {
             "op": "eq"
