@@ -13,6 +13,9 @@ const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
+  /** TODAS las filas (sin tope). Para lo que no es «una página»: la rejilla del TPV, un
+   *  `<ion-select>` de categorías… El viejo `page_size` NO existía y truncaba a 50. */
+  queryAll<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T[]>;
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
@@ -162,7 +165,7 @@ export class ErpCashRegisterDashboard extends LitElement {
 
   private async loadRegisters() {
     try {
-      const page = await erplora().queryPage<Register>('cash_register.registers.list', { page: 0, page_size: 50 });
+      const page = await erplora().queryAll<Register>('cash_register.registers.list');
       this.registers = page?.rows ?? [];
     } catch { /* lista de cajones opcional; el form sigue funcionando sin ella */ }
   }
