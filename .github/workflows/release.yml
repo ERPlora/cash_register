@@ -1,0 +1,81 @@
+name: Release
+
+# AUTO-BUMP de la versión del módulo.
+#
+# POR QUÉ: el SaaS ya republica solo — su GitHub App recibe el `push` a main (webhook
+# `github_app_webhook` → `handle_push_event` → `sync_module_repository`) y recrea el paquete.
+# PERO solo sube un zip si esa versión NO existe ya en Object Storage: las rutas
+# `modules/{id}/v{version}.zip` son CREATE-ONLY, porque sobrescribir un zip publicado rompería
+# el SHA256 que verifican los hubs ya desplegados al instalar.
+#
+# Consecuencia: un merge a main SIN bump no llega nunca al marketplace (el sync corre, ve la
+# misma versión y salta la subida). Y el Hub tampoco ofrece «hay una actualización», porque eso
+# lo decide comparando el número de versión.
+#
+# Este workflow sube el patch por su cuenta, así que nadie tiene que acordarse. Mismo patrón que
+# `publish.yml` de OutfitKit.
+#
+# Anti-bucle: el push de vuelta lo hace GITHUB_TOKEN, y GitHub NO dispara workflows con los
+# pushes hechos con ese token. El `if` del job es defensa extra por si algún día se usa un PAT.
+# El filtro `paths` tampoco incluye module.json/package.json (lo único que toca el bot).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ui/**'
+      - 'queries/**'
+      - 'commands/**'
+      - 'migrations/**'
+      - 'handler/**'
+      - 'schemas/**'
+      - 'locales/**'
+      - 'dist/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Dos merges seguidos: el segundo espera, no cancela (si no, se perdería un bump).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Subir el patch en module.json (y sincronizar package.json)
+        id: bump
+        run: |
+          set -euo pipefail
+          NEW=$(python3 - <<'PY'
+          import json, pathlib
+          mj = pathlib.Path('module.json')
+          d = json.loads(mj.read_text())
+          maj, mi, pa = d['version'].split('.')
+          new = f"{maj}.{mi}.{int(pa) + 1}"
+          d['version'] = new
+          mj.write_text(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
+          pj = pathlib.Path('package.json')
+          if pj.exists():
+              p = json.loads(pj.read_text())
+              p['version'] = new
+              pj.write_text(json.dumps(p, indent=2, ensure_ascii=False) + '\n')
+          print(new)
+          PY
+          )
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "→ v$NEW"
+
+      - name: Commit + push (dispara el sync del SaaS)
+        run: |
+          set -euo pipefail
+          git config user.name  "erplora-bot"
+          git config user.email "bot@erplora.com"
+          git add module.json package.json 2>/dev/null || git add module.json
+          git commit -m "chore(release): v${{ steps.bump.outputs.version }}"
+          git push
