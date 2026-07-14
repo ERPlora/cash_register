@@ -11,6 +11,13 @@ import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
+/** Euros tecleados → CÉNTIMOS (el dinero es INTEGER, ADR-0007/0123). «150,50» → 15050.
+ *  Mandaba los euros crudos a una columna INTEGER: abrir con 150,50 € guardaba 1,50 €. */
+function aCentimos(v: string | number): number {
+  const n = Number(String(v ?? '').replace(',', '.'));
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
   /** TODAS las filas (sin tope). Para lo que no es «una página»: la rejilla del TPV, un
@@ -207,7 +214,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       await erplora().command('cash_register.session.open', {
         register_id: this.openRegisterId || null,
         session_number: sessionNumber(),
-        opening_balance: Number(this.openBalance) || 0,
+        opening_balance: aCentimos(this.openBalance),
         opening_notes: this.openNotes.trim(),
       });
       this.openRegisterId = '';

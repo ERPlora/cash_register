@@ -59,6 +59,17 @@
       "component": "erp-cashregister-dashboard"
     }
   ],
+  "protects": [
+    {
+      "settings_query": "cash_register.settings.get",
+      "enabled_setting": "enable_cash_register",
+      "route_setting": "protected_pos_url",
+      "guard_query": "cash_register.current_session",
+      "expect": "non_empty",
+      "component": "erp-cashregister-open",
+      "resume_on": "cash_register.session_opened"
+    }
+  ],
   "settings": {
     "title": "Caja",
     "icon": "cash-outline",
@@ -70,6 +81,10 @@
     "sqlite": [
       "migrations/sqlite/001_init.sql",
       "migrations/sqlite/002_gift_total.sql"
+    ],
+    "postgres": [
+      "migrations/postgres/001_init.sql",
+      "migrations/postgres/002_gift_total.sql"
     ]
   },
   "queries": {

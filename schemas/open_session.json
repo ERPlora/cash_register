@@ -6,9 +6,24 @@
   "additionalProperties": true,
   "required": [],
   "properties": {
-    "register_id": { "type": ["string", "null"], "default": null },
-    "session_number": { "type": "string" },
-    "opening_balance": { "type": ["number", "string", "null"], "default": 0 },
-    "opening_notes": { "type": "string", "default": "" }
+    "register_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "session_number": {
+      "type": "string"
+    },
+    "opening_balance": {
+      "type": "integer",
+      "default": 0,
+      "description": "Fondo de apertura en CÉNTIMOS (ADR-0007/0123). 150,50 € = 15050."
+    },
+    "opening_notes": {
+      "type": "string",
+      "default": ""
+    }
   }
 }

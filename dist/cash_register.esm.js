@@ -1997,17 +1997,17 @@ var OkDataTable = class extends i3 {
       out.push(row);
     }
     const headers = out.shift() ?? [];
-    const rows = out.map((r6) => Object.fromEntries(headers.map((h4, i7) => [h4, r6[i7] ?? ""])));
-    return { headers, rows };
+    const rows2 = out.map((r6) => Object.fromEntries(headers.map((h4, i7) => [h4, r6[i7] ?? ""])));
+    return { headers, rows: rows2 };
   }
   async onImportFile(ev) {
     const input = ev.target;
     const file = input.files?.[0];
     if (!file) return;
     const text = await file.text();
-    const { headers, rows } = this.parseCsv(text);
-    this.emit("csvImport", { headers, rows });
-    this.emit("import", { headers, rows });
+    const { headers, rows: rows2 } = this.parseCsv(text);
+    this.emit("csvImport", { headers, rows: rows2 });
+    this.emit("import", { headers, rows: rows2 });
     input.value = "";
   }
   toggle(p4) {
@@ -3140,6 +3140,10 @@ var en_default = {
 
 // modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG = { es: es_default, en: en_default };
+function aCentimos(v3) {
+  const n6 = Number(String(v3 ?? "").replace(",", "."));
+  return Number.isFinite(n6) ? Math.round(n6 * 100) : 0;
+}
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
 function erplora() {
@@ -3279,7 +3283,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       await erplora().command("cash_register.session.open", {
         register_id: this.openRegisterId || null,
         session_number: sessionNumber(),
-        opening_balance: Number(this.openBalance) || 0,
+        opening_balance: aCentimos(this.openBalance),
         opening_notes: this.openNotes.trim()
       });
       this.openRegisterId = "";
@@ -3550,6 +3554,138 @@ __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "registers", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
-export {
-  ErpCashRegisterDashboard
+
+// modules/cash_register/ui/components/erp-cashregister-open/erp-cashregister-open.ts
+var CATALOG2 = { es: es_default, en: en_default };
+function erplora2() {
+  const c5 = globalThis.erplora;
+  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
+  return c5;
+}
+function rows(r6) {
+  if (Array.isArray(r6)) return r6;
+  if (r6 && typeof r6 === "object" && Array.isArray(r6.rows)) return r6.rows;
+  return [];
+}
+function aCentimos2(v3) {
+  const n6 = Number(String(v3).replace(",", "."));
+  return Number.isFinite(n6) ? Math.round(n6 * 100) : 0;
+}
+function numeroSesion() {
+  const d3 = /* @__PURE__ */ new Date();
+  const p4 = (n6) => String(n6).padStart(2, "0");
+  return `CS-${String(d3.getFullYear()).slice(2)}${p4(d3.getMonth() + 1)}${p4(d3.getDate())}-${p4(d3.getHours())}${p4(d3.getMinutes())}`;
+}
+var ErpCashregisterOpen = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.registers = [];
+    this.registerId = "";
+    this.balance = "";
+    this.notes = "";
+    this.saving = false;
+    this.error = "";
+  }
+  static {
+    this.styles = i`
+    :host { display:flex; align-items:center; justify-content:center; height:100%; padding:1rem;
+            font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
+    .card { width:min(94vw, 26rem); background:var(--ion-background-color,#fff); border-radius:16px;
+            padding:1.5rem; box-shadow:0 8px 32px rgba(0,0,0,.12); text-align:center; }
+    .ico { font-size:3rem; color:var(--ion-color-primary,#0091ce); }
+    h2 { margin:.4rem 0 .2rem; font-size:1.3rem; }
+    .sub { color:#8b897f; font-size:.9rem; margin-bottom:1.2rem; }
+    .form { display:flex; flex-direction:column; gap:.8rem; text-align:left; }
+    .error { color:#d9480f; font-size:.85rem; margin-top:.6rem; }
+  `;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    void this.load();
+  }
+  async load() {
+    this.registers = rows(
+      await erplora2().query("cash_register.registers.list").catch(() => [])
+    );
+    if (this.registers.length === 1) this.registerId = this.registers[0].id;
+  }
+  async openSession() {
+    if (this.registers.length > 1 && !this.registerId) {
+      this.error = erplora2().t(CATALOG2, "ui.labelRegister");
+      return;
+    }
+    this.saving = true;
+    this.error = "";
+    try {
+      await erplora2().command("cash_register.session.open", {
+        register_id: this.registerId || null,
+        session_number: numeroSesion(),
+        opening_balance: aCentimos2(this.balance),
+        opening_notes: this.notes
+      });
+    } catch (e5) {
+      this.error = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errOpenSession");
+    } finally {
+      this.saving = false;
+    }
+  }
+  render() {
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    return b2`
+      <div class="card">
+        <ion-icon class="ico" name="cash-outline"></ion-icon>
+        <h2>${t5("ui.openSessionTitle")}</h2>
+        <p class="sub">${t5("ui.msgSessionOpened")}</p>
+
+        <div class="form">
+          ${this.registers.length > 1 ? b2`<ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
+                .value=${this.registerId}
+                @ionChange=${(e5) => {
+      this.registerId = e5.target.value;
+    }}>
+                ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
+              </ion-select>` : A}
+
+          <ion-input fill="outline" type="number" min="0" step="0.01"
+            label=${t5("ui.labelOpeningBalance")} label-placement="floating"
+            .value=${this.balance}
+            @ionInput=${(e5) => {
+      this.balance = e5.target.value;
+    }}></ion-input>
+
+          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
+            placeholder=${t5("ui.optional")} .value=${this.notes}
+            @ionInput=${(e5) => {
+      this.notes = e5.target.value;
+    }}></ion-input>
+
+          <ion-button class="open-session" expand="block" ?disabled=${this.saving}
+            @click=${() => void this.openSession()}>
+            ${this.saving ? t5("ui.opening") : t5("ui.openSession")}
+          </ion-button>
+
+          ${this.error ? b2`<p class="error">${this.error}</p>` : A}
+        </div>
+      </div>
+    `;
+  }
 };
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "registers", 2);
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "registerId", 2);
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "balance", 2);
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "notes", 2);
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpCashregisterOpen.prototype, "error", 2);
+define("erp-cashregister-open", ErpCashregisterOpen);

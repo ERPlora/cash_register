@@ -56,3 +56,27 @@ describe('las cajas del dashboard (regresión queryAll, ADR-0124)', () => {
     expect((el as unknown as { registers: unknown[] }).registers).toEqual([]);
   });
 });
+
+// El dinero es INTEGER en CÉNTIMOS (ADR-0007/0123). El panel de apertura mandaba
+// `Number(this.openBalance)` —los EUROS crudos del ion-input— a una columna INTEGER: abrir la caja
+// con 150,50 € guardaba 150 céntimos = 1,50 €. El arqueo del día arrancaba con el fondo equivocado
+// (y el `erplora validate` lo cantaba: `opening_balance` declaraba `number` en vez de `integer`).
+describe('el fondo de apertura va en céntimos (ADR-0007/0123)', () => {
+  it('teclear 150,50 € abre la sesión con 15050, no con 150', async () => {
+    const comandos: { name: string; payload: Record<string, unknown> }[] = [];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = async (name: string, payload: Record<string, unknown>) => {
+      comandos.push({ name, payload });
+      return {};
+    };
+
+    const el = await montar();
+    const wc = el as unknown as { openBalance: string; openSession(e: Event): Promise<void> };
+    wc.openBalance = '150.50';
+    await wc.openSession(new Event('submit'));
+
+    const abrir = comandos.find((c) => c.name === 'cash_register.session.open');
+    expect(abrir, 'no se llamó a session.open').toBeTruthy();
+    expect(abrir!.payload.opening_balance).toBe(15050);
+  });
+});
