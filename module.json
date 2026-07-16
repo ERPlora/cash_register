@@ -70,6 +70,10 @@
     "sqlite": [
       "migrations/sqlite/001_init.sql",
       "migrations/sqlite/002_gift_total.sql"
+    ],
+    "postgres": [
+      "migrations/postgres/001_init.sql",
+      "migrations/postgres/002_gift_total.sql"
     ]
   },
   "queries": {
