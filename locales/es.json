@@ -75,5 +75,13 @@
     "msgSettingsSaved": "Ajustes guardados",
     "errLoadSettings": "No se pudieron cargar los ajustes",
     "errSaveSettings": "No se pudieron guardar los ajustes"
+  },
+  "widgets": {
+    "cash_register.current_session": {
+      "title": "Caja (sesión actual)"
+    },
+    "cash_register.recent_sessions": {
+      "title": "Descuadres recientes"
+    }
   }
 }
