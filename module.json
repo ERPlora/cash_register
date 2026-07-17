@@ -291,6 +291,7 @@
       "default": true,
       "kind": "kpi",
       "query": "cash_register.current_session",
+      "refresh_on": ["sale.completed", "sale.voided", "cash_register.session_opened", "cash_register.session_closed"],
       "map": {
         "value": "expected_total"
       },
@@ -315,6 +316,7 @@
       "default": false,
       "kind": "bar-list",
       "query": "cash_register.sessions.list",
+      "refresh_on": ["cash_register.session_opened", "cash_register.session_closed"],
       "params": {
         "status": "closed",
         "sort": "closed_at",
