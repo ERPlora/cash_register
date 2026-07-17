@@ -78,7 +78,8 @@
   },
   "widgets": {
     "cash_register.current_session": {
-      "title": "Caja (sesión actual)"
+      "title": "Caja (sesión actual)",
+      "label": "Efectivo esperado en caja"
     },
     "cash_register.recent_sessions": {
       "title": "Descuadres recientes"

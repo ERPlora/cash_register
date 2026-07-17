@@ -296,7 +296,7 @@
         "value": "expected_total"
       },
       "options": {
-        "label": "Efectivo esperado en caja",
+        "label": "Expected cash in drawer",
         "icon": "cash-outline",
         "format": "currency",
         "currency": "EUR",
