@@ -279,7 +279,7 @@
   },
   "widgets": {
     "cash_register.current_session": {
-      "title": "Caja (sesión actual)",
+      "title": "Cash register (current session)",
       "icon": "cash-outline",
       "category": "Caja",
       "size": "sm",
@@ -304,7 +304,7 @@
       }
     },
     "cash_register.recent_sessions": {
-      "title": "Descuadres recientes",
+      "title": "Recent discrepancies",
       "icon": "swap-vertical-outline",
       "category": "Caja",
       "size": "md",
