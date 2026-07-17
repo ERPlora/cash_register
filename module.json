@@ -291,7 +291,7 @@
       "default": true,
       "kind": "kpi",
       "query": "cash_register.current_session",
-      "refresh_on": ["sale.completed", "sale.voided", "cash_register.session_opened", "cash_register.session_closed"],
+      "refresh_on": ["cash_register.movement_added", "cash_register.session_opened", "cash_register.session_closed"],
       "map": {
         "value": "expected_total"
       },
@@ -392,6 +392,7 @@
       "sql": [
         "commands/add_movement.sql"
       ],
+      "emit": ["cash_register.movement_added"],
       "ai": {
         "description": "Records a cash movement (cash-in or cash-out) against the active register session"
       }
@@ -410,6 +411,7 @@
     },
     "cash_register.record_sale": {
       "permission": "cash_register.add_movement",
+      "emit": ["cash_register.movement_added"],
       "handler": {
         "type": "wasm",
         "file": "dist/handler.wasm",
@@ -436,7 +438,8 @@
       "transaction": true,
       "sql": [
         "commands/_reverse_sale.sql"
-      ]
+      ],
+      "emit": ["cash_register.movement_added"]
     }
   },
   "events": {
