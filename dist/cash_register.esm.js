@@ -1552,6 +1552,16 @@ function okIcon(value) {
 }
 
 // node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-data-table.js
+var CSV_BOM = "\uFEFF";
+function decodeCsvBuffer(buf) {
+  let text;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+  } catch {
+    text = new TextDecoder("windows-1252").decode(buf);
+  }
+  return text.charCodeAt(0) === 65279 ? text.slice(1) : text;
+}
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -1956,7 +1966,7 @@ var OkDataTable = class extends i3 {
     const head = cols.map((c5) => this.csvEscape(c5.key)).join(",");
     const lines = this.rows.map((r6) => cols.map((c5) => this.csvEscape(r6[c5.key])).join(","));
     const csv = [head, ...lines].join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([CSV_BOM + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a3 = document.createElement("a");
     a3.href = url;
@@ -2004,7 +2014,7 @@ var OkDataTable = class extends i3 {
     const input = ev.target;
     const file = input.files?.[0];
     if (!file) return;
-    const text = await file.text();
+    const text = decodeCsvBuffer(await file.arrayBuffer());
     const { headers, rows: rows2 } = this.parseCsv(text);
     this.emit("csvImport", { headers, rows: rows2 });
     this.emit("import", { headers, rows: rows2 });
@@ -2369,8 +2379,6 @@ var OkDataTable = class extends i3 {
       (a3) => {
         const loading = a3.loading?.(row) === true;
         const disabled = loading || a3.disabled?.(row) === true;
-        const iconOnly = !!a3.icon;
-        const name = iconOnly && a3.label ? a3.label : A;
         return b2`
             <ion-button
               size="small"
@@ -2378,8 +2386,6 @@ var OkDataTable = class extends i3 {
               color=${a3.color ?? "medium"}
               ?disabled=${disabled}
               aria-disabled=${disabled ? "true" : A}
-              title=${name}
-              aria-label=${name}
               @click=${() => this.emit("rowAction", { actionId: a3.id, row })}
             >
               ${loading ? b2`<ion-spinner slot="icon-only" name="dots"></ion-spinner>` : a3.icon ? b2`<ion-icon slot="icon-only" .icon=${okIcon(a3.icon)}></ion-icon>` : a3.label}
@@ -3058,6 +3064,15 @@ var es_default = {
     msgSettingsSaved: "Ajustes guardados",
     errLoadSettings: "No se pudieron cargar los ajustes",
     errSaveSettings: "No se pudieron guardar los ajustes"
+  },
+  widgets: {
+    "cash_register.current_session": {
+      title: "Caja (sesi\xF3n actual)",
+      label: "Efectivo esperado en caja"
+    },
+    "cash_register.recent_sessions": {
+      title: "Descuadres recientes"
+    }
   }
 };
 
@@ -3247,8 +3262,10 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.unsub?.();
   }
   // Saldos en UNIDADES mayores → formateados con la MONEDA DEL HUB (ADR-0059). `null` → guion.
+  /** Balances de sesión en CÉNTIMOS (ADR-0123) → formatMoney divide. Con formatAmount
+   *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
   fmt(n6) {
-    return n6 == null ? "\u2014" : erplora().formatAmount(Number(n6));
+    return n6 == null ? "\u2014" : erplora().formatMoney(Number(n6));
   }
   async loadRegisters() {
     try {
@@ -3314,7 +3331,10 @@ var ErpCashRegisterDashboard = class extends i3 {
     try {
       await erplora().command("cash_register.session.close", {
         session_id: sessionId,
-        closing_balance: Number(this.closeBalance) || 0,
+        // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
+        // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
+        // con coma decimal directamente 0 (Number('150,50') = NaN).
+        closing_balance: aCentimos(this.closeBalance),
         closing_notes: this.closeNotes.trim()
       });
       this.closeBalance = "";
@@ -3381,10 +3401,13 @@ var ErpCashRegisterDashboard = class extends i3 {
     };
     return { bills: pick(BILLS), coins: pick(COINS) };
   }
-  countTotal() {
-    let total = 0;
-    for (const k2 of [...BILLS, ...COINS]) total += Number(k2) * (Number(this.denomCounts[k2] ?? 0) || 0);
-    return Math.round(total * 100) / 100;
+  /** Total del recuento en CÉNTIMOS enteros: cada denominación se convierte una vez
+   *  (0,05 € = 5 céntimos, exacto) y se suma en entero — nada de acumular euros en f64
+   *  (0,05×3 = 0.15000000000000002). */
+  countTotalCents() {
+    let cents = 0;
+    for (const k2 of [...BILLS, ...COINS]) cents += Math.round(Number(k2) * 100) * (Number(this.denomCounts[k2] ?? 0) || 0);
+    return cents;
   }
   async addCount(ev) {
     ev.preventDefault();
@@ -3399,11 +3422,11 @@ var ErpCashRegisterDashboard = class extends i3 {
         denominations: this.denominationsPayload(),
         notes: this.countNotes.trim()
       });
-      const total = this.countTotal();
+      const totalCents = this.countTotalCents();
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: erplora().formatAmount(total) });
+      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: erplora().formatMoney(totalCents) });
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddCount");
     } finally {
@@ -3473,7 +3496,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${erplora().formatAmount(this.countTotal())}</p>
+        <p class="total">${t5("ui.totalCounted")}: ${erplora().formatMoney(this.countTotalCents())}</p>
         <div class="form">
           <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
