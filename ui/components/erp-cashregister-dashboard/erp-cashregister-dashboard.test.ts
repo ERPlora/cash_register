@@ -80,3 +80,42 @@ describe('el fondo de apertura va en céntimos (ADR-0007/0123)', () => {
     expect(abrir!.payload.opening_balance).toBe(15050);
   });
 });
+
+describe('el dinero de la lista habla céntimos → formatMoney (bug ×100)', () => {
+  it('opening_balance 15050 céntimos se pinta «150.50 €», no «15050.00 €»', async () => {
+    const el = await montar();
+    const cols = (el as unknown as { columns: { key: string; format?: (r: unknown) => string }[] }).columns;
+    const abre = cols.find((c) => c.key === 'opening_balance');
+    expect(abre!.format!({ opening_balance: 15050 })).toBe('150.50 €');
+  });
+});
+
+describe('el CIERRE convierte euros→céntimos por la frontera con nombre (como la apertura)', () => {
+  it('cerrar con «150,50» manda closing_balance=15050 (no 0 por la coma, no euros crudos)', async () => {
+    const comandos: { name: string; payload: Record<string, unknown> }[] = [];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = async (name: string, payload: Record<string, unknown>) => {
+      comandos.push({ name, payload });
+      return {};
+    };
+    const el = await montar();
+    const wc = el as unknown as {
+      target: { id: string } | null; closeBalance: string; closeSession(e: Event): Promise<void>;
+    };
+    wc.target = { id: 's1' };
+    wc.closeBalance = '150,50';
+    await wc.closeSession(new Event('submit'));
+    const cierre = comandos.find((c) => c.name === 'cash_register.session.close');
+    expect(cierre, 'no se llamó a session.close').toBeTruthy();
+    expect(cierre!.payload.closing_balance).toBe(15050);
+  });
+});
+
+describe('el arqueo por denominaciones se suma en CÉNTIMOS enteros (exacto)', () => {
+  it('3 monedas de 0,05 € son 15 céntimos exactos (no 0.15000000000000002 €)', async () => {
+    const el = await montar();
+    const wc = el as unknown as { denomCounts: Record<string, string>; countTotalCents(): number };
+    wc.denomCounts = { '0.05': '3' };
+    expect(wc.countTotalCents()).toBe(15);
+  });
+});

@@ -32,6 +32,8 @@ interface ErploraClientLike extends ListClient {
   /** Moneda del hub + formateo de dinero (ADR-0059). */
   currency: string;
   formatAmount(units: number, opts?: { currency?: string; locale?: string }): string;
+  /** Dinero (ADR-0123): `formatMoney` recibe CÉNTIMOS y divide según la moneda. */
+  formatMoney(cents: number, opts?: { currency?: string; locale?: string }): string;
 }
 
 interface Session {
@@ -169,7 +171,9 @@ export class ErpCashRegisterDashboard extends LitElement {
     super.disconnectedCallback(); this.unsub?.(); }
 
   // Saldos en UNIDADES mayores → formateados con la MONEDA DEL HUB (ADR-0059). `null` → guion.
-  private fmt(n: number | null): string { return n == null ? '—' : erplora().formatAmount(Number(n)); }
+  /** Balances de sesión en CÉNTIMOS (ADR-0123) → formatMoney divide. Con formatAmount
+   *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
+  private fmt(n: number | null): string { return n == null ? '—' : erplora().formatMoney(Number(n)); }
 
   private async loadRegisters() {
     try {
@@ -242,7 +246,10 @@ export class ErpCashRegisterDashboard extends LitElement {
     try {
       await erplora().command('cash_register.session.close', {
         session_id: sessionId,
-        closing_balance: Number(this.closeBalance) || 0,
+        // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
+        // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
+        // con coma decimal directamente 0 (Number('150,50') = NaN).
+        closing_balance: aCentimos(this.closeBalance),
         closing_notes: this.closeNotes.trim(),
       });
       this.closeBalance = '';
@@ -311,10 +318,13 @@ export class ErpCashRegisterDashboard extends LitElement {
     return { bills: pick(BILLS), coins: pick(COINS) };
   }
 
-  private countTotal(): number {
-    let total = 0;
-    for (const k of [...BILLS, ...COINS]) total += Number(k) * (Number(this.denomCounts[k] ?? 0) || 0);
-    return Math.round(total * 100) / 100;
+  /** Total del recuento en CÉNTIMOS enteros: cada denominación se convierte una vez
+   *  (0,05 € = 5 céntimos, exacto) y se suma en entero — nada de acumular euros en f64
+   *  (0,05×3 = 0.15000000000000002). */
+  private countTotalCents(): number {
+    let cents = 0;
+    for (const k of [...BILLS, ...COINS]) cents += Math.round(Number(k) * 100) * (Number(this.denomCounts[k] ?? 0) || 0);
+    return cents;
   }
 
   private async addCount(ev: Event) {
@@ -330,11 +340,11 @@ export class ErpCashRegisterDashboard extends LitElement {
         denominations: this.denominationsPayload(),
         notes: this.countNotes.trim(),
       });
-      const total = this.countTotal();
+      const totalCents = this.countTotalCents();
       this.denomCounts = {};
       this.countNotes = '';
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatAmount(total) });
+      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatMoney(totalCents) });
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errAddCount');
     } finally {
@@ -408,7 +418,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t('ui.coins')}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t('ui.totalCounted')}: ${erplora().formatAmount(this.countTotal())}</p>
+        <p class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(this.countTotalCents())}</p>
         <div class="form">
           <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
           <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
