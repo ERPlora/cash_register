@@ -1268,141 +1268,6 @@ function define(tag, ctor) {
   }
 }
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
-var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
-var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
-var i4 = class {
-  constructor(t5) {
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  _$AT(t5, e5, i7) {
-    this._$Ct = t5, this._$AM = e5, this._$Ci = i7;
-  }
-  _$AS(t5, e5) {
-    return this.update(t5, e5);
-  }
-  update(t5, e5) {
-    return this.render(...e5);
-  }
-};
-
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
-var { I: t4 } = j;
-var i5 = (o7) => o7;
-var s4 = () => document.createComment("");
-var v2 = (o7, n6, e5) => {
-  const l3 = o7._$AA.parentNode, d3 = void 0 === n6 ? o7._$AB : n6._$AA;
-  if (void 0 === e5) {
-    const i7 = l3.insertBefore(s4(), d3), n7 = l3.insertBefore(s4(), d3);
-    e5 = new t4(i7, n7, o7, o7.options);
-  } else {
-    const t5 = e5._$AB.nextSibling, n7 = e5._$AM, c5 = n7 !== o7;
-    if (c5) {
-      let t6;
-      e5._$AQ?.(o7), e5._$AM = o7, void 0 !== e5._$AP && (t6 = o7._$AU) !== n7._$AU && e5._$AP(t6);
-    }
-    if (t5 !== d3 || c5) {
-      let o8 = e5._$AA;
-      for (; o8 !== t5; ) {
-        const t6 = i5(o8).nextSibling;
-        i5(l3).insertBefore(o8, d3), o8 = t6;
-      }
-    }
-  }
-  return e5;
-};
-var u3 = (o7, t5, i7 = o7) => (o7._$AI(t5, i7), o7);
-var m3 = {};
-var p3 = (o7, t5 = m3) => o7._$AH = t5;
-var M2 = (o7) => o7._$AH;
-var h3 = (o7) => {
-  o7._$AR(), o7._$AA.remove();
-};
-
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
-var u4 = (e5, s5, t5) => {
-  const r6 = /* @__PURE__ */ new Map();
-  for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
-  return r6;
-};
-var c4 = e4(class extends i4 {
-  constructor(e5) {
-    if (super(e5), e5.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
-  }
-  dt(e5, s5, t5) {
-    let r6;
-    void 0 === t5 ? t5 = s5 : void 0 !== s5 && (r6 = s5);
-    const l3 = [], o7 = [];
-    let i7 = 0;
-    for (const s6 of e5) l3[i7] = r6 ? r6(s6, i7) : i7, o7[i7] = t5(s6, i7), i7++;
-    return { values: o7, keys: l3 };
-  }
-  render(e5, s5, t5) {
-    return this.dt(e5, s5, t5).values;
-  }
-  update(s5, [t5, r6, c5]) {
-    const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t5, r6, c5);
-    if (!Array.isArray(d3)) return this.ut = a3, p4;
-    const h4 = this.ut ??= [], v3 = [];
-    let m4, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
-    for (; x2 <= j2 && k2 <= w2; ) if (null === d3[x2]) x2++;
-    else if (null === d3[j2]) j2--;
-    else if (h4[x2] === a3[k2]) v3[k2] = u3(d3[x2], p4[k2]), x2++, k2++;
-    else if (h4[j2] === a3[w2]) v3[w2] = u3(d3[j2], p4[w2]), j2--, w2--;
-    else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
-    else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
-    else if (void 0 === m4 && (m4 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m4.has(h4[x2])) if (m4.has(h4[j2])) {
-      const e5 = y3.get(a3[k2]), t6 = void 0 !== e5 ? d3[e5] : null;
-      if (null === t6) {
-        const e6 = v2(s5, d3[x2]);
-        u3(e6, p4[k2]), v3[k2] = e6;
-      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e5] = null;
-      k2++;
-    } else h3(d3[j2]), j2--;
-    else h3(d3[x2]), x2++;
-    for (; k2 <= w2; ) {
-      const e5 = v2(s5, v3[w2 + 1]);
-      u3(e5, p4[k2]), v3[k2++] = e5;
-    }
-    for (; x2 <= j2; ) {
-      const e5 = d3[x2++];
-      null !== e5 && h3(e5);
-    }
-    return this.ut = a3, p3(s5, v3), E;
-  }
-});
-
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
-var n5 = "important";
-var i6 = " !" + n5;
-var o6 = e4(class extends i4 {
-  constructor(t5) {
-    if (super(t5), t5.type !== t3.ATTRIBUTE || "style" !== t5.name || t5.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
-  }
-  render(t5) {
-    return Object.keys(t5).reduce((e5, r6) => {
-      const s5 = t5[r6];
-      return null == s5 ? e5 : e5 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
-    }, "");
-  }
-  update(e5, [r6]) {
-    const { style: s5 } = e5.element;
-    if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
-    for (const t5 of this.ft) null == r6[t5] && (this.ft.delete(t5), t5.includes("-") ? s5.removeProperty(t5) : s5[t5] = null);
-    for (const t5 in r6) {
-      const e6 = r6[t5];
-      if (null != e6) {
-        this.ft.add(t5);
-        const r7 = "string" == typeof e6 && e6.endsWith(i6);
-        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e6.slice(0, -11) : e6, r7 ? n5 : "") : s5[t5] = e6;
-      }
-    }
-    return E;
-  }
-});
-
 // node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/shared/icons.js
 var rawAdd = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288m144-144H112"/></svg>';
 var rawAlertCircle = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="currentColor" d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208s208-93.31 208-208S370.69 48 256 48m0 319.91a20 20 0 1 1 20-20a20 20 0 0 1-20 20m21.72-201.15l-5.74 122a16 16 0 0 1-32 0l-5.74-121.94v-.05a21.74 21.74 0 1 1 43.44 0Z"/></svg>';
@@ -1551,6 +1416,358 @@ function okIcon(value) {
   return BY_NAME[value] ?? value;
 }
 
+// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-inline-feedback.js
+var __defProp2 = Object.defineProperty;
+var __decorateClass2 = (decorators, target, key, kind) => {
+  var result = void 0;
+  for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
+    if (decorator = decorators[i7])
+      result = decorator(target, key, result) || result;
+  if (result) __defProp2(target, key, result);
+  return result;
+};
+var DEFAULT_LABELS = {
+  dismiss: "Dismiss"
+};
+var OkInlineFeedback = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.tone = "info";
+    this.dismissible = false;
+    this.hidden = false;
+    this.labels = {};
+    this.hasActions = false;
+    this.onActionsSlotChange = (e5) => {
+      const slot = e5.target;
+      this.hasActions = slot.assignedNodes({ flatten: true }).length > 0;
+    };
+  }
+  static {
+    this.styles = i`
+    :host {
+      /* Vars overridable (estilo Ionic), default = cadena --ok-* → --ion-* → hex.
+         --tone-color y --tone-icon se reasignan por tone abajo. */
+      --tone-color: var(--ok-primary, var(--ion-color-primary, #3880ff));
+      --background-opacity: 0.1;
+      --color: var(--ok-text, var(--ion-text-color, #1c1b17));
+      --border-radius: var(--ok-radius, var(--ion-border-radius, 8px));
+      --padding: var(--ok-spacing, var(--ion-padding, 16px));
+      --accent-width: 4px;
+      --font: var(--ok-font, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+
+      /* Responsive: el banner ocupa el ancho del contenedor. */
+      display: block;
+      width: 100%;
+      font-family: var(--font);
+      box-sizing: border-box;
+    }
+    :host([hidden]) { display: none; }
+
+    /* Mapa de tonos → color Ionic + icono por defecto. */
+    :host([tone='success']) { --tone-color: var(--ok-success, var(--ion-color-success, #2dd55b)); }
+    :host([tone='warning']) { --tone-color: var(--ok-warning, var(--ion-color-warning, #ffc409)); }
+    :host([tone='danger'])  { --tone-color: var(--ok-danger, var(--ion-color-danger, #c5000f)); }
+    :host([tone='neutral']) { --tone-color: var(--ok-medium, var(--ion-color-medium, #5f5f5f)); }
+    /* info / sin tono → primary (default ya aplicado en :host). */
+
+    .box {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: var(--padding);
+      border-radius: var(--border-radius);
+      border-inline-start: var(--accent-width) solid var(--tone-color);
+      /* Fondo tonal: el color del tono con baja opacidad (color-mix con fallback al borde fino). */
+      background: color-mix(in srgb, var(--tone-color) calc(var(--background-opacity) * 100%), transparent);
+      color: var(--color);
+    }
+
+    .icon {
+      flex: 0 0 auto;
+      font-size: 1.4rem;
+      line-height: 1;
+      color: var(--tone-color);
+      margin-top: 0.05rem;
+    }
+
+    .content {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .text {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .heading {
+      font-weight: 700;
+      font-size: 0.98rem;
+      line-height: 1.3;
+    }
+    .body {
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    /* Si no hay actions, el slot queda vacío y no ocupa espacio. */
+    .actions.empty { display: none; }
+
+    .close {
+      flex: 0 0 auto;
+      background: none;
+      border: 0;
+      cursor: pointer;
+      padding: 0.15rem;
+      margin: -0.15rem -0.15rem 0 0;
+      color: inherit;
+      opacity: 0.6;
+      font-size: 1.2rem;
+      line-height: 1;
+      border-radius: 4px;
+      transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease),
+        border-color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease),
+        opacity 0.15s ease, transform 120ms ease;
+    }
+    @media (hover: hover) {
+      .close:hover { opacity: 1; background: rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.07); }
+    }
+    .close:active { transform: scale(var(--ok-press-scale, 0.97)); }
+
+    /* Móvil: las actions bajan bajo el texto (apiladas a ancho completo). */
+    @media (max-width: 640px) {
+      .row { flex-direction: column; align-items: stretch; }
+      .actions { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .close:hover,
+      .close:active { transform: none; }
+    }
+  `;
+  }
+  // Textos efectivos: defaults en inglés + overrides del consumidor.
+  get t() {
+    return { ...DEFAULT_LABELS, ...this.labels };
+  }
+  // Icono por defecto según el tono (overridable por la prop `icon`).
+  defaultIcon() {
+    switch (this.tone) {
+      case "success":
+        return iconCheckmarkCircle;
+      case "warning":
+        return iconWarning;
+      case "danger":
+        return iconAlertCircle;
+      case "neutral":
+        return iconInformationCircle;
+      case "info":
+      default:
+        return iconInformationCircle;
+    }
+  }
+  // Oculta el banner y avisa al consumidor; éste puede revertir restaurando `hidden=false`.
+  dismiss() {
+    this.hidden = true;
+    this.dispatchEvent(new CustomEvent("ok-dismiss", { bubbles: true, composed: true }));
+  }
+  render() {
+    const iconName = this.icon ?? this.defaultIcon();
+    return b2`
+      <div class="box" role="status">
+        <ion-icon class="icon" .icon=${okIcon(iconName)} aria-hidden="true"></ion-icon>
+        <div class="content">
+          <div class="row">
+            <div class="text">
+              ${this.heading ? b2`<div class="heading">${this.heading}</div>` : null}
+              <div class="body"><slot></slot></div>
+            </div>
+            <div class="actions ${this.hasActions ? "" : "empty"}">
+              <slot name="actions" @slotchange=${this.onActionsSlotChange}></slot>
+            </div>
+          </div>
+        </div>
+        ${this.dismissible ? b2`
+              <button class="close" aria-label=${this.t.dismiss} @click=${this.dismiss}>
+                <ion-icon .icon=${iconClose} aria-hidden="true"></ion-icon>
+              </button>
+            ` : null}
+      </div>
+    `;
+  }
+};
+__decorateClass2([
+  n4({ type: String, reflect: true })
+], OkInlineFeedback.prototype, "tone");
+__decorateClass2([
+  n4({ type: String })
+], OkInlineFeedback.prototype, "heading");
+__decorateClass2([
+  n4({ type: String })
+], OkInlineFeedback.prototype, "icon");
+__decorateClass2([
+  n4({ type: Boolean, reflect: true })
+], OkInlineFeedback.prototype, "dismissible");
+__decorateClass2([
+  n4({ type: Boolean, reflect: true })
+], OkInlineFeedback.prototype, "hidden");
+__decorateClass2([
+  n4({ attribute: false })
+], OkInlineFeedback.prototype, "labels");
+__decorateClass2([
+  r5()
+], OkInlineFeedback.prototype, "hasActions");
+define("ok-inline-feedback", OkInlineFeedback);
+
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
+var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
+var i4 = class {
+  constructor(t5) {
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AT(t5, e5, i7) {
+    this._$Ct = t5, this._$AM = e5, this._$Ci = i7;
+  }
+  _$AS(t5, e5) {
+    return this.update(t5, e5);
+  }
+  update(t5, e5) {
+    return this.render(...e5);
+  }
+};
+
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+var { I: t4 } = j;
+var i5 = (o7) => o7;
+var s4 = () => document.createComment("");
+var v2 = (o7, n6, e5) => {
+  const l3 = o7._$AA.parentNode, d3 = void 0 === n6 ? o7._$AB : n6._$AA;
+  if (void 0 === e5) {
+    const i7 = l3.insertBefore(s4(), d3), n7 = l3.insertBefore(s4(), d3);
+    e5 = new t4(i7, n7, o7, o7.options);
+  } else {
+    const t5 = e5._$AB.nextSibling, n7 = e5._$AM, c5 = n7 !== o7;
+    if (c5) {
+      let t6;
+      e5._$AQ?.(o7), e5._$AM = o7, void 0 !== e5._$AP && (t6 = o7._$AU) !== n7._$AU && e5._$AP(t6);
+    }
+    if (t5 !== d3 || c5) {
+      let o8 = e5._$AA;
+      for (; o8 !== t5; ) {
+        const t6 = i5(o8).nextSibling;
+        i5(l3).insertBefore(o8, d3), o8 = t6;
+      }
+    }
+  }
+  return e5;
+};
+var u3 = (o7, t5, i7 = o7) => (o7._$AI(t5, i7), o7);
+var m3 = {};
+var p3 = (o7, t5 = m3) => o7._$AH = t5;
+var M2 = (o7) => o7._$AH;
+var h3 = (o7) => {
+  o7._$AR(), o7._$AA.remove();
+};
+
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
+var u4 = (e5, s5, t5) => {
+  const r6 = /* @__PURE__ */ new Map();
+  for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
+  return r6;
+};
+var c4 = e4(class extends i4 {
+  constructor(e5) {
+    if (super(e5), e5.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
+  }
+  dt(e5, s5, t5) {
+    let r6;
+    void 0 === t5 ? t5 = s5 : void 0 !== s5 && (r6 = s5);
+    const l3 = [], o7 = [];
+    let i7 = 0;
+    for (const s6 of e5) l3[i7] = r6 ? r6(s6, i7) : i7, o7[i7] = t5(s6, i7), i7++;
+    return { values: o7, keys: l3 };
+  }
+  render(e5, s5, t5) {
+    return this.dt(e5, s5, t5).values;
+  }
+  update(s5, [t5, r6, c5]) {
+    const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t5, r6, c5);
+    if (!Array.isArray(d3)) return this.ut = a3, p4;
+    const h4 = this.ut ??= [], v3 = [];
+    let m4, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
+    for (; x2 <= j2 && k2 <= w2; ) if (null === d3[x2]) x2++;
+    else if (null === d3[j2]) j2--;
+    else if (h4[x2] === a3[k2]) v3[k2] = u3(d3[x2], p4[k2]), x2++, k2++;
+    else if (h4[j2] === a3[w2]) v3[w2] = u3(d3[j2], p4[w2]), j2--, w2--;
+    else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
+    else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
+    else if (void 0 === m4 && (m4 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m4.has(h4[x2])) if (m4.has(h4[j2])) {
+      const e5 = y3.get(a3[k2]), t6 = void 0 !== e5 ? d3[e5] : null;
+      if (null === t6) {
+        const e6 = v2(s5, d3[x2]);
+        u3(e6, p4[k2]), v3[k2] = e6;
+      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e5] = null;
+      k2++;
+    } else h3(d3[j2]), j2--;
+    else h3(d3[x2]), x2++;
+    for (; k2 <= w2; ) {
+      const e5 = v2(s5, v3[w2 + 1]);
+      u3(e5, p4[k2]), v3[k2++] = e5;
+    }
+    for (; x2 <= j2; ) {
+      const e5 = d3[x2++];
+      null !== e5 && h3(e5);
+    }
+    return this.ut = a3, p3(s5, v3), E;
+  }
+});
+
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
+var n5 = "important";
+var i6 = " !" + n5;
+var o6 = e4(class extends i4 {
+  constructor(t5) {
+    if (super(t5), t5.type !== t3.ATTRIBUTE || "style" !== t5.name || t5.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
+  }
+  render(t5) {
+    return Object.keys(t5).reduce((e5, r6) => {
+      const s5 = t5[r6];
+      return null == s5 ? e5 : e5 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
+    }, "");
+  }
+  update(e5, [r6]) {
+    const { style: s5 } = e5.element;
+    if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
+    for (const t5 of this.ft) null == r6[t5] && (this.ft.delete(t5), t5.includes("-") ? s5.removeProperty(t5) : s5[t5] = null);
+    for (const t5 in r6) {
+      const e6 = r6[t5];
+      if (null != e6) {
+        this.ft.add(t5);
+        const r7 = "string" == typeof e6 && e6.endsWith(i6);
+        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e6.slice(0, -11) : e6, r7 ? n5 : "") : s5[t5] = e6;
+      }
+    }
+    return E;
+  }
+});
+
 // node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-data-table.js
 var CSV_BOM = "\uFEFF";
 function decodeCsvBuffer(buf) {
@@ -1562,16 +1779,16 @@ function decodeCsvBuffer(buf) {
   }
   return text.charCodeAt(0) === 65279 ? text.slice(1) : text;
 }
-var __defProp2 = Object.defineProperty;
-var __decorateClass2 = (decorators, target, key, kind) => {
+var __defProp3 = Object.defineProperty;
+var __decorateClass3 = (decorators, target, key, kind) => {
   var result = void 0;
   for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
     if (decorator = decorators[i7])
       result = decorator(target, key, result) || result;
-  if (result) __defProp2(target, key, result);
+  if (result) __defProp3(target, key, result);
   return result;
 };
-var DEFAULT_LABELS = {
+var DEFAULT_LABELS2 = {
   search: "Search\u2026",
   empty: "No results",
   filters: "Filters",
@@ -1699,7 +1916,7 @@ var OkDataTable = class extends i3 {
     .tk-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.18); z-index: 19; }
     .drawer { position: absolute; top: 0; right: 0; height: 100%; width: 340px; max-width: 88%;
       background: var(--background); border-left: 1px solid var(--border-color);
-      box-shadow: -10px 0 28px rgba(0, 0, 0, 0.10); display: flex; flex-direction: column; z-index: 20;
+      display: flex; flex-direction: column; z-index: 20;
       animation: tk-slide-in 0.18s ease; }
     @keyframes tk-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .drawer .dh { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
@@ -1885,7 +2102,7 @@ var OkDataTable = class extends i3 {
   }
   // ── i18n: textos efectivos (default inglés ← overrides de `.labels`) ──────────────────────
   get t() {
-    return { ...DEFAULT_LABELS, ...this.labels };
+    return { ...DEFAULT_LABELS2, ...this.labels };
   }
   /** Placeholder efectivo del buscador (prop explícita → label i18n → default inglés). */
   get effSearchPlaceholder() {
@@ -2719,151 +2936,151 @@ var OkDataTable = class extends i3 {
     `;
   }
 };
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "columns");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "rows");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "searchKeys");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "row-key-field" })
 ], OkDataTable.prototype, "rowKeyField");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "rowKey");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Number, attribute: "page-size" })
 ], OkDataTable.prototype, "pageSize");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "empty-message" })
 ], OkDataTable.prototype, "emptyMessage");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "search-placeholder" })
 ], OkDataTable.prototype, "searchPlaceholder");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "labels");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "actions");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "addable");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "pageSizeOptions");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean, reflect: true })
 ], OkDataTable.prototype, "fill");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean, attribute: "column-picker" })
 ], OkDataTable.prototype, "columnPicker");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "csv");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "csv-name" })
 ], OkDataTable.prototype, "csvName");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean, attribute: "server-side" })
 ], OkDataTable.prototype, "serverSide");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Number })
 ], OkDataTable.prototype, "total");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Number })
 ], OkDataTable.prototype, "page");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "searchable");
-__decorateClass2([
+__decorateClass3([
   n4({ type: String })
 ], OkDataTable.prototype, "sort");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "sort-dir" })
 ], OkDataTable.prototype, "sortDir");
-__decorateClass2([
+__decorateClass3([
   n4()
 ], OkDataTable.prototype, "title");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "views");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: "default-view" })
 ], OkDataTable.prototype, "defaultView");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "exportable");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "importable");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean, attribute: "column-selector" })
 ], OkDataTable.prototype, "columnSelector");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "pageSizes");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "selectable");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "selectedKeys");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "primaryAction");
-__decorateClass2([
+__decorateClass3([
   n4({ type: Boolean })
 ], OkDataTable.prototype, "inlineFilters");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "menuActions");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "cardTitle");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "cardIcon");
-__decorateClass2([
+__decorateClass3([
   n4({ attribute: false })
 ], OkDataTable.prototype, "renderCard");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "q");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "clientPage");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "clientPageSize");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "clientSort");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "clientSortDir");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "clientFilters");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "filterDraft");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "panel");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "viewMode");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "hiddenKeys");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "internalSelection");
-__decorateClass2([
+__decorateClass3([
   r5()
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
@@ -3206,7 +3423,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
     h3 { margin:.25rem 0 .5rem; font-size:1rem; }
-    .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius:10px; padding:.75rem 1rem; margin:0 0 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
+    .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius: var(--ok-radius-sm, 10px); padding:.75rem 1rem; margin:0 0 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
     .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; }
     .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
@@ -3521,8 +3738,8 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.panel === "movement" ? this.renderMovementPanel() : A}
         ${this.panel === "count" ? this.renderCountPanel() : A}
         ${this.formMsg ? b2`<p class="ok">${this.formMsg}</p>` : A}
-        ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
-        ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
+        ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
+        ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
@@ -3618,13 +3835,13 @@ var ErpCashregisterOpen = class extends i3 {
     this.styles = i`
     :host { display:flex; align-items:center; justify-content:center; height:100%; padding:1rem;
             font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
-    .card { width:min(94vw, 26rem); background:var(--ion-background-color,#fff); border-radius:16px;
-            padding:1.5rem; box-shadow:0 8px 32px rgba(0,0,0,.12); text-align:center; }
+    .card { width:min(94vw, 26rem); background:var(--ion-card-background,#fff); border-radius:var(--ok-radius-lg, 16px);
+            padding:1.5rem; box-shadow:var(--ok-shadow-md, 0 8px 32px rgba(0,0,0,.12)); text-align:center; }
     .ico { font-size:3rem; color:var(--ion-color-primary,#0091ce); }
     h2 { margin:.4rem 0 .2rem; font-size:1.3rem; }
-    .sub { color:#8b897f; font-size:.9rem; margin-bottom:1.2rem; }
+    .sub { color:var(--ion-color-medium,#8b897f); font-size:.9rem; margin-bottom:1.2rem; }
     .form { display:flex; flex-direction:column; gap:.8rem; text-align:left; }
-    .error { color:#d9480f; font-size:.85rem; margin-top:.6rem; }
+    .error { color:var(--ion-color-danger,#d9480f); font-size:.85rem; margin-top:.6rem; }
   `;
   }
   connectedCallback() {

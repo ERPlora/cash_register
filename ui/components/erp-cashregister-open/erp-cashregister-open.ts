@@ -56,13 +56,13 @@ export class ErpCashregisterOpen extends LitElement {
   static styles = css`
     :host { display:flex; align-items:center; justify-content:center; height:100%; padding:1rem;
             font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
-    .card { width:min(94vw, 26rem); background:var(--ion-background-color,#fff); border-radius:16px;
-            padding:1.5rem; box-shadow:0 8px 32px rgba(0,0,0,.12); text-align:center; }
+    .card { width:min(94vw, 26rem); background:var(--ion-card-background,#fff); border-radius:var(--ok-radius-lg, 16px);
+            padding:1.5rem; box-shadow:var(--ok-shadow-md, 0 8px 32px rgba(0,0,0,.12)); text-align:center; }
     .ico { font-size:3rem; color:var(--ion-color-primary,#0091ce); }
     h2 { margin:.4rem 0 .2rem; font-size:1.3rem; }
-    .sub { color:#8b897f; font-size:.9rem; margin-bottom:1.2rem; }
+    .sub { color:var(--ion-color-medium,#8b897f); font-size:.9rem; margin-bottom:1.2rem; }
     .form { display:flex; flex-direction:column; gap:.8rem; text-align:left; }
-    .error { color:#d9480f; font-size:.85rem; margin-top:.6rem; }
+    .error { color:var(--ion-color-danger,#d9480f); font-size:.85rem; margin-top:.6rem; }
   `;
 
   @state() private registers: Register[] = [];
