@@ -111,6 +111,28 @@ describe('el CIERRE convierte euros→céntimos por la frontera con nombre (como
   });
 });
 
+// #272 — «No se puede cerrar la caja»: con locale es-ES el usuario teclea «150,50» (coma decimal),
+// pero el input era `type="number"`. El navegador descarta la coma como valor inválido → el campo
+// queda vacío → el botón «Cerrar sesión» permanece deshabilitado y `closeSession` retorna antes de
+// llamar al backend. El handler y `aCentimos` están bien; el input es el que cortaba el valor.
+// Solución: `type="text"` + `inputmode="decimal"` (teclado numérico en móvil) + el patrón deja pasar
+// la coma para que llegue a `aCentimos`.
+describe('cerrar caja: el campo acepta coma decimal (no es type=number, #272)', () => {
+  it('el input de saldo contado NO es type=number (bloquea la coma en es-ES)', async () => {
+    const el = await montar();
+    // Abrir el panel de cierre para que renderice el input.
+    (el as unknown as { panel: string | null; target: unknown }).panel = 'close';
+    (el as unknown as { target: unknown }).target = { id: 's1', session_number: 'S-1', status: 'open' };
+    await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+    const input = el.shadowRoot.querySelector('section.panel ion-input[label="ui.labelCountedCash"]') as HTMLElement | null;
+    expect(input, 'no se encontró el input de saldo contado').toBeTruthy();
+    // `type=number` rechaza la coma → el valor se pierde → botón disabled → «no se puede cerrar».
+    // Cualquier cosa que no sea 'number' (text/tel…) deja pasar la coma hasta `aCentimos`.
+    // Se lee el atributo (no `.type`: happy-dom no lo expone como propiedad en ion-input).
+    expect(input!.getAttribute('type'), 'type=number bloquea la coma decimal; debe ser text/decimal').not.toBe('number');
+  });
+});
+
 describe('el arqueo por denominaciones se suma en CÉNTIMOS enteros (exacto)', () => {
   it('3 monedas de 0,05 € son 15 céntimos exactos (no 0.15000000000000002 €)', async () => {
     const el = await montar();
