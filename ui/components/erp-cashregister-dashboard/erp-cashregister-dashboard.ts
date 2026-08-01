@@ -361,7 +361,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         <ion-select fill="outline" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
           ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input fill="outline" type="number" label=${t('ui.labelOpeningBalance')} label-placement="floating" min="0" step="0.01" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
         <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
@@ -375,7 +375,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<section class="panel">
       <h3>${t('ui.closeSessionTitle')} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e: Event) => this.closeSession(e)}>
-        <ion-input fill="outline" type="number" label=${t('ui.labelCountedCash')} label-placement="floating" min="0" step="0.01" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
         <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${this.saving ? t('ui.closing') : t('ui.closeSession')}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
@@ -393,7 +393,7 @@ export class ErpCashRegisterDashboard extends LitElement {
           <ion-select-option value="in">${t('ui.movementIn')}</ion-select-option>
           <ion-select-option value="out">${t('ui.movementOut')}</ion-select-option>
         </ion-select>
-        <ion-input fill="outline" type="number" label=${t('ui.labelAmount')} label-placement="floating" min="0.01" step="0.01" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
         <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
         <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
