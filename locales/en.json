@@ -8,6 +8,10 @@
       "label": "Settings"
     }
   },
+  "setup": {
+    "title": "Your cash drawer",
+    "description": "Decide how the till opens and closes: the opening float, the closing count and the POS screen that stays locked until the drawer is open."
+  },
   "ui": {
     "title": "Cash Register",
     "openSession": "Open session",

@@ -78,6 +78,23 @@
     "get": "cash_register.settings.get",
     "set": "cash_register.settings.update"
   },
+  "setup": {
+    "query": "cash_register.settings.get",
+    "configured_when": [
+      {
+        "field": "id",
+        "truthy": true
+      }
+    ],
+    "title": "Your cash drawer",
+    "description": "Decide how the till opens and closes: the opening float, the closing count and the POS screen that stays locked until the drawer is open.",
+    "icon": "cash-outline",
+    "route": "/m/cash_register/settings",
+    "permission": "cash_register.manage_settings",
+    "countries": [],
+    "order": 90,
+    "required": false
+  },
   "migrations": {
     "postgres": [
       "migrations/postgres/001_init.sql",
