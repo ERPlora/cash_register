@@ -355,14 +355,15 @@ def canonical_schema() -> tuple[dict, str] | None:
         if res.returncode == 0:
             candidates.append((f"{hub}@{ref}", res.stdout))
 
-    fallback: tuple[dict, str] | None = None
     for source, raw in candidates:
         schema = json.loads(raw)
         setup = schema.get("properties", {}).get("setup", {}).get("properties", {})
         if "order" in setup and "countries" in setup:
             return schema, source
-        fallback = fallback or (schema, f"{source} (PREDATES hub#369)")
-    return fallback
+    # Every copy predates hub#369. Validating against one would be a FALSE RED — `countries` and
+    # `order` do not exist there and the block is `additionalProperties: false` — so this layer
+    # reports SKIPPED and says why. Never a silent green, never a red for being right.
+    return None
 
 
 def check_against_canonical_schema() -> None:
@@ -375,8 +376,10 @@ def check_against_canonical_schema() -> None:
     found = canonical_schema()
     if found is None:
         notes.append(
-            "SKIPPED canonical schema: hub/schemas/module.schema.json not found "
-            "(set ERPLORA_MODULE_SCHEMA or ERPLORA_HUB_DIR)"
+            "SKIPPED canonical schema: no copy of hub/schemas/module.schema.json that knows about "
+            "hub#369 (`setup.countries`/`setup.order`). The contract lives on the hub's `develop` "
+            "branch, NOT on `main`: point ERPLORA_MODULE_SCHEMA at it, or ERPLORA_HUB_DIR at a hub "
+            "checkout whose origin/develop is fetched"
         )
         return
 
@@ -547,20 +550,38 @@ def check_against_postgres(setup: dict) -> None:
     checks = setup.get("configured_when", [])
     psql(["-c", f'CREATE DATABASE "{DB}"'])
     try:
+        # Exactly what `installer::install` does, in its order: migrations, then the module's own
+        # seed for this dialect. Anything either of them creates is there BEFORE the user does a
+        # single thing — which is the whole point of the next assertion.
         for rel in MANIFEST["migrations"]["postgres"]:
             psql([], db=DB, stdin=(MODULE_DIR / rel).read_text())
-        ok("migrations apply on a clean Postgres")
+        for rel in MANIFEST.get("seed", {}).get("postgres", []):
+            # `seed::apply_module_seed` binds `:hub_id`, `:now` and a `:current_user_id` of
+            # "system": the seed is written by the installer, not by a user.
+            seed_params = {
+                "hub_id": HUB,
+                "now": "2026-08-07T09:00:00Z",
+                "current_user_id": "system",
+            }
+            psql([], db=DB, stdin=bind((MODULE_DIR / rel).read_text(), seed_params))
+        ok("migrations (+ seed, if any) apply on a clean Postgres")
 
-        # 1. A fresh hub has never saved the cash settings ⇒ the item is the user's to do.
+        # 1. THE ONE THAT MATTERS (services#26): a hub that was just installed and where nobody
+        #    ever opened the till must read PENDING. If the row this query reads were created by
+        #    the install itself — a seed, a DEFAULT row, another module writing it — the item would
+        #    report DONE on an untouched hub and the task would be hidden FOREVER, in silence:
+        #    nothing turns red when a checklist lies in the optimistic direction.
         rows = run_setup_query(setup)
-        if rows:
+        if rows or is_configured(rows, checks):
             fail(
-                f"fresh hub: the setup query returned {len(rows)} row(s), expected none (PENDING)"
+                f"a just-installed hub, with nobody having touched the till, already reads "
+                f"{'DONE' if is_configured(rows, checks) else 'a row'} "
+                f"({rows[:1]}) — the row is created by the install, not by the user, so the item "
+                f"would be ticked from birth and the task would never be shown. Use a query whose "
+                f"row only exists once somebody has actually configured something."
             )
-        elif is_configured(rows, checks):
-            fail("fresh hub: reads DONE with no row at all")
         else:
-            ok("fresh hub reads PENDING")
+            ok("a just-installed hub reads PENDING (no row is auto-created)")
 
         # 2. The user saves the cash settings from the screen `route` points at ⇒ done.
         run_command("cash_register.settings.update", SETTINGS_SNAPSHOT)
