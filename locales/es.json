@@ -8,6 +8,10 @@
       "label": "Ajustes"
     }
   },
+  "setup": {
+    "title": "Tu caja",
+    "description": "Decide cómo se abre y se cierra la caja: el fondo inicial, el arqueo de cierre y la pantalla del TPV que queda bloqueada hasta abrirla."
+  },
   "ui": {
     "title": "Caja",
     "openSession": "Abrir sesión",

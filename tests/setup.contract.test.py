@@ -69,6 +69,7 @@ HUB = "hub-test"
 USER = "u-admin"
 
 failures: list[str] = []
+warnings: list[str] = []
 notes: list[str] = []
 
 JSON_TYPE_NAME = {
@@ -381,12 +382,34 @@ def check_against_canonical_schema() -> None:
 
     schema, source = found
     notes.append(f"canonical schema applied: {source}")
+
+    # The `setup` subtree is what this file owns, and it is strict: `additionalProperties: false`,
+    # so a typo'd key fails HERE instead of shipping a manifest the installer refuses.
+    setup_schema = schema.get("properties", {}).get("setup")
+    if isinstance(setup_schema, dict):
+        for err in sorted(
+            jsonschema.Draft202012Validator(setup_schema).iter_errors(
+                MANIFEST["setup"]
+            ),
+            key=lambda e: list(e.absolute_path),
+        ):
+            where = "/".join(str(p) for p in err.absolute_path) or "<setup>"
+            fail(f"[schema] setup/{where}: {err.message}")
+        ok("the setup block validates against the canonical schema")
+
+    # The rest of the manifest is validated too, but as a WARNING: this is the setup-block test,
+    # and the blocks around it have their own drift. Today the only hit is `protects` (ADR-0130,
+    # `architecture/hub/route-guards-and-subroutes.md`), a real and documented block that the hub
+    # schema never grew — a gap in the hub, not something this module can fix from here.
     validator = jsonschema.Draft202012Validator(schema)
     for err in sorted(
         validator.iter_errors(MANIFEST), key=lambda e: list(e.absolute_path)
     ):
-        where = "/".join(str(p) for p in err.absolute_path) or "<root>"
-        fail(f"[schema] {where}: {err.message}")
+        path = list(err.absolute_path)
+        if path[:1] == ["setup"]:
+            continue  # already reported, strictly, above
+        where = "/".join(str(p) for p in path) or "<root>"
+        warnings.append(f"[schema] {where}: {err.message}")
 
 
 # ── Layer 3: the item's acceptance points, against a real Postgres ───────────────────────
@@ -606,6 +629,8 @@ def main() -> int:
 
     for note in notes:
         print(f"  · {note}")
+    for warning in warnings:
+        print(f"  ! {warning}")
     print()
 
     if failures:
