@@ -1,28 +1,39 @@
 name: Release
 
-# AUTO-BUMP de la versión del módulo.
+# AUTO-BUMP of the module version.
 #
-# POR QUÉ: el SaaS ya republica solo — su GitHub App recibe el `push` a main (webhook
-# `github_app_webhook` → `handle_push_event` → `sync_module_repository`) y recrea el paquete.
-# PERO solo sube un zip si esa versión NO existe ya en Object Storage: las rutas
-# `modules/{id}/v{version}.zip` son CREATE-ONLY, porque sobrescribir un zip publicado rompería
-# el SHA256 que verifican los hubs ya desplegados al instalar.
+# WHY: the SaaS already republishes on its own — its GitHub App receives the `push` to main
+# (webhook `github_app_webhook` → `handle_push_event` → `sync_module_repository`) and rebuilds the
+# package. BUT it only uploads a zip when that version does NOT exist yet in Object Storage:
+# `modules/{id}/v{version}.zip` paths are CREATE-ONLY, because overwriting a published zip would
+# break the SHA256 that already-deployed hubs verify at install time.
 #
-# Consecuencia: un merge a main SIN bump no llega nunca al marketplace (el sync corre, ve la
-# misma versión y salta la subida). Y el Hub tampoco ofrece «hay una actualización», porque eso
-# lo decide comparando el número de versión.
+# Consequence: a merge to main WITHOUT a bump never reaches the marketplace (the sync runs, sees
+# the same version and skips the upload). The Hub does not offer "an update is available" either,
+# because that is decided by comparing version numbers.
 #
-# Este workflow sube el patch por su cuenta, así que nadie tiene que acordarse. Mismo patrón que
-# `publish.yml` de OutfitKit.
+# This workflow bumps the patch on its own, so nobody has to remember. Same pattern as OutfitKit's
+# `publish.yml`.
 #
-# Anti-bucle: el push de vuelta lo hace GITHUB_TOKEN, y GitHub NO dispara workflows con los
-# pushes hechos con ese token. El `if` del job es defensa extra por si algún día se usa un PAT.
-# El filtro `paths` tampoco incluye module.json/package.json (lo único que toca el bot).
+# `module.json` IS a trigger path (pm#68). The manifest is exactly where the bug that CLOSES THE
+# DOOR lives — `Manifest::load` is the first thing `installer::install` does, so a mistyped value
+# there does not degrade a feature, it makes the whole module impossible to install. Leaving the
+# manifest out of `paths` meant such a fix merged green, closed its issue and never republished:
+# the broken version stayed as the latest one served by the marketplace.
+#
+# ANTI-LOOP — three independent layers, none of them the `paths` filter:
+#   1. The bump is pushed with GITHUB_TOKEN, and GitHub does NOT trigger workflows for pushes made
+#      with that token. No run is even created for the bot's `chore(release)` commit.
+#   2. If that ever changed (a PAT, a deploy key), the job-level `if` skips any push whose head
+#      commit is a `chore(release)`: the run is created, the job does not execute.
+#   3. And even then, the step re-reads the tip of origin/main and exits when it already is a
+#      `chore(release)`, so a bump can never be stacked on top of another bump.
 
 on:
   push:
     branches: [main]
     paths:
+      - 'module.json'
       - 'ui/**'
       - 'queries/**'
       - 'commands/**'
@@ -36,7 +47,7 @@ on:
 permissions:
   contents: write
 
-# Dos merges seguidos: el segundo espera, no cancela (si no, se perdería un bump).
+# Two merges in a row: the second one waits, it does not cancel (otherwise a bump would be lost).
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -44,28 +55,30 @@ concurrency:
 jobs:
   bump:
     runs-on: ubuntu-latest
+    # Anti-loop layer 2: never bump on top of a release commit.
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
     steps:
       - uses: actions/checkout@v4
 
-      # El bump se calcula SOBRE LA PUNTA DE main, no sobre el sha que disparó la run.
-      # Dos pushes seguidos a main (o dos eventos del mismo commit) lanzan dos runs; la
-      # concurrency las serializa, pero cada checkout se queda anclado a su sha. La segunda
-      # pushearía desde una base ya obsoleta → `[rejected] (fetch first)`, y encima repetiría
-      # la misma versión. Por eso: sincronizar con origin/main, y si otra run ya dejó el bump
-      # ahí, no hay nada que publicar.
-      - name: Bump del patch + push (dispara el sync del SaaS)
+      # The bump is computed ON THE TIP of main, not on the sha that triggered the run.
+      # Two pushes in a row to main (or two events for the same commit) start two runs; the
+      # concurrency group serializes them, but each checkout stays pinned to its own sha. The
+      # second one would push from an already stale base → `[rejected] (fetch first)`, and it
+      # would repeat the same version on top of that. Hence: sync with origin/main, and if
+      # another run already left the bump there, there is nothing to publish.
+      - name: Bump patch + push (triggers the SaaS sync)
         run: |
           set -euo pipefail
           git config user.name  "erplora-bot"
           git config user.email "bot@erplora.com"
 
-          for intento in 1 2 3; do
+          for attempt in 1 2 3; do
             git fetch --quiet origin main
             git reset --hard --quiet origin/main
 
+            # Anti-loop layer 3: the tip already is a release commit.
             if git log -1 --pretty=%s | grep -q '^chore(release)'; then
-              echo "→ main ya está bumpeado por otra run: $(git log -1 --pretty=%s). Nada que publicar."
+              echo "→ main is already bumped by another run: $(git log -1 --pretty=%s). Nothing to publish."
               exit 0
             fi
 
@@ -90,12 +103,12 @@ jobs:
             git commit -m "chore(release): v$NEW"
 
             if git push origin HEAD:main; then
-              echo "→ publicado v$NEW"
+              echo "→ published v$NEW"
               exit 0
             fi
 
-            echo "→ main se movió durante el intento $intento; reintento sobre la nueva punta"
+            echo "→ main moved during attempt $attempt; retrying on the new tip"
           done
 
-          echo "::error::no se pudo pushear el bump tras 3 intentos"
+          echo "::error::could not push the bump after 3 attempts"
           exit 1
