@@ -82,7 +82,7 @@ pub fn add_count_pure(input: Value) -> Output {
         denoms.as_object().cloned().unwrap_or_default()).to_string()));
     p.insert("total".into(), json!(total));
     p.insert("notes".into(), json!(sor(&payload, "notes", "")));
-    Output { operations: vec![Operation::sql("cash_register._insert_count", p)], events: vec![] }
+    Output { operations: vec![Operation::sql("cash_register._insert_count", p)], events: vec![], ..Default::default() }
 }
 
 /// record_sale: listener de sale.completed → movimiento de caja (tipo 'sale') en la
@@ -94,7 +94,7 @@ pub fn record_sale_pure(input: Value) -> Output {
     // el movimiento para el arqueo. Una venta TODA-invitación (total 0) igual registra el movimiento.
     let gift_total = money::from_json(payload.get("gift_total").unwrap_or(&Value::Null), 0);
     if total <= 0 && gift_total <= 0 {
-        return Output { operations: vec![], events: vec![] };
+        return Output { operations: vec![], events: vec![], ..Default::default() };
     }
     let mut p = Map::new();
     p.insert("movement_id".into(), new_id(&input, 0));
@@ -105,7 +105,7 @@ pub fn record_sale_pure(input: Value) -> Output {
     p.insert("sale_reference".into(), payload.get("sale_id").cloned().unwrap_or(json!("")));
     p.insert("description".into(), json!(format!("Sale {}", s(payload.get("sale_id").unwrap_or(&Value::Null)))));
     // La sesión abierta del usuario activo la resuelve el SQL (subquery por current_user_id).
-    Output { operations: vec![Operation::sql("cash_register._movement_for_open_session", p)], events: vec![] }
+    Output { operations: vec![Operation::sql("cash_register._movement_for_open_session", p)], events: vec![], ..Default::default() }
 }
 
 #[cfg(test)]
