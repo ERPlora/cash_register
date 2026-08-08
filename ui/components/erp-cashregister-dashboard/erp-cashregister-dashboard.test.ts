@@ -28,6 +28,8 @@ beforeEach(() => {
     currency: 'EUR',
     formatAmount: (units: number) => `${(units || 0).toFixed(2)} €`,
     formatMoney: (cents: number) => `${((cents || 0) / 100).toFixed(2)} €`,
+    // Scale of the hub's currency, injected by the shell: 2 in EUR, 0 in JPY, 3 in KWD.
+    currencyDecimals: 2,
   };
 });
 
@@ -108,6 +110,70 @@ describe('el CIERRE convierte euros→céntimos por la frontera con nombre (como
     const cierre = comandos.find((c) => c.name === 'cash_register.session.close');
     expect(cierre, 'no se llamó a session.close').toBeTruthy();
     expect(cierre!.payload.closing_balance).toBe(15050);
+  });
+});
+
+// The third border of the same contract (cash_register#10). Opening and closing already converted;
+// the MANUAL MOVEMENT did not — `Math.abs(Number(this.movAmount))` sent the typed euros straight to
+// `cash_register._insert_movement`, whose `amount` column is INTEGER minor units. A 12,34 € cash-in
+// was persisted as 12 minor units — 0,12 € — and the day's count came out short.
+describe('the manual movement crosses the same border as opening and closing', () => {
+  const spyCommands = () => {
+    const seen: { name: string; payload: Record<string, unknown> }[] = [];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = async (name: string, payload: Record<string, unknown>) => {
+      seen.push({ name, payload });
+      return {};
+    };
+    return seen;
+  };
+
+  const addMovement = async (amount: string, type: 'in' | 'out' = 'in') => {
+    const el = await montar();
+    const wc = el as unknown as {
+      target: { id: string } | null; movAmount: string; movType: string; movDescription: string;
+      addMovement(e: Event): Promise<void>;
+    };
+    wc.target = { id: 's1' };
+    wc.movAmount = amount;
+    wc.movType = type;
+    wc.movDescription = 'Fondo extra';
+    await wc.addMovement(new Event('submit'));
+  };
+
+  it('a 12,34 € cash-in travels as 1234 minor units, not as 12.34', async () => {
+    const comandos = spyCommands();
+    await addMovement('12,34');
+    const mov = comandos.find((c) => c.name === 'cash_register.movement.add');
+    expect(mov, 'movement.add was not called').toBeTruthy();
+    expect(mov!.payload.amount).toBe(1234);
+  });
+
+  it('a cash-out keeps the sign AND the scale', async () => {
+    const comandos = spyCommands();
+    await addMovement('12,34', 'out');
+    expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.amount).toBe(-1234);
+  });
+
+  // Same trap as every other border: the scale belongs to the hub's currency. In JPY the minor
+  // unit IS the yen, so a fixed ×100 books a movement 100 times too big.
+  it('uses the hub currency scale, not a hardcoded 2 decimals', async () => {
+    const comandos = spyCommands();
+    ((globalThis as Record<string, unknown>).erplora as Record<string, unknown>).currencyDecimals = 0;
+    await addMovement('1999');
+    expect(
+      comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.amount,
+      '1999 ¥ are 1999 minor units, not 199900',
+    ).toBe(1999);
+  });
+
+  // A hub that has not been redeployed yet may run a shell that does not inject the scale. The
+  // amount must still be a number: a `NaN` reaching an INTEGER column is silent corruption.
+  it('a shell that does not inject the scale falls back to 2, never to NaN', async () => {
+    const comandos = spyCommands();
+    delete ((globalThis as Record<string, unknown>).erplora as Record<string, unknown>).currencyDecimals;
+    await addMovement('12,34');
+    expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.amount).toBe(1234);
   });
 });
 

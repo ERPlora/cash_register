@@ -4,7 +4,7 @@ import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
-import { createListController } from '@erplora/module-sdk';
+import { createListController, majorToMinor } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
 // Catálogo i18n del módulo (ADR-0055): esbuild inlinea estos JSON en el `dist` del WC. Los textos
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
@@ -12,11 +12,18 @@ import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
-/** Euros tecleados → CÉNTIMOS (el dinero es INTEGER, ADR-0007/0123). «150,50» → 15050.
- *  Mandaba los euros crudos a una columna INTEGER: abrir con 150,50 € guardaba 1,50 €. */
-function aCentimos(v: string | number): number {
-  const n = Number(String(v ?? '').replace(',', '.'));
-  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+/** Typed major units → MINOR units (money is INTEGER, ADR-0007/0123). «150,50» → 15050.
+ *
+ *  Two things this border has to get right, and both were bugs here:
+ *  - the **decimal comma** (es-ES types «150,50»): without normalising it, `Number` gives `NaN`;
+ *  - the **scale**, which belongs to the hub's currency — `majorToMinor` from the module-sdk with
+ *    `erplora.currencyDecimals`, not a fixed ×100. In JPY the minor unit IS the yen, and a ×100
+ *    here books 100 times too much. */
+function toMinorUnits(v: string | number): number {
+  // A shell too old to inject the scale would give `undefined` here, and `10 ** undefined` is NaN —
+  // silent corruption in an INTEGER column. Same fallback the SDK client uses: 2.
+  const decimals = erplora().currencyDecimals;
+  return majorToMinor(String(v ?? '').replace(',', '.'), typeof decimals === 'number' ? decimals : 2);
 }
 
 interface ErploraClientLike extends ListClient {
@@ -35,6 +42,8 @@ interface ErploraClientLike extends ListClient {
   formatAmount(units: number, opts?: { currency?: string; locale?: string }): string;
   /** Dinero (ADR-0123): `formatMoney` recibe CÉNTIMOS y divide según la moneda. */
   formatMoney(cents: number, opts?: { currency?: string; locale?: string }): string;
+  /** Decimals of the hub's currency — the scale of money. 2 in EUR, 0 in JPY, 3 in KWD. */
+  currencyDecimals: number;
 }
 
 interface Session {
@@ -220,7 +229,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       await erplora().command('cash_register.session.open', {
         register_id: this.openRegisterId || null,
         session_number: sessionNumber(),
-        opening_balance: aCentimos(this.openBalance),
+        opening_balance: toMinorUnits(this.openBalance),
         opening_notes: this.openNotes.trim(),
       });
       this.openRegisterId = '';
@@ -250,7 +259,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
         // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
         // con coma decimal directamente 0 (Number('150,50') = NaN).
-        closing_balance: aCentimos(this.closeBalance),
+        closing_balance: toMinorUnits(this.closeBalance),
         closing_notes: this.closeNotes.trim(),
       });
       this.closeBalance = '';
@@ -277,7 +286,11 @@ export class ErpCashRegisterDashboard extends LitElement {
   private async addMovement(ev: Event) {
     ev.preventDefault();
     if (!this.target || !this.movAmount) return;
-    const amount = Math.abs(Number(this.movAmount) || 0);
+    // Same named border as opening and closing: typed major units → MINOR units. It used to send
+    // `Number(this.movAmount)` — the raw euros — into an INTEGER minor-units column, so a 12,34 €
+    // cash-in was booked as 0,12 €; and with a decimal comma `Number` gave `NaN`, which collapsed
+    // to 0 and the movement was rejected without ever reaching the server (#272, same class).
+    const amount = Math.abs(toMinorUnits(this.movAmount));
     if (amount <= 0) { this.formError = erplora().t(CATALOG, 'ui.errInvalidAmount'); return; }
     this.saving = true;
     this.formError = '';
@@ -292,7 +305,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         description: this.movDescription.trim(),
       });
       const msg = erplora().t(CATALOG, this.movType === 'in' ? 'ui.msgMovementIn' : 'ui.msgMovementOut', {
-        amount: amount.toFixed(2),
+        amount: erplora().formatMoney(amount), // minor units in, hub currency out
       });
       this.movAmount = '';
       this.movDescription = '';
