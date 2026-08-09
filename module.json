@@ -477,7 +477,13 @@
       "sale.voided": {
         "command": "cash_register._reverse_sale"
       }
-    }
+    },
+    "emits": [
+      "cash_register.movement_added",
+      "cash_register.session_closed",
+      "cash_register.session_opened",
+      "cash_register.settings_updated"
+    ]
   },
   "ui": {
     "entry": "dist/cash_register.esm.js"
