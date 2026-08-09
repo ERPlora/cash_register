@@ -1,0 +1,29 @@
+# The module's CI gate — ERPlora/pm#107.
+#
+# WHY. On 2026-08-09 a sweep of the 24 published modules found FOUR shipping SQL that Postgres
+# cannot even PREPARE. Since ADR-0154 modules ship the `postgres` dialect only, so "does not
+# prepare" is not a degraded feature: the command DOES NOT EXIST in any hub. Nothing stood between a
+# broken merge and the marketplace — the SaaS republishes on its own when it sees the `push` to
+# main.
+#
+# WHAT RUNS. `erplora validate . --pg`: manifest, portable SQL, migrations, JSON schemas, ADR-0127
+# contracts, bundle CSP, `dist/handler.wasm` freshness — and a real PREPARE of every declared
+# statement against a scratch Postgres built from this module's own migrations. It does NOT compile
+# the Rust handler to wasm32 (that needs a checkout of the hub, which is not here) and it says so
+# out loud instead of pretending.
+#
+# The whole body lives in ERPlora/module-toolkit, next to the validator it runs: closing a hole
+# there closes it in the 24 repos at once, without 24 pull requests.
+name: Module gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: module-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    uses: ERPlora/module-toolkit/.github/workflows/module-gate.yml@main
