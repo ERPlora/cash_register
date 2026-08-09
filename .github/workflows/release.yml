@@ -53,7 +53,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ERPlora/pm#107 — nothing reaches the marketplace without passing `erplora validate --pg`. The
+  # `pull_request` gate guards the door people walk through; THIS file is the one that publishes
+  # (the SaaS republishes when it sees the bump commit), so a red gate must mean no bump: the
+  # marketplace keeps serving the last version that WAS valid.
+  #
+  # Same anti-loop condition as `bump`, so a `chore(release)` commit does not pay for a gate run
+  # either — and a skipped `gate` skips `bump` with it, which is the behaviour that was already
+  # there.
+  gate:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    uses: ERPlora/module-toolkit/.github/workflows/module-gate.yml@main
+
   bump:
+    needs: gate
     runs-on: ubuntu-latest
     # Anti-loop layer 2: never bump on top of a release commit.
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
