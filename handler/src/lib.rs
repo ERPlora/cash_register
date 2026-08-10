@@ -102,6 +102,10 @@ pub fn record_sale_pure(input: Value) -> Output {
     p.insert("amount".into(), json!(total));
     p.insert("gift_total".into(), json!(gift_total));
     p.insert("payment_method".into(), json!(sor(&payload, "payment_method_name", "cash")));
+    // Tipo CANÓNICO del método (`cash`|`card`|`transfer`|`other`), de sale.completed (hub#778):
+    // el cajón compara contra este, no contra el `name` localizado. Default `cash` para ventas de
+    // eventos antiguos o emisores que aún no lo envíen (degradación: igual que antes del fix).
+    p.insert("payment_method_type".into(), json!(sor(&payload, "payment_method_type", "cash")));
     p.insert("sale_reference".into(), payload.get("sale_id").cloned().unwrap_or(json!("")));
     p.insert("description".into(), json!(format!("Sale {}", s(payload.get("sale_id").unwrap_or(&Value::Null)))));
     // La sesión abierta del usuario activo la resuelve el SQL (subquery por current_user_id).
@@ -146,6 +150,34 @@ mod tests {
         assert_eq!(out.operations[0].params["amount"], json!(4550));
         assert_eq!(out.operations[0].params["movement_type"], json!("sale"));
         assert_eq!(out.operations[0].params["sale_reference"], json!("sale1"));
+    }
+
+    #[test]
+    fn record_sale_persists_the_payment_method_type_from_the_event() {
+        // hub#778: the movement carries the canonical TYPE so the drawer keys on it, not on the
+        // localized NAME. A Spanish "Efectivo" sale must reach the drawer as type "cash".
+        let payload = json!({ "sale_id": "s1", "total": 2000, "payment_method_name": "Efectivo", "payment_method_type": "cash" });
+        let out = record_sale_pure(inp(payload, 1));
+        assert_eq!(out.operations[0].params["payment_method"], json!("Efectivo"));
+        assert_eq!(out.operations[0].params["payment_method_type"], json!("cash"));
+    }
+
+    #[test]
+    fn record_sale_a_card_sale_carries_its_type() {
+        // The regression: a card sale must NOT inflate the expected drawer cash. Its type travels
+        // so the drawer excludes it from the expected total.
+        let payload = json!({ "sale_id": "s2", "total": 5000, "payment_method_name": "Tarjeta", "payment_method_type": "card" });
+        let out = record_sale_pure(inp(payload, 1));
+        assert_eq!(out.operations[0].params["payment_method_type"], json!("card"));
+    }
+
+    #[test]
+    fn record_sale_without_type_defaults_to_cash() {
+        // Backward compat: an event from an older emitter (pre-#778) without payment_method_type
+        // defaults to "cash" — same behavior as before the fix.
+        let payload = json!({ "sale_id": "s3", "total": 1500, "payment_method_name": "Cash" });
+        let out = record_sale_pure(inp(payload, 1));
+        assert_eq!(out.operations[0].params["payment_method_type"], json!("cash"));
     }
 
     #[test]

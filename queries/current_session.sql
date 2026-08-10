@@ -17,7 +17,9 @@ SELECT
   s.opening_balance,
   -- El CAJÓN es efectivo FÍSICO (QA 07-16): el esperado solo suma movimientos cash
   -- (COALESCE cubre filas antiguas sin método). Tarjeta queda en movimientos y KPIs.
-  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method,'cash') = 'cash' THEN m.amount ELSE 0 END),0) AS expected_total,
+  -- hub#778: se compara contra payment_method_TYPE ('cash' canónico), no contra el `name`
+  -- localizado («Efectivo»/«Cash») que nunca iguala 'cash' en Postgres case-sensitive.
+  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END),0) AS expected_total,
   COALESCE(SUM(CASE WHEN m.movement_type='sale' THEN m.amount ELSE 0 END),0) AS total_sales,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
