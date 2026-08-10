@@ -98,7 +98,8 @@
   "migrations": {
     "postgres": [
       "migrations/postgres/001_init.sql",
-      "migrations/postgres/002_gift_total.sql"
+      "migrations/postgres/002_gift_total.sql",
+      "migrations/postgres/003_payment_method_type.sql"
     ]
   },
   "queries": {
