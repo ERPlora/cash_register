@@ -419,6 +419,12 @@
       ],
       "ai": {
         "description": "Records a cash movement (cash-in or cash-out) against the active register session"
+      },
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "cash_register.session_unavailable",
+        "message": "That cash session is not available: it does not exist in this business or it has been deleted."
       }
     },
     "cash_register.count.add": {
