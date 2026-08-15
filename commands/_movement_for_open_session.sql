@@ -1,25 +1,24 @@
--- Inserta un movimiento en la sesión de caja ABIERTA del TERMINAL (resuelta por subquery).
+-- Crea el movimiento de una venta en la sesión de caja ABIERTA.
 --
--- ADR-0130: la sesión es del TERMINAL, no del cajero (patrón unánime del mercado: Odoo, Loyverse,
--- Square, Lightspeed, Shopify). Se abre una vez por jornada y TODOS los cajeros venden dentro de
--- ella; quién cobró queda en `employee_id` (= :current_user_id), que es donde vive la
--- responsabilidad individual.
+-- `payment_method` es el nombre que ve la persona («Efectivo», «Tarjeta») y está localizado.
+-- `payment_method_type` es el tipo CANÓNICO (`cash`|`card`|`transfer`|`other`, hub#778) y es el
+-- único contra el que se puede comparar: el arqueo de `close_session.sql` suma por él, y la
+-- anulación de `_reverse_sale.sql` filtra por él.
 --
--- ANTES esto filtraba por `s.user_id = :current_user_id` y PERDÍA DINERO: si la cajera A abría la
--- caja y cobraba la B, el INSERT ... SELECT no casaba ninguna fila → no se insertaba el movimiento,
--- SIN ERROR, y el efectivo desaparecía del arqueo. Además contradecía a `current_session.sql`, que
--- ya resolvía la sesión abierta del HUB (el KPI decía «caja abierta» mientras el cobro se perdía).
---
--- Sigue siendo un INSERT ... SELECT con guardia: si NO hay sesión abierta no inserta nada (y no
--- falla). Que no se pueda vender con la caja cerrada lo garantiza el guard de ruta (ADR-0130), no
--- esta sentencia.
---
--- Runtime inyecta :movement_id, :hub_id, :current_user_id, :now; el resto los aporta el handler.
+-- ⚠️ Faltaba en esta lista de columnas (cash_register#33). El handler calculaba el tipo y lo pasaba
+-- como parámetro, este INSERT no lo nombraba, y la columna se quedaba con el `DEFAULT 'cash'` que le
+-- puso su migración (`003_payment_method_type.sql`, sin backfill). Resultado: **el arqueo contaba
+-- las ventas con tarjeta como efectivo**, y el cajero cuadraba contra un descuadre fantasma del
+-- tamaño exacto de lo cobrado con tarjeta. La anulación sí la escribía desde el principio, así que
+-- las dos mitades de la misma operación no coincidían.
 INSERT INTO cash_register_movement
-  (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, gift_total, employee_id,
+  (id, hub_id, session_id, movement_type, amount, payment_method, payment_method_type,
+   sale_reference, description, gift_total, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT
-  :movement_id, :hub_id, s.id, :movement_type, :amount, :payment_method, :sale_reference, :description, :gift_total, :current_user_id,
+  :movement_id, :hub_id, s.id, :movement_type, :amount, :payment_method,
+  COALESCE(NULLIF(CAST(:payment_method_type AS TEXT), ''), 'cash'),
+  :sale_reference, :description, :gift_total, :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM cash_register_session s
 WHERE s.hub_id = :hub_id AND s.is_deleted = 0 AND s.status = 'open'
