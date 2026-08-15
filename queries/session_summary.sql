@@ -15,6 +15,6 @@ SELECT
   COALESCE(SUM(m.gift_total),0) AS total_gifts,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
-LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0
+LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0 AND m.hub_id = :hub_id
 WHERE s.id = :session_id AND s.hub_id = :hub_id
 GROUP BY s.id;
