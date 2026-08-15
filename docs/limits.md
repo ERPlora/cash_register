@@ -2,6 +2,24 @@
 
 ## Known limitation you should know about
 
+**Sessions that were already open when this fix shipped may still close short.** Until
+cash_register#33, a sale's movement did not record *how* it was paid: the column existed with a
+`DEFAULT 'cash'` and nothing wrote to it, so the closing reconciliation counted **card sales as
+cash** and the drawer came up short by exactly the card takings.
+
+It is fixed forward — every movement created from now on records its real payment type. But the
+movements written **before** the fix still say `cash`, and there is deliberately **no backfill**:
+
+- **Sessions already closed are not rewritten.** Their expected, counted and difference are frozen
+  on the session row: they are the record of what a cashier actually counted that day. Correcting
+  them afterwards would not fix anything that happened — it would falsify a closed arqueo.
+- **For a session still open**, the only trace left of the payment type is the method's *display
+  name* (`Efectivo`, `Tarjeta`, `Card`…), which is localised and free text per business. Guessing
+  from it would turn a known error into an invisible one.
+
+⚠️ **What to do:** if a session was open across the update, close it and read the difference knowing
+its card sales are still counted as cash. From the next session on, the figure is right.
+
 **The live "expected cash" widget counts refunds and cash-outs with the wrong sign.** The current
 session KPI flips the sign of negative movements, so a session with refunds or cash-outs shows a
 higher expected figure than it should. **The closing reconciliation is correct** — it is only the
