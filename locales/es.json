@@ -1,5 +1,6 @@
 {
   "name": "Caja",
+  "description": "Abre y cierra la caja, registra entradas y salidas de efectivo y cuadra el cajón al cerrar.",
   "navigation": {
     "cash_register": {
       "label": "Caja"
