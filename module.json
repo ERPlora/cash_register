@@ -31,6 +31,15 @@
     "admin": [
       "*"
     ],
+    "cashier": [
+      "cash_register.view_session",
+      "cash_register.add_session",
+      "cash_register.close_session",
+      "cash_register.view_movement",
+      "cash_register.add_movement",
+      "cash_register.view_count",
+      "cash_register.add_count"
+    ],
     "manager": [
       "cash_register.view_session",
       "cash_register.add_session",
