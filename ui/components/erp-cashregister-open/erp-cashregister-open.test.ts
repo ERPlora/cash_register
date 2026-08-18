@@ -99,4 +99,21 @@ describe('erp-cashregister-open', () => {
     const abrir = comandos.find((c) => c.name === 'cash_register.session.open')!;
     expect(abrir.payload.opening_balance).toBe(15050);
   });
+
+  // cash_register#11: two devices on the guard screen press "Open" at once → the database keeps ONE
+  // and refuses the other with `cash_register.session_already_open`. The loser reads it in their
+  // language, not the raw English fallback of the server.
+  it('si el servidor rechaza con `cash_register.session_already_open`, muestra el texto traducido', async () => {
+    registros = [CAJONES[0]];
+    const el = await montar();
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = async () => {
+      const e = new Error('A cash session is already open for this business.') as Error & { code: string };
+      e.code = 'cash_register.session_already_open';
+      throw e;
+    };
+    el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el.shadowRoot.querySelector('.error')?.textContent?.trim()).toBe('ui.errSessionAlreadyOpen');
+  });
 });

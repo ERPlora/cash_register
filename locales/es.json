@@ -64,6 +64,7 @@
     "msgCountAdded": "Arqueo registrado · total contado {total}",
     "errSessionNotOpen": "La sesión {session} no está abierta",
     "errOpenSession": "No se pudo abrir la sesión",
+    "errSessionAlreadyOpen": "Ya hay una sesión de caja abierta. Ciérrala antes de abrir otra.",
     "errCloseSession": "No se pudo cerrar la sesión",
     "errInvalidAmount": "Importe inválido",
     "errAddMovement": "No se pudo registrar el movimiento",

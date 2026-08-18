@@ -128,6 +128,12 @@ export class ErpCashRegisterDashboard extends LitElement {
 
   @state() registers: Register[] = [];
 
+  // One open session per hub (cash_register#11). The database owns the invariant (partial unique
+  // index + `cash_register.session_already_open`); this flag only keeps the dashboard from INVITING
+  // the second open. Source: `cash_register.current_session` (server, per hub) — not the paginated
+  // list, where the open session may sit on another page.
+  @state() hasOpenSession = false;
+
   private ctrl!: ListController<Session>;
 
   private unsub?: () => void;
@@ -168,10 +174,11 @@ export class ErpCashRegisterDashboard extends LitElement {
       sort: 'id',
       dir: 'asc',
     });
-    await Promise.all([this.ctrl.load(), this.loadRegisters()]);
+    await Promise.all([this.ctrl.load(), this.loadRegisters(), this.loadCurrentSession()]);
     try {
-      const a = erplora().on('cash_register.session_opened', () => this.ctrl.load());
-      const b = erplora().on('cash_register.session_closed', () => this.ctrl.load());
+      const refresh = () => { void this.ctrl.load(); void this.loadCurrentSession(); };
+      const a = erplora().on('cash_register.session_opened', refresh);
+      const b = erplora().on('cash_register.session_closed', refresh);
       this.unsub = () => { a(); b(); };
     } catch { /* preview */ }
   }
@@ -193,6 +200,13 @@ export class ErpCashRegisterDashboard extends LitElement {
       const res = await erplora().queryAll<Register>('cash_register.registers.list');
       this.registers = Array.isArray(res) ? res : [];
     } catch { /* lista de cajones opcional; el form sigue funcionando sin ella */ }
+  }
+
+  private async loadCurrentSession() {
+    try {
+      const rows = await erplora().query<Session[]>('cash_register.current_session');
+      this.hasOpenSession = Array.isArray(rows) && rows.length > 0;
+    } catch { /* preview: the button stays enabled and the server keeps the invariant */ }
   }
 
   private resetPanel() {
@@ -237,9 +251,17 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.openNotes = '';
       this.resetPanel();
       this.formMsg = erplora().t(CATALOG, 'ui.msgSessionOpened');
-      await this.ctrl.load();
+      await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errOpenSession');
+      // The domain refusal (`expect_rows` gate) travels as `code`: translate it, and re-read the
+      // server so the button reflects the session that DID win.
+      const code = (e as { code?: unknown } | null)?.code;
+      if (code === 'cash_register.session_already_open') {
+        this.formError = erplora().t(CATALOG, 'ui.errSessionAlreadyOpen');
+        void Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
+      } else {
+        this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errOpenSession');
+      }
     } finally {
       this.saving = false;
     }
@@ -265,7 +287,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.closeBalance = '';
       this.closeNotes = '';
       this.resetPanel();
-      await this.ctrl.load();
+      await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
       const row = (this.ctrl.rows ?? []).find((r) => String(r.id) === String(sessionId));
       this.formMsg = row
         ? erplora().t(CATALOG, 'ui.msgSessionClosedDetail', {
@@ -446,7 +468,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<div>
         <header>
           <h2>${t('ui.title')}</h2>
-          <ion-button size="small" @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
+          <ion-button size="small" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t('ui.errSessionAlreadyOpen') : ''} @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
         </header>
         ${this.panel === 'open' ? this.renderOpenPanel() : nothing}
         ${this.panel === 'close' ? this.renderClosePanel() : nothing}

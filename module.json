@@ -99,7 +99,8 @@
     "postgres": [
       "migrations/postgres/001_init.sql",
       "migrations/postgres/002_gift_total.sql",
-      "migrations/postgres/003_payment_method_type.sql"
+      "migrations/postgres/003_payment_method_type.sql",
+      "migrations/postgres/004_one_open_session_per_hub.sql"
     ]
   },
   "queries": {
@@ -391,8 +392,14 @@
       "emit": [
         "cash_register.session_opened"
       ],
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "cash_register.session_already_open",
+        "message": "A cash session is already open for this business. Close it before opening a new one."
+      },
       "ai": {
-        "description": "Opens a new cash register session with the specified opening float"
+        "description": "Opens a new cash register session with the specified opening float. Fails with cash_register.session_already_open if the hub already has an open session."
       }
     },
     "cash_register.session.close": {

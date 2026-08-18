@@ -3,6 +3,7 @@
   "module": "cash_register",
   "consumes": {
     "queries": [
+      "cash_register.current_session",
       "cash_register.registers.list",
       "cash_register.sessions.list"
     ],
