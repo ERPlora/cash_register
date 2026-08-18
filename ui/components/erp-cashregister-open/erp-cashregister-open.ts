@@ -104,7 +104,13 @@ export class ErpCashregisterOpen extends LitElement {
       // El comando emite `cash_register.session_opened`; el shell lo escucha (`resume_on` del bloque
       // `protects`) y remonta el TPV en esta misma ruta.
     } catch (e) {
-      this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errOpenSession');
+      // cash_register#11: the database keeps ONE open session per hub; a lost race comes back as
+      // the domain code `cash_register.session_already_open` — shown translated, not as the raw
+      // English fallback. The winning session emits `session_opened`, so the shell resumes anyway.
+      const code = (e as { code?: unknown } | null)?.code;
+      this.error = code === 'cash_register.session_already_open'
+        ? erplora().t(CATALOG, 'ui.errSessionAlreadyOpen')
+        : e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errOpenSession');
     } finally {
       this.saving = false;
     }

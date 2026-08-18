@@ -63,6 +63,7 @@
     "msgCountAdded": "Count recorded · total counted {total}",
     "errSessionNotOpen": "Session {session} is not open",
     "errOpenSession": "Could not open the session",
+    "errSessionAlreadyOpen": "A cash session is already open. Close it before opening a new one.",
     "errCloseSession": "Could not close the session",
     "errInvalidAmount": "Invalid amount",
     "errAddMovement": "Could not record the movement",

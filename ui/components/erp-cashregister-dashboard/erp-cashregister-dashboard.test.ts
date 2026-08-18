@@ -207,3 +207,50 @@ describe('el arqueo por denominaciones se suma en CÉNTIMOS enteros (exacto)', (
     expect(wc.countTotalCents()).toBe(15);
   });
 });
+
+// cash_register#11 — one open session per hub. The database owns the invariant (partial unique
+// index + `expect_rows` → `cash_register.session_already_open`); the dashboard must not INVITE the
+// second open, and when the server refuses it, the person must read WHY in their language.
+describe('una sola sesión abierta por hub (cash_register#11)', () => {
+  const ABIERTA = { id: 's1', session_number: 'S-1', status: 'open', opening_balance: 0, expected_balance: null, closing_balance: null, difference: null };
+  const CERRADA = { id: 's0', session_number: 'S-0', status: 'closed', opening_balance: 0, expected_balance: 0, closing_balance: 0, difference: 0 };
+
+  function botonAbrir(el: HTMLElement): HTMLButtonElement {
+    const btn = Array.from(el.shadowRoot!.querySelectorAll('header ion-button')).find(
+      (b) => b.textContent?.trim() === 'ui.openSession',
+    );
+    if (!btn) throw new Error('header «Abrir sesión» button not found');
+    return btn as HTMLButtonElement;
+  }
+
+  // The truth comes from `cash_register.current_session` (server, per hub), NOT from the paginated
+  // list: the open session may sit on another page, and the list is sorted by id.
+  it('con una sesión ABIERTA (current_session no vacía), «Abrir sesión» está deshabilitado', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.query = async (name: string) => (name === 'cash_register.current_session' ? [ABIERTA] : []);
+    sdk.queryPage = async () => ({ rows: [CERRADA, ABIERTA], total: 2, limit: 50, offset: 0 });
+    const el = await montar();
+    expect(botonAbrir(el).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('sin sesión abierta (current_session vacía), «Abrir sesión» está habilitado', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.query = async () => [];
+    sdk.queryPage = async () => ({ rows: [CERRADA], total: 1, limit: 50, offset: 0 });
+    const el = await montar();
+    expect(botonAbrir(el).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('si el servidor rechaza con `cash_register.session_already_open`, se muestra el texto traducido', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = async () => {
+      const e = new Error('A cash session is already open for this business.') as Error & { code: string };
+      e.code = 'cash_register.session_already_open';
+      throw e;
+    };
+    const el = await montar();
+    const wc = el as unknown as { formError: string; openSession(e: Event): Promise<void> };
+    await wc.openSession(new Event('submit'));
+    expect(wc.formError).toBe('ui.errSessionAlreadyOpen');
+  });
+});
