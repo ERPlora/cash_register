@@ -1,7 +1,7 @@
 {
   "name": "@erplora/module-cash_register",
   "private": true,
-  "version": "1.3.22",
+  "version": "1.3.23",
   "type": "module",
   "description": "Módulo cash_register (manifest declarativo + Web Component Lit).",
   "dependencies": {
