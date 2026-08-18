@@ -25,7 +25,8 @@
     "cash_register.view_count",
     "cash_register.add_count",
     "cash_register.view_reports",
-    "cash_register.manage_settings"
+    "cash_register.manage_settings",
+    "cash_register.view_expected_totals"
   ],
   "role_permissions": {
     "admin": [
@@ -48,7 +49,8 @@
       "cash_register.add_movement",
       "cash_register.view_count",
       "cash_register.add_count",
-      "cash_register.view_reports"
+      "cash_register.view_reports",
+      "cash_register.view_expected_totals"
     ],
     "employee": [
       "cash_register.view_session",
@@ -109,7 +111,8 @@
       "migrations/postgres/001_init.sql",
       "migrations/postgres/002_gift_total.sql",
       "migrations/postgres/003_payment_method_type.sql",
-      "migrations/postgres/004_one_open_session_per_hub.sql"
+      "migrations/postgres/004_one_open_session_per_hub.sql",
+      "migrations/postgres/005_require_blind_count.sql"
     ]
   },
   "queries": {
@@ -298,7 +301,14 @@
       "permission": "cash_register.view_session",
       "sql": "queries/current_session.sql",
       "ai": {
-        "description": "Returns the currently open cash register session for the hub with its expected cash total (opening balance + net movements). Empty if no session is open."
+        "description": "Returns the currently open cash register session for the hub. Includes its expected cash total (opening balance + net cash movements) unless the blind-count setting is on. Empty if no session is open."
+      }
+    },
+    "cash_register.current_session.expected": {
+      "permission": "cash_register.view_expected_totals",
+      "sql": "queries/current_session_expected.sql",
+      "ai": {
+        "description": "Returns the currently open cash register session with its expected cash total (opening balance + net cash movements), for supervisors — not subject to the blind-count setting. Empty if no session is open."
       }
     }
   },
@@ -308,14 +318,14 @@
       "icon": "cash-outline",
       "category": "Caja",
       "size": "sm",
-      "permission": "cash_register.view_session",
+      "permission": "cash_register.view_expected_totals",
       "sectors": [
         "retail",
         "hosteleria"
       ],
       "default": true,
       "kind": "kpi",
-      "query": "cash_register.current_session",
+      "query": "cash_register.current_session.expected",
       "refresh_on": [
         "cash_register.movement_added",
         "cash_register.session_opened",
