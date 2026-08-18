@@ -280,8 +280,11 @@ def check_migration_heals_existing_duplicates() -> None:
     db = f"{DB}_dups"
     psql(["-c", f'CREATE DATABASE "{db}"'])
     try:
+        # The healing lives in 004; later migrations (005+) are unrelated to it and must not be
+        # applied BEFORE the seed — the partial unique index would refuse the duplicate rows.
         migrations = MANIFEST["migrations"]["postgres"]
-        for rel in migrations[:-1]:
+        heal = next(i for i, rel in enumerate(migrations) if rel.endswith("004_one_open_session_per_hub.sql"))
+        for rel in migrations[:heal]:
             psql([], db=db, stdin=(MODULE_DIR / rel).read_text())
         seed = (
             "INSERT INTO cash_register_session (id, hub_id, user_id, session_number, status, opened_at, is_deleted) VALUES "
@@ -290,7 +293,7 @@ def check_migration_heals_existing_duplicates() -> None:
             f"('other', '{OTHER_HUB}', '{USER}', 'S-B', 'open', '2026-08-10T19:00:00Z', 0)"
         )
         psql(["-c", seed], db=db)
-        psql([], db=db, stdin=(MODULE_DIR / migrations[-1]).read_text())
+        psql([], db=db, stdin=(MODULE_DIR / migrations[heal]).read_text())
         rows = psql(["-tAc", "SELECT id || ':' || status FROM cash_register_session ORDER BY id"], db=db).split()
         if rows != ["new:open", "old:closed", "other:open"]:
             fail(f"migration on a hub with duplicate open sessions left {rows}; expected the newest open, the older closed, other hubs untouched")

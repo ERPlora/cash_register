@@ -50,11 +50,14 @@ and difference from there.
 | Record a drawer count | `cash_register.add_count` |
 | See reports and the discrepancy widget | `cash_register.view_reports` |
 | Create a register, change the settings | `cash_register.manage_settings` |
+| See the expected cash of the open session before the count (widget, `current_session.expected`) | `cash_register.view_expected_totals` |
 
-By role: **admin** has everything. **manager** and **employee** share the exact same set —
-everything except `manage_settings`. That means a normal employee can open, close, move cash and
-count, which is what a shift needs; but **only an admin can create a drawer or change how the till
-behaves**.
+By role: **admin** has everything. **manager** has everything except `manage_settings`.
+**employee** is a manager minus `view_expected_totals`; **cashier** (declared by `sales`) gets the
+operational set only. That means a normal employee can open, close, move cash and count, which is
+what a shift needs; but **only an admin can create a drawer or change how the till behaves**, and
+with the *Arqueo ciego* setting on, only admins and managers see what the drawer should hold before
+it is counted.
 
 ## Dependencies — what breaks if something is missing
 

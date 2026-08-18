@@ -74,6 +74,7 @@
     "toggleRequireOpening": "Exigir fondo de apertura",
     "toggleRequireClosing": "Exigir recuento al cierre",
     "toggleAllowNegative": "Permitir saldo negativo",
+    "toggleRequireBlindCount": "Arqueo ciego (ocultar el efectivo esperado hasta contar)",
     "toggleAutoOpen": "Abrir sesión al iniciar sesión",
     "toggleAutoClose": "Cerrar sesión al salir",
     "labelProtectedPosUrl": "URL del POS protegida",

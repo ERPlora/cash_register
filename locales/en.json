@@ -73,6 +73,7 @@
     "toggleRequireOpening": "Require opening float",
     "toggleRequireClosing": "Require closing count",
     "toggleAllowNegative": "Allow negative balance",
+    "toggleRequireBlindCount": "Blind count (hide expected cash until counted)",
     "toggleAutoOpen": "Open session on login",
     "toggleAutoClose": "Close session on logout",
     "labelProtectedPosUrl": "Protected POS URL",

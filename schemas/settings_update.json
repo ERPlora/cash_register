@@ -9,6 +9,7 @@
     "require_opening_balance": { "type": "boolean", "title": "Exigir saldo de apertura" },
     "require_closing_balance": { "type": "boolean", "title": "Exigir saldo de cierre" },
     "allow_negative_balance": { "type": "boolean", "title": "Permitir saldo negativo" },
+    "require_blind_count": { "type": "boolean", "title": "Arqueo ciego", "description": "Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento. Los supervisores (permiso «ver totales esperados») siguen viéndolo." },
     "auto_open_session_on_login": { "type": "boolean", "title": "Abrir caja al iniciar sesión" },
     "auto_close_session_on_logout": { "type": "boolean", "title": "Cerrar caja al cerrar sesión" },
     "protected_pos_url": { "type": "string", "maxLength": 255, "title": "URL del POS protegido", "description": "Ruta del POS que exige tener la caja abierta." }
@@ -18,6 +19,7 @@
     "require_opening_balance",
     "require_closing_balance",
     "allow_negative_balance",
+    "require_blind_count",
     "auto_open_session_on_login",
     "auto_close_session_on_logout",
     "protected_pos_url"
