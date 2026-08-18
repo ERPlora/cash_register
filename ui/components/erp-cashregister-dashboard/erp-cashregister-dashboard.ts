@@ -80,6 +80,9 @@ export class ErpCashRegisterDashboard extends LitElement {
     .panel { border:1px solid var(--ion-border-color,#e7e2d6); border-radius: var(--ok-radius-sm, 10px); padding:.75rem 1rem; margin:0 0 1rem; background:var(--ok-surface-2, var(--ion-color-step-50, rgba(var(--ion-text-color-rgb, 24, 24, 27), 0.04))); }
     .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; }
     .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    /* Touch targets (cash_register#12): Ionic md buttons default to 36 px; a finger needs 44×44
+       (WCAG 2.5.5). Same rule OutfitKit applied to the data-table actions. */
+    header ion-button, .form ion-button { min-height: 44px; min-width: 44px; margin: 0; }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
@@ -398,8 +401,8 @@ export class ErpCashRegisterDashboard extends LitElement {
         </ion-select>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+        <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
+        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -412,8 +415,8 @@ export class ErpCashRegisterDashboard extends LitElement {
       <form class="form" @submit=${(e: Event) => this.closeSession(e)}>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" size="small" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${this.saving ? t('ui.closing') : t('ui.closeSession')}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${this.saving ? t('ui.closing') : t('ui.closeSession')}</ion-button>
+        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -430,8 +433,8 @@ export class ErpCashRegisterDashboard extends LitElement {
         </ion-select>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
-        <ion-button type="submit" size="small" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
-        <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+        <ion-button type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
+        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -456,8 +459,8 @@ export class ErpCashRegisterDashboard extends LitElement {
         <div class="denoms">${COINS.map(denomInput)}</div>
         <p class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(this.countTotalCents())}</p>
         <div class="form">
-          <ion-button type="submit" size="small" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
-          <ion-button size="small" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+          <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
+          <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
         </div>
       </form>
     </section>`;
@@ -468,7 +471,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<div>
         <header>
           <h2>${t('ui.title')}</h2>
-          <ion-button size="small" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t('ui.errSessionAlreadyOpen') : ''} @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
+          <ion-button ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t('ui.errSessionAlreadyOpen') : ''} @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
         </header>
         ${this.panel === 'open' ? this.renderOpenPanel() : nothing}
         ${this.panel === 'close' ? this.renderClosePanel() : nothing}
