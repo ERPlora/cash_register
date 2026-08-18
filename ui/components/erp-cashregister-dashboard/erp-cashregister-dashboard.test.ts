@@ -254,3 +254,28 @@ describe('una sola sesión abierta por hub (cash_register#11)', () => {
     expect(wc.formError).toBe('ui.errSessionAlreadyOpen');
   });
 });
+
+// cash_register#12 — touch targets. `ion-button size="small"` renders ~27 px high; a finger needs
+// 44×44 (WCAG 2.5.5 / Ionic default size). The data-table already got its 44 px centrally in
+// OutfitKit (`9927a4c`); these are the module's OWN buttons: header, and every panel's submit and
+// cancel.
+describe('los botones propios del módulo son táctiles (cash_register#12)', () => {
+  it('ningún ion-button del dashboard usa size="small" (cabecera + los 4 paneles)', async () => {
+    const el = await montar();
+    const wc = el as unknown as { panel: string | null; target: unknown; updateComplete: Promise<unknown> };
+    const small: string[] = [];
+    for (const panel of ['open', 'close', 'movement', 'count']) {
+      wc.panel = panel;
+      wc.target = { id: 's1', session_number: 'S-1', status: 'open' };
+      await wc.updateComplete;
+      el.shadowRoot!.querySelectorAll('ion-button[size="small"]').forEach((b) => small.push(`${panel}: ${b.textContent?.trim()}`));
+    }
+    expect(small, 'size="small" = ~27 px, below the 44 px touch target').toEqual([]);
+  });
+
+  it('el CSS del componente garantiza 44 px de alto a los botones propios (Ionic md por defecto son 36 px)', async () => {
+    const el = await montar();
+    const styles = (el.constructor as unknown as { styles: { cssText: string } }).styles;
+    expect(styles.cssText).toContain('header ion-button, .form ion-button { min-height: 44px;');
+  });
+});
