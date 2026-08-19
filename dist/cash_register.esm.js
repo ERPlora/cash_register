@@ -680,16 +680,16 @@ var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "a
 var s = Symbol();
 var o = /* @__PURE__ */ new WeakMap();
 var n = class {
-  constructor(t5, e5, o7) {
-    if (this._$cssResult$ = true, o7 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t5, this.t = e5;
+  constructor(t5, e6, o8) {
+    if (this._$cssResult$ = true, o8 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = t5, this.t = e6;
   }
   get styleSheet() {
     let t5 = this.o;
     const s5 = this.t;
     if (e && void 0 === t5) {
-      const e5 = void 0 !== s5 && 1 === s5.length;
-      e5 && (t5 = o.get(s5)), void 0 === t5 && ((this.o = t5 = new CSSStyleSheet()).replaceSync(this.cssText), e5 && o.set(s5, t5));
+      const e6 = void 0 !== s5 && 1 === s5.length;
+      e6 && (t5 = o.get(s5)), void 0 === t5 && ((this.o = t5 = new CSSStyleSheet()).replaceSync(this.cssText), e6 && o.set(s5, t5));
     }
     return t5;
   }
@@ -698,25 +698,25 @@ var n = class {
   }
 };
 var r = (t5) => new n("string" == typeof t5 ? t5 : t5 + "", void 0, s);
-var i = (t5, ...e5) => {
-  const o7 = 1 === t5.length ? t5[0] : e5.reduce((e6, s5, o8) => e6 + ((t6) => {
+var i = (t5, ...e6) => {
+  const o8 = 1 === t5.length ? t5[0] : e6.reduce((e7, s5, o9) => e7 + ((t6) => {
     if (true === t6._$cssResult$) return t6.cssText;
     if ("number" == typeof t6) return t6;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + t6 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(s5) + t5[o8 + 1], t5[0]);
-  return new n(o7, t5, s);
+  })(s5) + t5[o9 + 1], t5[0]);
+  return new n(o8, t5, s);
 };
-var S = (s5, o7) => {
-  if (e) s5.adoptedStyleSheets = o7.map((t5) => t5 instanceof CSSStyleSheet ? t5 : t5.styleSheet);
-  else for (const e5 of o7) {
-    const o8 = document.createElement("style"), n6 = t.litNonce;
-    void 0 !== n6 && o8.setAttribute("nonce", n6), o8.textContent = e5.cssText, s5.appendChild(o8);
+var S = (s5, o8) => {
+  if (e) s5.adoptedStyleSheets = o8.map((t5) => t5 instanceof CSSStyleSheet ? t5 : t5.styleSheet);
+  else for (const e6 of o8) {
+    const o9 = document.createElement("style"), n6 = t.litNonce;
+    void 0 !== n6 && o9.setAttribute("nonce", n6), o9.textContent = e6.cssText, s5.appendChild(o9);
   }
 };
 var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSSStyleSheet ? ((t6) => {
-  let e5 = "";
-  for (const s5 of t6.cssRules) e5 += s5.cssText;
-  return r(e5);
+  let e6 = "";
+  for (const s5 of t6.cssRules) e6 += s5.cssText;
+  return r(e6);
 })(t5) : t5;
 
 // ../module-toolkit/node_modules/@lit/reactive-element/node/reactive-element.js
@@ -768,18 +768,18 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
   }
   static createProperty(t5, s5 = y) {
     if (s5.state && (s5.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t5) && ((s5 = Object.create(s5)).wrapped = true), this.elementProperties.set(t5, s5), !s5.noAccessor) {
-      const i7 = Symbol(), e5 = this.getPropertyDescriptor(t5, i7, s5);
-      void 0 !== e5 && r2(this.prototype, t5, e5);
+      const i7 = Symbol(), e6 = this.getPropertyDescriptor(t5, i7, s5);
+      void 0 !== e6 && r2(this.prototype, t5, e6);
     }
   }
   static getPropertyDescriptor(t5, s5, i7) {
-    const { get: e5, set: h4 } = o2(this.prototype, t5) ?? { get() {
+    const { get: e6, set: h4 } = o2(this.prototype, t5) ?? { get() {
       return this[s5];
     }, set(t6) {
       this[s5] = t6;
     } };
-    return { get: e5, set(s6) {
-      const r6 = e5?.call(this);
+    return { get: e6, set(s6) {
+      const r6 = e6?.call(this);
       h4?.call(this, s6), this.requestUpdate(t5, r6, i7);
     }, configurable: true, enumerable: true };
   }
@@ -812,8 +812,8 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
   static finalizeStyles(t5) {
     const s5 = [];
     if (Array.isArray(t5)) {
-      const e5 = new Set(t5.flat(1 / 0).reverse());
-      for (const t6 of e5) s5.unshift(c(t6));
+      const e6 = new Set(t5.flat(1 / 0).reverse());
+      for (const t6 of e6) s5.unshift(c(t6));
     } else void 0 !== t5 && s5.push(c(t5));
     return s5;
   }
@@ -854,31 +854,31 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
     this._$AK(t5, i7);
   }
   _$ET(t5, s5) {
-    const i7 = this.constructor.elementProperties.get(t5), e5 = this.constructor._$Eu(t5, i7);
-    if (void 0 !== e5 && true === i7.reflect) {
+    const i7 = this.constructor.elementProperties.get(t5), e6 = this.constructor._$Eu(t5, i7);
+    if (void 0 !== e6 && true === i7.reflect) {
       const h4 = (void 0 !== i7.converter?.toAttribute ? i7.converter : b).toAttribute(s5, i7.type);
-      this._$Em = t5, null == h4 ? this.removeAttribute(e5) : this.setAttribute(e5, h4), this._$Em = null;
+      this._$Em = t5, null == h4 ? this.removeAttribute(e6) : this.setAttribute(e6, h4), this._$Em = null;
     }
   }
   _$AK(t5, s5) {
-    const i7 = this.constructor, e5 = i7._$Eh.get(t5);
-    if (void 0 !== e5 && this._$Em !== e5) {
-      const t6 = i7.getPropertyOptions(e5), h4 = "function" == typeof t6.converter ? { fromAttribute: t6.converter } : void 0 !== t6.converter?.fromAttribute ? t6.converter : b;
-      this._$Em = e5;
+    const i7 = this.constructor, e6 = i7._$Eh.get(t5);
+    if (void 0 !== e6 && this._$Em !== e6) {
+      const t6 = i7.getPropertyOptions(e6), h4 = "function" == typeof t6.converter ? { fromAttribute: t6.converter } : void 0 !== t6.converter?.fromAttribute ? t6.converter : b;
+      this._$Em = e6;
       const r6 = h4.fromAttribute(s5, t6.type);
-      this[e5] = r6 ?? this._$Ej?.get(e5) ?? r6, this._$Em = null;
+      this[e6] = r6 ?? this._$Ej?.get(e6) ?? r6, this._$Em = null;
     }
   }
-  requestUpdate(t5, s5, i7, e5 = false, h4) {
+  requestUpdate(t5, s5, i7, e6 = false, h4) {
     if (void 0 !== t5) {
       const r6 = this.constructor;
-      if (false === e5 && (h4 = this[t5]), i7 ??= r6.getPropertyOptions(t5), !((i7.hasChanged ?? m)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t5) && !this.hasAttribute(r6._$Eu(t5, i7)))) return;
+      if (false === e6 && (h4 = this[t5]), i7 ??= r6.getPropertyOptions(t5), !((i7.hasChanged ?? m)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t5) && !this.hasAttribute(r6._$Eu(t5, i7)))) return;
       this.C(t5, s5, i7);
     }
     false === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(t5, s5, { useDefault: i7, reflect: e5, wrapped: h4 }, r6) {
-    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t5) && (this._$Ej.set(t5, r6 ?? s5 ?? this[t5]), true !== h4 || void 0 !== r6) || (this._$AL.has(t5) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t5, s5)), true === e5 && this._$Em !== t5 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t5));
+  C(t5, s5, { useDefault: i7, reflect: e6, wrapped: h4 }, r6) {
+    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t5) && (this._$Ej.set(t5, r6 ?? s5 ?? this[t5]), true !== h4 || void 0 !== r6) || (this._$AL.has(t5) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t5, s5)), true === e6 && this._$Em !== t5 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t5));
   }
   async _$EP() {
     this.isUpdatePending = true;
@@ -902,8 +902,8 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
       }
       const t6 = this.constructor.elementProperties;
       if (t6.size > 0) for (const [s6, i7] of t6) {
-        const { wrapped: t7 } = i7, e5 = this[s6];
-        true !== t7 || this._$AL.has(s6) || void 0 === e5 || this.C(s6, void 0, i7, e5);
+        const { wrapped: t7 } = i7, e6 = this[s6];
+        true !== t7 || this._$AL.has(s6) || void 0 === e6 || this.C(s6, void 0, i7, e6);
       }
     }
     let t5 = false;
@@ -978,32 +978,32 @@ function V(t5, i7) {
   return void 0 !== e2 ? e2.createHTML(i7) : i7;
 }
 var N = (t5, i7) => {
-  const s5 = t5.length - 1, e5 = [];
+  const s5 = t5.length - 1, e6 = [];
   let n6, l3 = 2 === i7 ? "<svg>" : 3 === i7 ? "<math>" : "", c5 = v;
   for (let i8 = 0; i8 < s5; i8++) {
     const s6 = t5[i8];
     let a3, u5, d3 = -1, f3 = 0;
     for (; f3 < s6.length && (c5.lastIndex = f3, u5 = c5.exec(s6), null !== u5); ) f3 = c5.lastIndex, c5 === v ? "!--" === u5[1] ? c5 = _ : void 0 !== u5[1] ? c5 = m2 : void 0 !== u5[2] ? (y2.test(u5[2]) && (n6 = RegExp("</" + u5[2], "g")), c5 = p2) : void 0 !== u5[3] && (c5 = p2) : c5 === p2 ? ">" === u5[0] ? (c5 = n6 ?? v, d3 = -1) : void 0 === u5[1] ? d3 = -2 : (d3 = c5.lastIndex - u5[2].length, a3 = u5[1], c5 = void 0 === u5[3] ? p2 : '"' === u5[3] ? $ : g2) : c5 === $ || c5 === g2 ? c5 = p2 : c5 === _ || c5 === m2 ? c5 = v : (c5 = p2, n6 = void 0);
     const x2 = c5 === p2 && t5[i8 + 1].startsWith("/>") ? " " : "";
-    l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e5.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
+    l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e6.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
   }
-  return [V(t5, l3 + (t5[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e5];
+  return [V(t5, l3 + (t5[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e6];
 };
 var S2 = class _S {
-  constructor({ strings: t5, _$litType$: i7 }, e5) {
+  constructor({ strings: t5, _$litType$: i7 }, e6) {
     let r6;
     this.parts = [];
     let l3 = 0, a3 = 0;
     const u5 = t5.length - 1, d3 = this.parts, [f3, v3] = N(t5, i7);
-    if (this.el = _S.createElement(f3, e5), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
+    if (this.el = _S.createElement(f3, e6), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
       const t6 = this.el.content.firstChild;
       t6.replaceWith(...t6.childNodes);
     }
     for (; null !== (r6 = P.nextNode()) && d3.length < u5; ) {
       if (1 === r6.nodeType) {
         if (r6.hasAttributes()) for (const t6 of r6.getAttributeNames()) if (t6.endsWith(h2)) {
-          const i8 = v3[a3++], s5 = r6.getAttribute(t6).split(o3), e6 = /([.?@])?(.*)/.exec(i8);
-          d3.push({ type: 1, index: l3, name: e6[2], strings: s5, ctor: "." === e6[1] ? I : "?" === e6[1] ? L : "@" === e6[1] ? z : H }), r6.removeAttribute(t6);
+          const i8 = v3[a3++], s5 = r6.getAttribute(t6).split(o3), e7 = /([.?@])?(.*)/.exec(i8);
+          d3.push({ type: 1, index: l3, name: e7[2], strings: s5, ctor: "." === e7[1] ? I : "?" === e7[1] ? L : "@" === e7[1] ? z : H }), r6.removeAttribute(t6);
         } else t6.startsWith(o3) && (d3.push({ type: 6, index: l3 }), r6.removeAttribute(t6));
         if (y2.test(r6.tagName)) {
           const t6 = r6.textContent.split(o3), i8 = t6.length - 1;
@@ -1026,11 +1026,11 @@ var S2 = class _S {
     return s5.innerHTML = t5, s5;
   }
 };
-function M(t5, i7, s5 = t5, e5) {
+function M(t5, i7, s5 = t5, e6) {
   if (i7 === E) return i7;
-  let h4 = void 0 !== e5 ? s5._$Co?.[e5] : s5._$Cl;
-  const o7 = a2(i7) ? void 0 : i7._$litDirective$;
-  return h4?.constructor !== o7 && (h4?._$AO?.(false), void 0 === o7 ? h4 = void 0 : (h4 = new o7(t5), h4._$AT(t5, s5, e5)), void 0 !== e5 ? (s5._$Co ??= [])[e5] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t5, h4._$AS(t5, i7.values), h4, e5)), i7;
+  let h4 = void 0 !== e6 ? s5._$Co?.[e6] : s5._$Cl;
+  const o8 = a2(i7) ? void 0 : i7._$litDirective$;
+  return h4?.constructor !== o8 && (h4?._$AO?.(false), void 0 === o8 ? h4 = void 0 : (h4 = new o8(t5), h4._$AT(t5, s5, e6)), void 0 !== e6 ? (s5._$Co ??= [])[e6] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t5, h4._$AS(t5, i7.values), h4, e6)), i7;
 }
 var R = class {
   constructor(t5, i7) {
@@ -1043,17 +1043,17 @@ var R = class {
     return this._$AM._$AU;
   }
   u(t5) {
-    const { el: { content: i7 }, parts: s5 } = this._$AD, e5 = (t5?.creationScope ?? l2).importNode(i7, true);
-    P.currentNode = e5;
-    let h4 = P.nextNode(), o7 = 0, n6 = 0, r6 = s5[0];
+    const { el: { content: i7 }, parts: s5 } = this._$AD, e6 = (t5?.creationScope ?? l2).importNode(i7, true);
+    P.currentNode = e6;
+    let h4 = P.nextNode(), o8 = 0, n6 = 0, r6 = s5[0];
     for (; void 0 !== r6; ) {
-      if (o7 === r6.index) {
+      if (o8 === r6.index) {
         let i8;
         2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t5) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t5) : 6 === r6.type && (i8 = new Z(h4, this, t5)), this._$AV.push(i8), r6 = s5[++n6];
       }
-      o7 !== r6?.index && (h4 = P.nextNode(), o7++);
+      o8 !== r6?.index && (h4 = P.nextNode(), o8++);
     }
-    return P.currentNode = l2, e5;
+    return P.currentNode = l2, e6;
   }
   p(t5) {
     let i7 = 0;
@@ -1064,8 +1064,8 @@ var k = class _k {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
-  constructor(t5, i7, s5, e5) {
-    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t5, this._$AB = i7, this._$AM = s5, this.options = e5, this._$Cv = e5?.isConnected ?? true;
+  constructor(t5, i7, s5, e6) {
+    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t5, this._$AB = i7, this._$AM = s5, this.options = e6, this._$Cv = e6?.isConnected ?? true;
   }
   get parentNode() {
     let t5 = this._$AA.parentNode;
@@ -1091,10 +1091,10 @@ var k = class _k {
     this._$AH !== A && a2(this._$AH) ? this._$AA.nextSibling.data = t5 : this.T(l2.createTextNode(t5)), this._$AH = t5;
   }
   $(t5) {
-    const { values: i7, _$litType$: s5 } = t5, e5 = "number" == typeof s5 ? this._$AC(t5) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
-    if (this._$AH?._$AD === e5) this._$AH.p(i7);
+    const { values: i7, _$litType$: s5 } = t5, e6 = "number" == typeof s5 ? this._$AC(t5) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
+    if (this._$AH?._$AD === e6) this._$AH.p(i7);
     else {
-      const t6 = new R(e5, this), s6 = t6.u(this.options);
+      const t6 = new R(e6, this), s6 = t6.u(this.options);
       t6.p(i7), this.T(s6), this._$AH = t6;
     }
   }
@@ -1105,9 +1105,9 @@ var k = class _k {
   k(t5) {
     u2(this._$AH) || (this._$AH = [], this._$AR());
     const i7 = this._$AH;
-    let s5, e5 = 0;
-    for (const h4 of t5) e5 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e5], s5._$AI(h4), e5++;
-    e5 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e5), i7.length = e5);
+    let s5, e6 = 0;
+    for (const h4 of t5) e6 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e6], s5._$AI(h4), e6++;
+    e6 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e6), i7.length = e6);
   }
   _$AR(t5 = this._$AA.nextSibling, s5) {
     for (this._$AP?.(false, true, s5); t5 !== this._$AB; ) {
@@ -1126,19 +1126,19 @@ var H = class {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(t5, i7, s5, e5, h4) {
-    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t5, this.name = i7, this._$AM = e5, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
+  constructor(t5, i7, s5, e6, h4) {
+    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t5, this.name = i7, this._$AM = e6, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
   }
-  _$AI(t5, i7 = this, s5, e5) {
+  _$AI(t5, i7 = this, s5, e6) {
     const h4 = this.strings;
-    let o7 = false;
-    if (void 0 === h4) t5 = M(this, t5, i7, 0), o7 = !a2(t5) || t5 !== this._$AH && t5 !== E, o7 && (this._$AH = t5);
+    let o8 = false;
+    if (void 0 === h4) t5 = M(this, t5, i7, 0), o8 = !a2(t5) || t5 !== this._$AH && t5 !== E, o8 && (this._$AH = t5);
     else {
-      const e6 = t5;
+      const e7 = t5;
       let n6, r6;
-      for (t5 = h4[0], n6 = 0; n6 < h4.length - 1; n6++) r6 = M(this, e6[s5 + n6], i7, n6), r6 === E && (r6 = this._$AH[n6]), o7 ||= !a2(r6) || r6 !== this._$AH[n6], r6 === A ? t5 = A : t5 !== A && (t5 += (r6 ?? "") + h4[n6 + 1]), this._$AH[n6] = r6;
+      for (t5 = h4[0], n6 = 0; n6 < h4.length - 1; n6++) r6 = M(this, e7[s5 + n6], i7, n6), r6 === E && (r6 = this._$AH[n6]), o8 ||= !a2(r6) || r6 !== this._$AH[n6], r6 === A ? t5 = A : t5 !== A && (t5 += (r6 ?? "") + h4[n6 + 1]), this._$AH[n6] = r6;
     }
-    o7 && !e5 && this.j(t5);
+    o8 && !e6 && this.j(t5);
   }
   j(t5) {
     t5 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t5 ?? "");
@@ -1161,13 +1161,13 @@ var L = class extends H {
   }
 };
 var z = class extends H {
-  constructor(t5, i7, s5, e5, h4) {
-    super(t5, i7, s5, e5, h4), this.type = 5;
+  constructor(t5, i7, s5, e6, h4) {
+    super(t5, i7, s5, e6, h4), this.type = 5;
   }
   _$AI(t5, i7 = this) {
     if ((t5 = M(this, t5, i7, 0) ?? A) === E) return;
-    const s5 = this._$AH, e5 = t5 === A && s5 !== A || t5.capture !== s5.capture || t5.once !== s5.once || t5.passive !== s5.passive, h4 = t5 !== A && (s5 === A || e5);
-    e5 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t5), this._$AH = t5;
+    const s5 = this._$AH, e6 = t5 === A && s5 !== A || t5.capture !== s5.capture || t5.once !== s5.once || t5.passive !== s5.passive, h4 = t5 !== A && (s5 === A || e6);
+    e6 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t5), this._$AH = t5;
   }
   handleEvent(t5) {
     "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t5) : this._$AH.handleEvent(t5);
@@ -1188,11 +1188,11 @@ var j = { M: h2, P: o3, A: n3, C: 1, L: N, R, D: d2, V: M, I: k, H, N: L, U: z, 
 var B = t2.litHtmlPolyfillSupport;
 B?.(S2, k), (t2.litHtmlVersions ??= []).push("3.3.3");
 var D = (t5, i7, s5) => {
-  const e5 = s5?.renderBefore ?? i7;
-  let h4 = e5._$litPart$;
+  const e6 = s5?.renderBefore ?? i7;
+  let h4 = e6._$litPart$;
   if (void 0 === h4) {
     const t6 = s5?.renderBefore ?? null;
-    e5._$litPart$ = h4 = new k(i7.insertBefore(c3(), t6), t6, void 0, s5 ?? {});
+    e6._$litPart$ = h4 = new k(i7.insertBefore(c3(), t6), t6, void 0, s5 ?? {});
   }
   return h4._$AI(t5), h4;
 };
@@ -1228,32 +1228,32 @@ o4?.({ LitElement: i3 });
 
 // ../module-toolkit/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
-var r4 = (t5 = o5, e5, r6) => {
+var r4 = (t5 = o5, e6, r6) => {
   const { kind: n6, metadata: i7 } = r6;
   let s5 = globalThis.litPropertyMetadata.get(i7);
   if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n6 && ((t5 = Object.create(t5)).wrapped = true), s5.set(r6.name, t5), "accessor" === n6) {
-    const { name: o7 } = r6;
+    const { name: o8 } = r6;
     return { set(r7) {
-      const n7 = e5.get.call(this);
-      e5.set.call(this, r7), this.requestUpdate(o7, n7, t5, true, r7);
-    }, init(e6) {
-      return void 0 !== e6 && this.C(o7, void 0, t5, e6), e6;
+      const n7 = e6.get.call(this);
+      e6.set.call(this, r7), this.requestUpdate(o8, n7, t5, true, r7);
+    }, init(e7) {
+      return void 0 !== e7 && this.C(o8, void 0, t5, e7), e7;
     } };
   }
   if ("setter" === n6) {
-    const { name: o7 } = r6;
+    const { name: o8 } = r6;
     return function(r7) {
-      const n7 = this[o7];
-      e5.call(this, r7), this.requestUpdate(o7, n7, t5, true, r7);
+      const n7 = this[o8];
+      e6.call(this, r7), this.requestUpdate(o8, n7, t5, true, r7);
     };
   }
   throw Error("Unsupported decorator location: " + n6);
 };
 function n4(t5) {
-  return (e5, o7) => "object" == typeof o7 ? r4(t5, e5, o7) : ((t6, e6, o8) => {
-    const r6 = e6.hasOwnProperty(o8);
-    return e6.constructor.createProperty(o8, t6), r6 ? Object.getOwnPropertyDescriptor(e6, o8) : void 0;
-  })(t5, e5, o7);
+  return (e6, o8) => "object" == typeof o8 ? r4(t5, e6, o8) : ((t6, e7, o9) => {
+    const r6 = e7.hasOwnProperty(o9);
+    return e7.constructor.createProperty(o9, t6), r6 ? Object.getOwnPropertyDescriptor(e7, o9) : void 0;
+  })(t5, e6, o8);
 }
 
 // ../module-toolkit/node_modules/@lit/reactive-element/node/decorators/state.js
@@ -1437,8 +1437,8 @@ var OkInlineFeedback = class extends i3 {
     this.hidden = false;
     this.labels = {};
     this.hasActions = false;
-    this.onActionsSlotChange = (e5) => {
-      const slot = e5.target;
+    this.onActionsSlotChange = (e6) => {
+      const slot = e6.target;
       this.hasActions = slot.assignedNodes({ flatten: true }).length > 0;
     };
   }
@@ -1635,77 +1635,77 @@ define("ok-inline-feedback", OkInlineFeedback);
 
 // node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
-var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
+var e4 = (t5) => (...e6) => ({ _$litDirective$: t5, values: e6 });
 var i4 = class {
   constructor(t5) {
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AT(t5, e5, i7) {
-    this._$Ct = t5, this._$AM = e5, this._$Ci = i7;
+  _$AT(t5, e6, i7) {
+    this._$Ct = t5, this._$AM = e6, this._$Ci = i7;
   }
-  _$AS(t5, e5) {
-    return this.update(t5, e5);
+  _$AS(t5, e6) {
+    return this.update(t5, e6);
   }
-  update(t5, e5) {
-    return this.render(...e5);
+  update(t5, e6) {
+    return this.render(...e6);
   }
 };
 
 // node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
-var i5 = (o7) => o7;
+var i5 = (o8) => o8;
 var s4 = () => document.createComment("");
-var v2 = (o7, n6, e5) => {
-  const l3 = o7._$AA.parentNode, d3 = void 0 === n6 ? o7._$AB : n6._$AA;
-  if (void 0 === e5) {
+var v2 = (o8, n6, e6) => {
+  const l3 = o8._$AA.parentNode, d3 = void 0 === n6 ? o8._$AB : n6._$AA;
+  if (void 0 === e6) {
     const i7 = l3.insertBefore(s4(), d3), n7 = l3.insertBefore(s4(), d3);
-    e5 = new t4(i7, n7, o7, o7.options);
+    e6 = new t4(i7, n7, o8, o8.options);
   } else {
-    const t5 = e5._$AB.nextSibling, n7 = e5._$AM, c5 = n7 !== o7;
+    const t5 = e6._$AB.nextSibling, n7 = e6._$AM, c5 = n7 !== o8;
     if (c5) {
       let t6;
-      e5._$AQ?.(o7), e5._$AM = o7, void 0 !== e5._$AP && (t6 = o7._$AU) !== n7._$AU && e5._$AP(t6);
+      e6._$AQ?.(o8), e6._$AM = o8, void 0 !== e6._$AP && (t6 = o8._$AU) !== n7._$AU && e6._$AP(t6);
     }
     if (t5 !== d3 || c5) {
-      let o8 = e5._$AA;
-      for (; o8 !== t5; ) {
-        const t6 = i5(o8).nextSibling;
-        i5(l3).insertBefore(o8, d3), o8 = t6;
+      let o9 = e6._$AA;
+      for (; o9 !== t5; ) {
+        const t6 = i5(o9).nextSibling;
+        i5(l3).insertBefore(o9, d3), o9 = t6;
       }
     }
   }
-  return e5;
+  return e6;
 };
-var u3 = (o7, t5, i7 = o7) => (o7._$AI(t5, i7), o7);
+var u3 = (o8, t5, i7 = o8) => (o8._$AI(t5, i7), o8);
 var m3 = {};
-var p3 = (o7, t5 = m3) => o7._$AH = t5;
-var M2 = (o7) => o7._$AH;
-var h3 = (o7) => {
-  o7._$AR(), o7._$AA.remove();
+var p3 = (o8, t5 = m3) => o8._$AH = t5;
+var M2 = (o8) => o8._$AH;
+var h3 = (o8) => {
+  o8._$AR(), o8._$AA.remove();
 };
 
 // node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
-var u4 = (e5, s5, t5) => {
+var u4 = (e6, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
-  for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
+  for (let l3 = s5; l3 <= t5; l3++) r6.set(e6[l3], l3);
   return r6;
 };
 var c4 = e4(class extends i4 {
-  constructor(e5) {
-    if (super(e5), e5.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
+  constructor(e6) {
+    if (super(e6), e6.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
   }
-  dt(e5, s5, t5) {
+  dt(e6, s5, t5) {
     let r6;
     void 0 === t5 ? t5 = s5 : void 0 !== s5 && (r6 = s5);
-    const l3 = [], o7 = [];
+    const l3 = [], o8 = [];
     let i7 = 0;
-    for (const s6 of e5) l3[i7] = r6 ? r6(s6, i7) : i7, o7[i7] = t5(s6, i7), i7++;
-    return { values: o7, keys: l3 };
+    for (const s6 of e6) l3[i7] = r6 ? r6(s6, i7) : i7, o8[i7] = t5(s6, i7), i7++;
+    return { values: o8, keys: l3 };
   }
-  render(e5, s5, t5) {
-    return this.dt(e5, s5, t5).values;
+  render(e6, s5, t5) {
+    return this.dt(e6, s5, t5).values;
   }
   update(s5, [t5, r6, c5]) {
     const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t5, r6, c5);
@@ -1719,21 +1719,21 @@ var c4 = e4(class extends i4 {
     else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
     else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
     else if (void 0 === m4 && (m4 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m4.has(h4[x2])) if (m4.has(h4[j2])) {
-      const e5 = y3.get(a3[k2]), t6 = void 0 !== e5 ? d3[e5] : null;
+      const e6 = y3.get(a3[k2]), t6 = void 0 !== e6 ? d3[e6] : null;
       if (null === t6) {
-        const e6 = v2(s5, d3[x2]);
-        u3(e6, p4[k2]), v3[k2] = e6;
-      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e5] = null;
+        const e7 = v2(s5, d3[x2]);
+        u3(e7, p4[k2]), v3[k2] = e7;
+      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e6] = null;
       k2++;
     } else h3(d3[j2]), j2--;
     else h3(d3[x2]), x2++;
     for (; k2 <= w2; ) {
-      const e5 = v2(s5, v3[w2 + 1]);
-      u3(e5, p4[k2]), v3[k2++] = e5;
+      const e6 = v2(s5, v3[w2 + 1]);
+      u3(e6, p4[k2]), v3[k2++] = e6;
     }
     for (; x2 <= j2; ) {
-      const e5 = d3[x2++];
-      null !== e5 && h3(e5);
+      const e6 = d3[x2++];
+      null !== e6 && h3(e6);
     }
     return this.ut = a3, p3(s5, v3), E;
   }
@@ -1747,21 +1747,21 @@ var o6 = e4(class extends i4 {
     if (super(t5), t5.type !== t3.ATTRIBUTE || "style" !== t5.name || t5.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
   }
   render(t5) {
-    return Object.keys(t5).reduce((e5, r6) => {
+    return Object.keys(t5).reduce((e6, r6) => {
       const s5 = t5[r6];
-      return null == s5 ? e5 : e5 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
+      return null == s5 ? e6 : e6 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
     }, "");
   }
-  update(e5, [r6]) {
-    const { style: s5 } = e5.element;
+  update(e6, [r6]) {
+    const { style: s5 } = e6.element;
     if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
     for (const t5 of this.ft) null == r6[t5] && (this.ft.delete(t5), t5.includes("-") ? s5.removeProperty(t5) : s5[t5] = null);
     for (const t5 in r6) {
-      const e6 = r6[t5];
-      if (null != e6) {
+      const e7 = r6[t5];
+      if (null != e7) {
         this.ft.add(t5);
-        const r7 = "string" == typeof e6 && e6.endsWith(i6);
-        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e6.slice(0, -11) : e6, r7 ? n5 : "") : s5[t5] = e6;
+        const r7 = "string" == typeof e7 && e7.endsWith(i6);
+        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e7.slice(0, -11) : e7, r7 ? n5 : "") : s5[t5] = e7;
       }
     }
     return E;
@@ -2157,8 +2157,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
       this.mq = window.matchMedia(`(max-width: ${_OkDataTable2.MOBILE_BREAKPOINT}px)`);
       this.isMobile = this.mq.matches;
-      const handler = (e5) => {
-        const matches = "matches" in e5 ? e5.matches : this.mq?.matches ?? false;
+      const handler = (e6) => {
+        const matches = "matches" in e6 ? e6.matches : this.mq?.matches ?? false;
         if (this.isMobile === matches) return;
         this.isMobile = matches;
         if (matches && this.cardViewEnabled) this.viewMode = "cards";
@@ -2584,10 +2584,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
           placeholder=${this.t.select}
-          @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
+          @ionChange=${(e6) => this.onFilterSelect(col, e6.detail.value, multi)}
         >
           ${multi ? A : b2`<ion-select-option value="">${this.t.select}</ion-select-option>`}
-          ${opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+          ${opts.map((o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`)}
         </ion-select>
       `;
     }
@@ -2599,9 +2599,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           <span class="flabel">${col.header}</span>
           <div class="frange">
             <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
-              @ionInput=${(e5) => onEdge(col, "from", e5)}></ion-input>
+              @ionInput=${(e6) => onEdge(col, "from", e6)}></ion-input>
             <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
-              @ionInput=${(e5) => onEdge(col, "to", e5)}></ion-input>
+              @ionInput=${(e6) => onEdge(col, "to", e6)}></ion-input>
           </div>
         </div>
       `;
@@ -2614,7 +2614,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         label=${col.header}
         label-placement="stacked"
         placeholder=${this.t.filterPlaceholder}
-        @ionInput=${(e5) => this.onFilterInput(col, e5)}
+        @ionInput=${(e6) => this.onFilterInput(col, e6)}
       ></ion-input>
     `;
   }
@@ -2645,19 +2645,19 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           aria-label=${col.header}
           placeholder=${col.header}
           .value=${current}
-          @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
+          @ionChange=${(e6) => this.onFilterSelect(col, e6.detail.value, multi)}
         >
           ${multi ? A : b2`<ion-select-option value="">${col.header}</ion-select-option>`}
-          ${opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+          ${opts.map((o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`)}
         </ion-select>
       `;
     }
     return b2`
       <span class="tk-daterange" role="group" aria-label=${col.header}>
         <ion-icon .icon=${iconCalendarOutline}></ion-icon>
-        <ion-input type="date" aria-label=${this.t.fromOf.replace("{label}", col.header)} .value=${f3?.from ?? ""} @ionChange=${(e5) => this.onInlineRange(col, "from", e5)}></ion-input>
+        <ion-input type="date" aria-label=${this.t.fromOf.replace("{label}", col.header)} .value=${f3?.from ?? ""} @ionChange=${(e6) => this.onInlineRange(col, "from", e6)}></ion-input>
         <span class="arr">→</span>
-        <ion-input type="date" aria-label=${this.t.toOf.replace("{label}", col.header)} .value=${f3?.to ?? ""} @ionChange=${(e5) => this.onInlineRange(col, "to", e5)}></ion-input>
+        <ion-input type="date" aria-label=${this.t.toOf.replace("{label}", col.header)} .value=${f3?.to ?? ""} @ionChange=${(e6) => this.onInlineRange(col, "to", e6)}></ion-input>
       </span>
     `;
   }
@@ -2665,7 +2665,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   renderOverflowMenu() {
     if (!this.menuActions.length) return A;
     return b2`
-      <ion-button class="toolbtn" fill="clear" aria-label=${this.t.moreActions} @click=${(e5) => this.openMenu(e5)}>
+      <ion-button class="toolbtn" fill="clear" aria-label=${this.t.moreActions} @click=${(e6) => this.openMenu(e6)}>
         <ion-icon slot="icon-only" .icon=${iconEllipsisVertical}></ion-icon>
       </ion-button>
       <ion-popover
@@ -2804,7 +2804,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                             aria-label=${this.t.columnsVisible}
                             .value=${this.visibleColumns.map((c5) => c5.key)}
                             .selectedText=${this.t.columns}
-                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
+                            @ionChange=${(e6) => this.setVisibleColumns(e6.detail.value)}
                           >
                             ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
                           </ion-select>
@@ -2815,7 +2815,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                             interface="popover"
                             aria-label=${this.t.rowsPerPage}
                             .value=${ps}
-                            @ionChange=${(e5) => setPageSize(Number(e5.detail.value))}
+                            @ionChange=${(e6) => setPageSize(Number(e6.detail.value))}
                           >
                             ${this.effPageSizes.map((n6) => b2`<ion-select-option .value=${n6}>${n6}</ion-select-option>`)}
                           </ion-select>
@@ -2829,7 +2829,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                     ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
                     ${this.effImport ? b2`
                           ${this.toolButton("cloud-upload-outline", false, () => this.renderRoot.querySelector(".tk-file")?.click(), this.t.importCsv)}
-                          <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e5) => this.onImportFile(e5)} />
+                          <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e6) => this.onImportFile(e6)} />
                         ` : A}
                     ${this.effExport ? this.toolButton("download-outline", false, () => this.exportCsv(), this.t.exportCsv) : A}
                     ${this.addable ? this.toolButton("add", this.panel === "create", () => this.toggle("create"), this.t.add) : A}
@@ -2867,7 +2867,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                     <span class="strong">${count}</span> ${count === 1 ? this.t.recordSingular : this.t.recordPlural}
                   </span>
                   ${!showTopbar && this.effPageSizes.length ? b2`
-                        <select class="psize" @change=${(e5) => setPageSize(Number(e5.target.value))}>
+                        <select class="psize" @change=${(e6) => setPageSize(Number(e6.target.value))}>
                           ${this.effPageSizes.map((n6) => b2`<option value=${n6} ?selected=${n6 === ps}>${this.t.perPageShort.replace("{n}", String(n6))}</option>`)}
                         </select>
                       ` : A}
@@ -2920,8 +2920,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         <div class="fblock">
           <span class="flabel">${label}</span>
           <div class="daterange">
-            <ion-input type="date" label=${this.t.from} label-placement="stacked" fill="outline" .value=${f3.from ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "from", e5.detail.value ?? "")}></ion-input>
-            <ion-input type="date" label=${this.t.to} label-placement="stacked" fill="outline" .value=${f3.to ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "to", e5.detail.value ?? "")}></ion-input>
+            <ion-input type="date" label=${this.t.from} label-placement="stacked" fill="outline" .value=${f3.from ?? ""} @ionChange=${(e6) => this.setFilterRange(col.key, "from", e6.detail.value ?? "")}></ion-input>
+            <ion-input type="date" label=${this.t.to} label-placement="stacked" fill="outline" .value=${f3.to ?? ""} @ionChange=${(e6) => this.setFilterRange(col.key, "to", e6.detail.value ?? "")}></ion-input>
           </div>
         </div>
       `;
@@ -2939,9 +2939,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
           placeholder=${this.t.select}
           .value=${selected}
-          @ionChange=${(e5) => this.setFilterValues(col.key, e5.detail.value ?? [])}
+          @ionChange=${(e6) => this.setFilterValues(col.key, e6.detail.value ?? [])}
         >
-          ${opts.length === 0 ? b2`<ion-select-option .disabled=${true} value="">${this.t.noValues}</ion-select-option>` : opts.map((o7) => b2`<ion-select-option value=${o7.value}>${o7.label}</ion-select-option>`)}
+          ${opts.length === 0 ? b2`<ion-select-option .disabled=${true} value="">${this.t.noValues}</ion-select-option>` : opts.map((o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`)}
         </ion-select>
       </div>
     `;
@@ -3196,6 +3196,175 @@ __decorateClass3([
 var OkDataTable = _OkDataTable;
 define("ok-data-table", OkDataTable);
 
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/unsafe-html.js
+var e5 = class extends i4 {
+  constructor(i7) {
+    if (super(i7), this.it = A, i7.type !== t3.CHILD) throw Error(this.constructor.directiveName + "() can only be used in child bindings");
+  }
+  render(r6) {
+    if (r6 === A || null == r6) return this._t = void 0, this.it = r6;
+    if (r6 === E) return r6;
+    if ("string" != typeof r6) throw Error(this.constructor.directiveName + "() called with a non-string value");
+    if (r6 === this.it) return this._t;
+    this.it = r6;
+    const s5 = [r6];
+    return s5.raw = s5, this._t = { _$litType$: this.constructor.resultType, strings: s5, values: [] };
+  }
+};
+e5.directiveName = "unsafeHTML", e5.resultType = 1;
+var o7 = e4(e5);
+
+// ../outfitkit/dist/ok-detail-list.js
+var __defProp4 = Object.defineProperty;
+var __decorateClass4 = (decorators, target, key, kind) => {
+  var result = void 0;
+  for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
+    if (decorator = decorators[i7])
+      result = decorator(target, key, result) || result;
+  if (result) __defProp4(target, key, result);
+  return result;
+};
+var OkDetailList = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.items = [];
+    this.columns = 1;
+    this.dense = false;
+    this.placeholder = "\u2014";
+  }
+  static {
+    this.styles = i`
+    :host {
+      display: block;
+      width: 100%;
+      /* Tokens propios estilo Ionic (overridables): --ok-* → --ion-* → hex. */
+      --label-color: var(--ok-color-medium, var(--ion-color-medium, #92949c));
+      --value-color: var(--ok-text-color, var(--ion-text-color, #1f2933));
+      --row-gap: 0.75rem;
+      --col-gap: 1rem;
+      --label-width: minmax(120px, 30%);
+      --divider-color: var(--ok-border-color, var(--ion-border-color, #e0e0e0));
+    }
+
+    .dl {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--row-gap) var(--col-gap);
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 2 columnas en desktop; se apila a 1 en pantallas estrechas. */
+    :host([columns='2']) .dl {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Modo denso: menos separación vertical. */
+    :host([dense]) {
+      --row-gap: 0.375rem;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: var(--label-width) 1fr;
+      gap: 0.25rem var(--col-gap);
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    /* Un par puede forzar ancho completo en layout de 2 columnas. */
+    .row.full {
+      grid-column: 1 / -1;
+    }
+
+    .label {
+      margin: 0;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--label-color);
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .value {
+      margin: 0;
+      font-size: 0.9375rem;
+      line-height: 1.4;
+      color: var(--value-color);
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    :host([dense]) .value {
+      font-size: 0.875rem;
+    }
+
+    .value.empty {
+      color: var(--label-color);
+    }
+
+    /* El valor enriquecido puede traer enlaces/badges: que hereden bien. */
+    .value ::slotted(*),
+    .value a {
+      color: inherit;
+    }
+
+    /* Apilado en móvil: la etiqueta encima del valor, full width. */
+    @media (max-width: 600px) {
+      :host([columns='2']) .dl {
+        grid-template-columns: 1fr;
+      }
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0.125rem;
+      }
+    }
+  `;
+  }
+  renderValue(item) {
+    const raw = item.value;
+    if (raw === void 0 || raw === null || raw === "") {
+      return b2`<dd class="value empty">${this.placeholder}</dd>`;
+    }
+    if (item.html) {
+      return b2`<dd class="value">${o7(raw)}</dd>`;
+    }
+    return b2`<dd class="value">${raw}</dd>`;
+  }
+  render() {
+    const items = this.items ?? [];
+    if (items.length === 0) {
+      return A;
+    }
+    return b2`
+      <dl class="dl">
+        ${items.map(
+      (item) => b2`
+            <div class="row ${item.full ? "full" : ""}" role="presentation">
+              <dt class="label">${item.label}</dt>
+              ${this.renderValue(item)}
+            </div>
+          `
+    )}
+      </dl>
+    `;
+  }
+};
+__decorateClass4([
+  n4({ attribute: false })
+], OkDetailList.prototype, "items");
+__decorateClass4([
+  n4({ type: Number, reflect: true })
+], OkDetailList.prototype, "columns");
+__decorateClass4([
+  n4({ type: Boolean, reflect: true })
+], OkDetailList.prototype, "dense");
+__decorateClass4([
+  n4()
+], OkDetailList.prototype, "placeholder");
+define("ok-detail-list", OkDetailList);
+
 // ../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
@@ -3246,11 +3415,11 @@ var ListController = class {
       if (mySeq !== this.seq) return;
       this.rows = page.rows ?? [];
       this.total = page.total ?? this.rows.length;
-    } catch (e5) {
+    } catch (e6) {
       if (mySeq !== this.seq) return;
       this.rows = [];
       this.total = 0;
-      this.error = e5 instanceof Error ? e5.message : "Error cargando datos";
+      this.error = e6 instanceof Error ? e6.message : "Error cargando datos";
     } finally {
       if (mySeq === this.seq) {
         this.loading = false;
@@ -3356,6 +3525,7 @@ var es_default = {
     actionMovement: "Movimiento",
     actionCount: "Arqueo",
     actionClose: "Cerrar",
+    actionDetail: "Detalle",
     openSessionTitle: "Abrir sesi\xF3n de caja",
     labelRegister: "Caj\xF3n",
     labelOpeningBalance: "Fondo de apertura",
@@ -3407,7 +3577,22 @@ var es_default = {
     saveSettings: "Guardar ajustes",
     msgSettingsSaved: "Ajustes guardados",
     errLoadSettings: "No se pudieron cargar los ajustes",
-    errSaveSettings: "No se pudieron guardar los ajustes"
+    errSaveSettings: "No se pudieron guardar los ajustes",
+    detailTitle: "Detalle de la sesi\xF3n",
+    detailMovements: "Movimientos",
+    detailCounts: "Arqueos",
+    detailCashSales: "Ventas en efectivo",
+    detailRefunds: "Devoluciones",
+    detailCashIn: "Entradas",
+    detailCashOut: "Salidas",
+    detailGifts: "Invitaciones",
+    detailCounted: "Contado",
+    colWhen: "Cu\xE1ndo",
+    colMethod: "M\xE9todo",
+    noMovements: "Sin movimientos en esta sesi\xF3n.",
+    noCounts: "Sin arqueos en esta sesi\xF3n.",
+    errLoadDetail: "No se pudo cargar el detalle de la sesi\xF3n",
+    back: "Volver"
   },
   widgets: {
     "cash_register.current_session": {
@@ -3457,6 +3642,7 @@ var en_default = {
     actionMovement: "Movement",
     actionCount: "Count",
     actionClose: "Close",
+    actionDetail: "Detail",
     openSessionTitle: "Open cash session",
     labelRegister: "Register",
     labelOpeningBalance: "Opening float",
@@ -3508,19 +3694,173 @@ var en_default = {
     saveSettings: "Save settings",
     msgSettingsSaved: "Settings saved",
     errLoadSettings: "Could not load settings",
-    errSaveSettings: "Could not save settings"
+    errSaveSettings: "Could not save settings",
+    detailTitle: "Session detail",
+    detailMovements: "Movements",
+    detailCounts: "Counts",
+    detailCashSales: "Cash sales",
+    detailRefunds: "Refunds",
+    detailCashIn: "Paid in",
+    detailCashOut: "Paid out",
+    detailGifts: "Gifts (comps)",
+    detailCounted: "Counted",
+    colWhen: "When",
+    colMethod: "Method",
+    noMovements: "No movements in this session.",
+    noCounts: "No counts in this session.",
+    errLoadDetail: "Could not load the session detail",
+    back: "Back"
   }
 };
 
-// modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// modules/cash_register/ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
 var CATALOG = { es: es_default, en: en_default };
+function erplora() {
+  const c5 = globalThis.erplora;
+  if (!c5) throw new Error("erplora SDK not initialised by the shell");
+  return c5;
+}
+var ErpCashRegisterSessionDetail = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.session = null;
+    this.summary = null;
+    this.error = "";
+    this.onLocaleChange = () => this.requestUpdate();
+  }
+  static {
+    this.styles = i`
+    :host { display: block; }
+    h3 { margin: .25rem 0 .5rem; font-size: 1rem; }
+    h4 { margin: 1rem 0 .5rem; font-size: .95rem; }
+    ok-detail-list { margin-bottom: .5rem; }
+    .muted { color: var(--ion-color-medium, #92949c); }
+  `;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
+  }
+  disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
+    super.disconnectedCallback();
+  }
+  updated(changed) {
+    if (changed.has("session")) void this.load();
+  }
+  /** Reload everything (the dashboard calls it after a movement/count on this session). */
+  async load() {
+    const session = this.session;
+    if (!session) return;
+    this.error = "";
+    this.summary = null;
+    try {
+      const rows2 = await erplora().query("cash_register.session.summary", { session_id: session.id });
+      this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
+    } catch (e6) {
+      this.error = e6 instanceof Error ? e6.message : erplora().t(CATALOG, "ui.errLoadDetail");
+    }
+    this.movements = createListController(erplora(), "cash_register.movements.list", () => this.requestUpdate(), {
+      pageSize: 50,
+      sort: "created_at",
+      dir: "desc",
+      context: { session_id: session.id }
+    });
+    this.counts = createListController(erplora(), "cash_register.counts.list", () => this.requestUpdate(), {
+      pageSize: 50,
+      sort: "id",
+      dir: "asc",
+      context: { session_id: session.id }
+    });
+    await Promise.all([this.movements.load(), this.counts.load()]);
+    this.requestUpdate();
+  }
+  fmt(n6) {
+    return n6 == null ? "\u2014" : erplora().formatMoney(Number(n6));
+  }
+  get summaryItems() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const s5 = this.summary;
+    const row = this.session;
+    const closed = (row?.status ?? s5?.status) === "closed";
+    return [
+      { label: t5("ui.colStatus"), value: row?.status ?? s5?.status ?? "\u2014" },
+      { label: t5("ui.detailMovements"), value: s5 ? String(s5.movement_count) : "\u2014" },
+      { label: t5("ui.labelOpeningBalance"), value: this.fmt(s5?.opening_balance ?? row?.opening_balance) },
+      { label: t5("ui.detailCashSales"), value: this.fmt(s5?.total_sales) },
+      { label: t5("ui.detailRefunds"), value: this.fmt(s5?.total_refunds) },
+      { label: t5("ui.detailCashIn"), value: this.fmt(s5?.total_cash_in) },
+      { label: t5("ui.detailCashOut"), value: this.fmt(s5?.total_cash_out) },
+      { label: t5("ui.detailGifts"), value: this.fmt(s5?.total_gifts) },
+      // Expected: what the row froze at closing when closed (the audited number), the live figure
+      // otherwise (`session.summary` runs under `view_session`; the blind-count setting hides it
+      // in the dashboard widget, not here — this is the manager's reconciliation view).
+      { label: t5("ui.colExpected"), value: this.fmt(closed ? row?.expected_balance ?? s5?.expected_cash : s5?.expected_cash) },
+      { label: t5("ui.detailCounted"), value: closed ? this.fmt(row?.closing_balance) : "\u2014" },
+      { label: t5("ui.colDifference"), value: closed ? this.fmt(row?.difference) : "\u2014" }
+    ];
+  }
+  get movementColumns() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { key: "created_at", header: t5("ui.colWhen"), sortable: true },
+      { key: "movement_type", header: t5("ui.labelType"), sortable: true },
+      { key: "amount", header: t5("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
+      { key: "payment_method", header: t5("ui.colMethod"), sortable: true },
+      { key: "description", header: t5("ui.labelConcept"), sortable: true }
+    ];
+  }
+  get countColumns() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { key: "counted_at", header: t5("ui.colWhen"), sortable: true },
+      { key: "count_type", header: t5("ui.labelCountType"), sortable: true },
+      { key: "total", header: t5("ui.totalCounted"), align: "right", sortable: true, format: (r6) => this.fmt(r6.total) },
+      { key: "notes", header: t5("ui.labelNotes") }
+    ];
+  }
+  table(ctrl, columns, empty) {
+    if (!ctrl) return A;
+    return b2`<ok-data-table .serverSide=${true} .columns=${columns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
+      .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, "ui.loading") : empty}
+      @pageChange=${(e6) => ctrl.setPage(e6.detail)}
+      @sortChange=${(e6) => ctrl.setSort(e6.detail.sort, e6.detail.dir)}></ok-data-table>`;
+  }
+  render() {
+    if (!this.session) return A;
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return b2`
+      <h3>${t5("ui.detailTitle")} · ${this.session.session_number}</h3>
+      ${this.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : A}
+      <ok-detail-list columns="2" dense .items=${this.summaryItems}></ok-detail-list>
+      <h4>${t5("ui.detailMovements")}</h4>
+      ${this.table(this.movements, this.movementColumns, t5("ui.noMovements"))}
+      <h4>${t5("ui.detailCounts")}</h4>
+      ${this.table(this.counts, this.countColumns, t5("ui.noCounts"))}
+    `;
+  }
+};
+__decorateClass([
+  n4({ attribute: false })
+], ErpCashRegisterSessionDetail.prototype, "session", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSessionDetail.prototype, "summary", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterSessionDetail.prototype, "error", 2);
+define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
+
+// modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+var CATALOG2 = { es: es_default, en: en_default };
 function toMinorUnits(v3) {
-  const decimals = erplora().currencyDecimals;
+  const decimals = erplora2().currencyDecimals;
   return majorToMinor(String(v3 ?? "").replace(",", "."), typeof decimals === "number" ? decimals : 2);
 }
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
-function erplora() {
+function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
@@ -3532,11 +3872,11 @@ var DOMAIN_MESSAGES = {
   "cash_register.negative_balance_not_allowed": "ui.errNegativeBalanceNotAllowed",
   "cash_register.session_unavailable": "ui.errSessionUnavailable"
 };
-function domainMessage(e5, fallbackKey) {
-  const code = e5?.code;
+function domainMessage(e6, fallbackKey) {
+  const code = e6?.code;
   const key = typeof code === "string" ? DOMAIN_MESSAGES[code] : void 0;
-  if (key) return erplora().t(CATALOG, key);
-  return e5 instanceof Error ? e5.message : erplora().t(CATALOG, fallbackKey);
+  if (key) return erplora2().t(CATALOG2, key);
+  return e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, fallbackKey);
 }
 function sessionNumber() {
   const d3 = /* @__PURE__ */ new Date();
@@ -3590,7 +3930,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   // Getter (no campo): se re-evalúa en cada render, así los textos cambian con el idioma activo
   // (ADR-0055). `connectedCallback` re-renderiza al recibir `erplora:locale-changed`.
   get columns() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
       { key: "session_number", header: t5("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
       { key: "status", header: t5("ui.colStatus"), sortable: true, filterable: true, filterType: "text" },
@@ -3601,9 +3941,11 @@ var ErpCashRegisterDashboard = class extends i3 {
     ];
   }
   get rowActions() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
       // Solo icono (ADR-0133): el `label` viaja como title + aria-label del botón, no como texto.
+      // `detail` (cash_register#2) works on ANY session — a closed one is read-only, not invisible.
+      { id: "detail", label: t5("ui.actionDetail"), icon: "document-text-outline" },
       { id: "movement", label: t5("ui.actionMovement"), icon: "swap-vertical-outline" },
       { id: "count", label: t5("ui.actionCount"), icon: "calculator-outline" },
       { id: "close", label: t5("ui.actionClose"), icon: "lock-closed-outline", color: "danger" }
@@ -3612,7 +3954,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
-    this.ctrl = createListController(erplora(), "cash_register.sessions.list", () => this.requestUpdate(), {
+    this.ctrl = createListController(erplora2(), "cash_register.sessions.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "id",
       dir: "asc"
@@ -3623,8 +3965,8 @@ var ErpCashRegisterDashboard = class extends i3 {
         void this.ctrl.load();
         void this.loadCurrentSession();
       };
-      const a3 = erplora().on("cash_register.session_opened", refresh);
-      const b3 = erplora().on("cash_register.session_closed", refresh);
+      const a3 = erplora2().on("cash_register.session_opened", refresh);
+      const b3 = erplora2().on("cash_register.session_closed", refresh);
       this.unsub = () => {
         a3();
         b3();
@@ -3641,18 +3983,18 @@ var ErpCashRegisterDashboard = class extends i3 {
   /** Balances de sesión en CÉNTIMOS (ADR-0123) → formatMoney divide. Con formatAmount
    *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
   fmt(n6) {
-    return n6 == null ? "\u2014" : erplora().formatMoney(Number(n6));
+    return n6 == null ? "\u2014" : erplora2().formatMoney(Number(n6));
   }
   async loadRegisters() {
     try {
-      const res = await erplora().queryAll("cash_register.registers.list");
+      const res = await erplora2().queryAll("cash_register.registers.list");
       this.registers = Array.isArray(res) ? res : [];
     } catch {
     }
   }
   async loadCurrentSession() {
     try {
-      const rows2 = await erplora().query("cash_register.current_session");
+      const rows2 = await erplora2().query("cash_register.current_session");
       this.hasOpenSession = Array.isArray(rows2) && rows2.length > 0;
     } catch {
     }
@@ -3663,9 +4005,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
   }
   openPanel(panel, session) {
-    if (session.status !== "open") {
+    if (panel !== "detail" && session.status !== "open") {
       this.formMsg = "";
-      this.formError = erplora().t(CATALOG, "ui.errSessionNotOpen", { session: session.session_number });
+      this.formError = erplora2().t(CATALOG2, "ui.errSessionNotOpen", { session: session.session_number });
       return;
     }
     this.target = session;
@@ -3676,7 +4018,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   onRowAction(ev) {
     const session = ev.detail.row;
     const id = ev.detail.actionId;
-    if (id === "close" || id === "movement" || id === "count") this.openPanel(id, session);
+    if (id === "close" || id === "movement" || id === "count" || id === "detail") this.openPanel(id, session);
   }
   // — Abrir sesión → cash_register.session.open —
   async openSession(ev) {
@@ -3685,7 +4027,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora().command("cash_register.session.open", {
+      await erplora2().command("cash_register.session.open", {
         register_id: this.openRegisterId || null,
         session_number: sessionNumber(),
         opening_balance: toMinorUnits(this.openBalance),
@@ -3695,11 +4037,11 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.openBalance = "0";
       this.openNotes = "";
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, "ui.msgSessionOpened");
+      this.formMsg = erplora2().t(CATALOG2, "ui.msgSessionOpened");
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
-    } catch (e5) {
-      this.formError = domainMessage(e5, "ui.errOpenSession");
-      if (e5?.code === "cash_register.session_already_open") {
+    } catch (e6) {
+      this.formError = domainMessage(e6, "ui.errOpenSession");
+      if (e6?.code === "cash_register.session_already_open") {
         void Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
       }
     } finally {
@@ -3715,7 +4057,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora().command("cash_register.session.close", {
+      await erplora2().command("cash_register.session.close", {
         session_id: sessionId,
         // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
         // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
@@ -3728,14 +4070,14 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.resetPanel();
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
       const row = (this.ctrl.rows ?? []).find((r6) => String(r6.id) === String(sessionId));
-      this.formMsg = row ? erplora().t(CATALOG, "ui.msgSessionClosedDetail", {
+      this.formMsg = row ? erplora2().t(CATALOG2, "ui.msgSessionClosedDetail", {
         session: row.session_number,
         expected: this.fmt(row.expected_balance),
         counted: this.fmt(row.closing_balance),
         difference: this.fmt(row.difference)
-      }) : erplora().t(CATALOG, "ui.msgSessionClosed");
-    } catch (e5) {
-      this.formError = domainMessage(e5, "ui.errCloseSession");
+      }) : erplora2().t(CATALOG2, "ui.msgSessionClosed");
+    } catch (e6) {
+      this.formError = domainMessage(e6, "ui.errCloseSession");
     } finally {
       this.saving = false;
     }
@@ -3746,14 +4088,14 @@ var ErpCashRegisterDashboard = class extends i3 {
     if (!this.target || !this.movAmount) return;
     const amount = Math.abs(toMinorUnits(this.movAmount));
     if (amount <= 0) {
-      this.formError = erplora().t(CATALOG, "ui.errInvalidAmount");
+      this.formError = erplora2().t(CATALOG2, "ui.errInvalidAmount");
       return;
     }
     this.saving = true;
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora().command("cash_register.movement.add", {
+      await erplora2().command("cash_register.movement.add", {
         session_id: this.target.id,
         movement_type: this.movType,
         amount: this.movType === "out" ? -amount : amount,
@@ -3761,8 +4103,8 @@ var ErpCashRegisterDashboard = class extends i3 {
         sale_reference: "",
         description: this.movDescription.trim()
       });
-      const msg = erplora().t(CATALOG, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
-        amount: erplora().formatMoney(amount)
+      const msg = erplora2().t(CATALOG2, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
+        amount: erplora2().formatMoney(amount)
         // minor units in, hub currency out
       });
       this.movAmount = "";
@@ -3770,8 +4112,8 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.resetPanel();
       this.formMsg = msg;
       await this.ctrl.load();
-    } catch (e5) {
-      this.formError = domainMessage(e5, "ui.errAddMovement");
+    } catch (e6) {
+      this.formError = domainMessage(e6, "ui.errAddMovement");
     } finally {
       this.saving = false;
     }
@@ -3803,7 +4145,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora().command("cash_register.count.add", {
+      await erplora2().command("cash_register.count.add", {
         session_id: this.target.id,
         count_type: this.countType,
         denominations: this.denominationsPayload(),
@@ -3813,23 +4155,23 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = erplora().t(CATALOG, "ui.msgCountAdded", { total: erplora().formatMoney(totalCents) });
-    } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddCount");
+      this.formMsg = erplora2().t(CATALOG2, "ui.msgCountAdded", { total: erplora2().formatMoney(totalCents) });
+    } catch (e6) {
+      this.formError = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errAddCount");
     } finally {
       this.saving = false;
     }
   }
   renderOpenPanel() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.openSessionTitle")}</h3>
-      <form class="form" @submit=${(e5) => this.openSession(e5)}>
-        <ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e5) => this.openRegisterId = e5.target.value}>
+      <form class="form" @submit=${(e6) => this.openSession(e6)}>
+        <ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e5) => this.openBalance = e5.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e5) => this.openNotes = e5.target.value}></ion-input>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
         <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3837,12 +4179,12 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderClosePanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
-      <form class="form" @submit=${(e5) => this.closeSession(e5)}>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e5) => this.closeBalance = e5.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e5) => this.closeNotes = e5.target.value}></ion-input>
+      <form class="form" @submit=${(e6) => this.closeSession(e6)}>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
         <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? t5("ui.closing") : t5("ui.closeSession")}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3850,16 +4192,16 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderMovementPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
-      <form class="form" @submit=${(e5) => this.addMovement(e5)}>
-        <ion-select fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e5) => this.movType = e5.target.value}>
+      <form class="form" @submit=${(e6) => this.addMovement(e6)}>
+        <ion-select fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
           <ion-select-option value="in">${t5("ui.movementIn")}</ion-select-option>
           <ion-select-option value="out">${t5("ui.movementOut")}</ion-select-option>
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e5) => this.movAmount = e5.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e5) => this.movDescription = e5.target.value}></ion-input>
+        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
+        <ion-input fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
         <ion-button type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -3867,23 +4209,23 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderCountPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora().t(CATALOG, k2);
-    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${`${k2} \u20AC`} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e5) => this.denomCounts = { ...this.denomCounts, [k2]: e5.target.value }}></ion-input>`;
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${`${k2} \u20AC`} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
-      <form @submit=${(e5) => this.addCount(e5)}>
+      <form @submit=${(e6) => this.addCount(e6)}>
         <div class="form">
-          <ion-select fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e5) => this.countType = e5.target.value}>
+          <ion-select fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
             <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
             <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e5) => this.countNotes = e5.target.value}></ion-input>
+          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
         <h3>${t5("ui.bills")}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${erplora().formatMoney(this.countTotalCents())}</p>
+        <p class="total">${t5("ui.totalCounted")}: ${erplora2().formatMoney(this.countTotalCents())}</p>
         <div class="form">
           <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
@@ -3891,8 +4233,16 @@ var ErpCashRegisterDashboard = class extends i3 {
       </form>
     </section>`;
   }
+  renderDetailPanel() {
+    if (!this.target) return A;
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    return b2`<section class="panel">
+      <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
+      <div class="form"><ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.back")}</ion-button></div>
+    </section>`;
+  }
   render() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div>
         <header>
           <h2>${t5("ui.title")}</h2>
@@ -3907,10 +4257,11 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.panel === "close" ? this.renderClosePanel() : A}
         ${this.panel === "movement" ? this.renderMovementPanel() : A}
         ${this.panel === "count" ? this.renderCountPanel() : A}
+        ${this.panel === "detail" ? this.renderDetailPanel() : A}
         ${this.formMsg ? b2`<p class="ok">${this.formMsg}</p>` : A}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} @rowAction=${(e6) => this.onRowAction(e6)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -3974,8 +4325,8 @@ __decorateClass([
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
 // modules/cash_register/ui/components/erp-cashregister-open/erp-cashregister-open.ts
-var CATALOG2 = { es: es_default, en: en_default };
-function erplora2() {
+var CATALOG3 = { es: es_default, en: en_default };
+function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
@@ -4023,33 +4374,33 @@ var ErpCashregisterOpen = class extends i3 {
   }
   async load() {
     this.registers = rows(
-      await erplora2().query("cash_register.registers.list").catch(() => [])
+      await erplora3().query("cash_register.registers.list").catch(() => [])
     );
     if (this.registers.length === 1) this.registerId = this.registers[0].id;
   }
   async openSession() {
     if (this.registers.length > 1 && !this.registerId) {
-      this.error = erplora2().t(CATALOG2, "ui.labelRegister");
+      this.error = erplora3().t(CATALOG3, "ui.labelRegister");
       return;
     }
     this.saving = true;
     this.error = "";
     try {
-      await erplora2().command("cash_register.session.open", {
+      await erplora3().command("cash_register.session.open", {
         register_id: this.registerId || null,
         session_number: numeroSesion(),
         opening_balance: aCentimos(this.balance),
         opening_notes: this.notes
       });
-    } catch (e5) {
-      const code = e5?.code;
-      this.error = code === "cash_register.session_already_open" ? erplora2().t(CATALOG2, "ui.errSessionAlreadyOpen") : e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errOpenSession");
+    } catch (e6) {
+      const code = e6?.code;
+      this.error = code === "cash_register.session_already_open" ? erplora3().t(CATALOG3, "ui.errSessionAlreadyOpen") : e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errOpenSession");
     } finally {
       this.saving = false;
     }
   }
   render() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>
@@ -4059,8 +4410,8 @@ var ErpCashregisterOpen = class extends i3 {
         <div class="form">
           ${this.registers.length > 1 ? b2`<ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
                 .value=${this.registerId}
-                @ionChange=${(e5) => {
-      this.registerId = e5.target.value;
+                @ionChange=${(e6) => {
+      this.registerId = e6.target.value;
     }}>
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
@@ -4068,14 +4419,14 @@ var ErpCashregisterOpen = class extends i3 {
           <ion-input fill="outline" type="number" min="0" step="0.01"
             label=${t5("ui.labelOpeningBalance")} label-placement="floating"
             .value=${this.balance}
-            @ionInput=${(e5) => {
-      this.balance = e5.target.value;
+            @ionInput=${(e6) => {
+      this.balance = e6.target.value;
     }}></ion-input>
 
           <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
             placeholder=${t5("ui.optional")} .value=${this.notes}
-            @ionInput=${(e5) => {
-      this.notes = e5.target.value;
+            @ionInput=${(e6) => {
+      this.notes = e6.target.value;
     }}></ion-input>
 
           <ion-button class="open-session" expand="block" ?disabled=${this.saving}

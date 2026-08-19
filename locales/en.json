@@ -34,6 +34,7 @@
     "actionMovement": "Movement",
     "actionCount": "Count",
     "actionClose": "Close",
+    "actionDetail": "Detail",
     "openSessionTitle": "Open cash session",
     "labelRegister": "Register",
     "labelOpeningBalance": "Opening float",
@@ -85,6 +86,21 @@
     "saveSettings": "Save settings",
     "msgSettingsSaved": "Settings saved",
     "errLoadSettings": "Could not load settings",
-    "errSaveSettings": "Could not save settings"
+    "errSaveSettings": "Could not save settings",
+    "detailTitle": "Session detail",
+    "detailMovements": "Movements",
+    "detailCounts": "Counts",
+    "detailCashSales": "Cash sales",
+    "detailRefunds": "Refunds",
+    "detailCashIn": "Paid in",
+    "detailCashOut": "Paid out",
+    "detailGifts": "Gifts (comps)",
+    "detailCounted": "Counted",
+    "colWhen": "When",
+    "colMethod": "Method",
+    "noMovements": "No movements in this session.",
+    "noCounts": "No counts in this session.",
+    "errLoadDetail": "Could not load the session detail",
+    "back": "Back"
   }
 }

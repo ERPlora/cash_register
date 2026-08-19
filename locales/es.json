@@ -35,6 +35,7 @@
     "actionMovement": "Movimiento",
     "actionCount": "Arqueo",
     "actionClose": "Cerrar",
+    "actionDetail": "Detalle",
     "openSessionTitle": "Abrir sesión de caja",
     "labelRegister": "Cajón",
     "labelOpeningBalance": "Fondo de apertura",
@@ -86,7 +87,22 @@
     "saveSettings": "Guardar ajustes",
     "msgSettingsSaved": "Ajustes guardados",
     "errLoadSettings": "No se pudieron cargar los ajustes",
-    "errSaveSettings": "No se pudieron guardar los ajustes"
+    "errSaveSettings": "No se pudieron guardar los ajustes",
+    "detailTitle": "Detalle de la sesión",
+    "detailMovements": "Movimientos",
+    "detailCounts": "Arqueos",
+    "detailCashSales": "Ventas en efectivo",
+    "detailRefunds": "Devoluciones",
+    "detailCashIn": "Entradas",
+    "detailCashOut": "Salidas",
+    "detailGifts": "Invitaciones",
+    "detailCounted": "Contado",
+    "colWhen": "Cuándo",
+    "colMethod": "Método",
+    "noMovements": "Sin movimientos en esta sesión.",
+    "noCounts": "Sin arqueos en esta sesión.",
+    "errLoadDetail": "No se pudo cargar el detalle de la sesión",
+    "back": "Volver"
   },
   "widgets": {
     "cash_register.current_session": {

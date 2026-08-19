@@ -57,16 +57,15 @@ The screen then shows the three numbers that matter: **expected**, **counted** a
 The session moves to `closed` and `cash_register.session_closed` is emitted. Requires
 `cash_register.close_session`.
 
-## What the session summary shows
+## The session detail (drawer report)
 
-Opening a session gives you its totals and the breakdown of its movements
-(`cash_register.session.summary`): cash sales, manual ins and outs, refunds, and **Invitaciones**
-(gifts) listed **separately, at cost** — a comped item never entered the drawer, so it must not be
-mixed with cash.
-
-## Movements and counts
-
-Two supporting lists, both 50 rows per page:
+The **Detalle** row action opens the detail of any session — open or closed, like Square's drawer
+report or Toast's cash drawer details. On top, the reconciliation summary
+(`cash_register.session.summary`): opening float, cash sales, refunds, paid in, paid out,
+**Invitaciones** (gifts) listed **separately, at cost** — a comped item never entered the drawer, so
+it must not be mixed with cash —, the expected cash, and, once the session is closed, the counted
+cash and the difference (an open session shows "—" there: the difference is revealed when the count
+is declared). Below it, the two lists of that session, both 50 rows per page:
 
 - **Movements** (`cash_register.movements.list`, needs `cash_register.view_movement`) — searchable by
   sale reference or description; filterable by type (`sale`, `refund`, `in`, `out`), amount range,
