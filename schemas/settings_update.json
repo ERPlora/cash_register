@@ -3,16 +3,72 @@
   "title": "cash_register.settings.update",
   "description": "Configuración de caja (singleton por hub). La UI envía el snapshot completo (upsert).",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
-    "enable_cash_register": { "type": "boolean", "title": "Activar caja", "description": "Habilita la gestión de caja (apertura/cierre de sesión)." },
-    "require_opening_balance": { "type": "boolean", "title": "Exigir saldo de apertura" },
-    "require_closing_balance": { "type": "boolean", "title": "Exigir saldo de cierre" },
-    "allow_negative_balance": { "type": "boolean", "title": "Permitir saldo negativo" },
-    "require_blind_count": { "type": "boolean", "title": "Arqueo ciego", "description": "Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento. Los supervisores (permiso «ver totales esperados») siguen viéndolo." },
-    "auto_open_session_on_login": { "type": "boolean", "title": "Abrir caja al iniciar sesión" },
-    "auto_close_session_on_logout": { "type": "boolean", "title": "Cerrar caja al cerrar sesión" },
-    "protected_pos_url": { "type": "string", "maxLength": 255, "title": "URL del POS protegido", "description": "Ruta del POS que exige tener la caja abierta." }
+    "enable_cash_register": {
+      "type": "boolean",
+      "title": "Activar caja",
+      "description": "Habilita la gestión de caja (apertura/cierre de sesión)."
+    },
+    "require_opening_balance": {
+      "type": "boolean",
+      "title": "Exigir saldo de apertura"
+    },
+    "require_closing_balance": {
+      "type": "boolean",
+      "title": "Exigir saldo de cierre"
+    },
+    "allow_negative_balance": {
+      "type": "boolean",
+      "title": "Permitir saldo negativo"
+    },
+    "require_blind_count": {
+      "type": "boolean",
+      "title": "Arqueo ciego",
+      "description": "Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento. Los supervisores (permiso «ver totales esperados») siguen viéndolo."
+    },
+    "auto_close_enabled": {
+      "type": "boolean",
+      "title": "Cierre automático diario",
+      "description": "Si nadie ha cerrado la caja, el hub la cierra solo a la hora indicada (hora local del negocio) con el efectivo esperado calculado y sin recuento; el cierre queda atribuido al sistema y marcado en las notas."
+    },
+    "auto_close_time": {
+      "type": "string",
+      "title": "Hora del cierre automático",
+      "enum": [
+        "00:00",
+        "01:00",
+        "02:00",
+        "03:00",
+        "04:00",
+        "05:00",
+        "06:00",
+        "07:00",
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00",
+        "21:00",
+        "22:00",
+        "23:00"
+      ],
+      "description": "Hora local a la que se cierran las sesiones que sigan abiertas (Toast cierra a las 04:00 por defecto)."
+    },
+    "protected_pos_url": {
+      "type": "string",
+      "maxLength": 255,
+      "title": "URL del POS protegido",
+      "description": "Ruta del POS que exige tener la caja abierta."
+    }
   },
   "required": [
     "enable_cash_register",
@@ -20,8 +76,9 @@
     "require_closing_balance",
     "allow_negative_balance",
     "require_blind_count",
-    "auto_open_session_on_login",
-    "auto_close_session_on_logout",
+    "auto_close_enabled",
+    "auto_close_time",
     "protected_pos_url"
-  ]
+  ],
+  "$comment": "additionalProperties:true only as a bridge (cash_register#23): callers older than this schema still send the retired auto_open_session_on_login/auto_close_session_on_logout keys; no SQL binds them, so they are ignored. Flip back to false once hub/crates/runtime/tests/protects_guard_e2e.rs drops them."
 }

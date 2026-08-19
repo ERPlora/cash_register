@@ -225,8 +225,6 @@ def settings_payload(**overrides) -> dict:
         "require_opening_balance": False,
         "require_closing_balance": True,
         "allow_negative_balance": False,
-        "auto_open_session_on_login": False,
-        "auto_close_session_on_logout": False,
         "protected_pos_url": "/m/sales/pos/",
         SETTING: False,
     }

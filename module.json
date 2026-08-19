@@ -112,7 +112,8 @@
       "migrations/postgres/002_gift_total.sql",
       "migrations/postgres/003_payment_method_type.sql",
       "migrations/postgres/004_one_open_session_per_hub.sql",
-      "migrations/postgres/005_require_blind_count.sql"
+      "migrations/postgres/005_require_blind_count.sql",
+      "migrations/postgres/006_auto_close.sql"
     ]
   },
   "queries": {
@@ -434,6 +435,16 @@
         "description": "Closes the active cash register session and records the final cash amount"
       }
     },
+    "cash_register._auto_close_sessions": {
+      "permission": "cash_register.close_session",
+      "transaction": true,
+      "sql": [
+        "commands/_auto_close_sessions.sql"
+      ],
+      "emit": [
+        "cash_register.session_closed"
+      ]
+    },
     "cash_register.movement.add": {
       "permission": "cash_register.add_movement",
       "transaction": true,
@@ -518,6 +529,14 @@
       "cash_register.settings_updated"
     ]
   },
+  "scheduled_tasks": [
+    {
+      "name": "auto_close_sessions",
+      "command": "cash_register._auto_close_sessions",
+      "cron": "*/5 * * * *",
+      "catch_up": "collapse"
+    }
+  ],
   "ui": {
     "entry": "dist/cash_register.esm.js"
   }

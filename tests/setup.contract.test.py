@@ -530,8 +530,6 @@ SETTINGS_SNAPSHOT = {
     "require_opening_balance": True,
     "require_closing_balance": True,
     "allow_negative_balance": False,
-    "auto_open_session_on_login": True,
-    "auto_close_session_on_logout": True,
     "protected_pos_url": "/m/sales/pos/",
 }
 
