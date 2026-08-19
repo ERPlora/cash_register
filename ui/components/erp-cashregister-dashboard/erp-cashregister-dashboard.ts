@@ -3,6 +3,7 @@ import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
+import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
 import { createListController, majorToMinor } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
@@ -114,8 +115,8 @@ export class ErpCashRegisterDashboard extends LitElement {
 
   @state() saving = false;
 
-  /** Panel activo: null | 'open' | 'close' | 'movement' | 'count'. */
-  @state() panel: 'open' | 'close' | 'movement' | 'count' | null = null;
+  /** Panel activo: null | 'open' | 'close' | 'movement' | 'count' | 'detail'. */
+  @state() panel: 'open' | 'close' | 'movement' | 'count' | 'detail' | null = null;
 
   /** Sesión objetivo de cerrar/movimiento/arqueo. */
   @state() target: Session | null = null;
@@ -176,6 +177,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       // Solo icono (ADR-0133): el `label` viaja como title + aria-label del botón, no como texto.
+      // `detail` (cash_register#2) works on ANY session — a closed one is read-only, not invisible.
+      { id: 'detail', label: t('ui.actionDetail'), icon: 'document-text-outline' },
       { id: 'movement', label: t('ui.actionMovement'), icon: 'swap-vertical-outline' },
       { id: 'count', label: t('ui.actionCount'), icon: 'calculator-outline' },
       { id: 'close', label: t('ui.actionClose'), icon: 'lock-closed-outline', color: 'danger' },
@@ -235,8 +238,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.formError = '';
   }
 
-  private openPanel(panel: 'close' | 'movement' | 'count', session: Session) {
-    if (session.status !== 'open') {
+  private openPanel(panel: 'close' | 'movement' | 'count' | 'detail', session: Session) {
+    if (panel !== 'detail' && session.status !== 'open') {
       this.formMsg = '';
       this.formError = erplora().t(CATALOG, 'ui.errSessionNotOpen', { session: session.session_number });
       return;
@@ -250,7 +253,7 @@ export class ErpCashRegisterDashboard extends LitElement {
   private onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
     const session = ev.detail.row as unknown as Session;
     const id = ev.detail.actionId;
-    if (id === 'close' || id === 'movement' || id === 'count') this.openPanel(id, session);
+    if (id === 'close' || id === 'movement' || id === 'count' || id === 'detail') this.openPanel(id, session);
   }
 
   // — Abrir sesión → cash_register.session.open —
@@ -480,6 +483,15 @@ export class ErpCashRegisterDashboard extends LitElement {
     </section>`;
   }
 
+  private renderDetailPanel() {
+    if (!this.target) return nothing;
+    const t = (k: string): string => erplora().t(CATALOG, k);
+    return html`<section class="panel">
+      <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
+      <div class="form"><ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.back')}</ion-button></div>
+    </section>`;
+  }
+
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div>
@@ -491,6 +503,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         ${this.panel === 'close' ? this.renderClosePanel() : nothing}
         ${this.panel === 'movement' ? this.renderMovementPanel() : nothing}
         ${this.panel === 'count' ? this.renderCountPanel() : nothing}
+        ${this.panel === 'detail' ? this.renderDetailPanel() : nothing}
         ${this.formMsg ? html`<p class="ok">${this.formMsg}</p>` : nothing}
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}

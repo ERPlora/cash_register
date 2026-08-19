@@ -323,3 +323,20 @@ describe('los botones propios del módulo son táctiles (cash_register#12)', () 
     expect(styles.cssText).toContain('header ion-button, .form ion-button { min-height: 44px;');
   });
 });
+
+// cash_register#2 — a session row opens its DETAIL (summary + movements + counts), also when the
+// session is closed: a closed session is read-only, not invisible.
+describe('la ficha de sesión desde la tabla (cash_register#2)', () => {
+  it('hay una acción de fila «detalle» y abre el panel de detalle también en una sesión cerrada', async () => {
+    const el = await montar();
+    const wc = el as unknown as { rowActions: { id: string }[]; panel: string | null; target: unknown; onRowAction(e: CustomEvent): void };
+    expect(wc.rowActions.map((a) => a.id)).toContain('detail');
+    const closed = { id: 's0', session_number: 'S-0', status: 'closed', opening_balance: 0, expected_balance: 0, closing_balance: 0, difference: 0 };
+    wc.onRowAction(new CustomEvent('rowAction', { detail: { actionId: 'detail', row: closed } }));
+    expect(wc.panel).toBe('detail');
+    expect((wc.target as { id: string }).id).toBe('s0');
+    await el.updateComplete;
+    const detail = el.shadowRoot?.querySelector('erp-cashregister-session-detail') as unknown as { session: { id: string } } | null;
+    expect(detail?.session?.id).toBe('s0');
+  });
+});
