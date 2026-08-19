@@ -255,6 +255,50 @@ describe('una sola sesión abierta por hub (cash_register#11)', () => {
   });
 });
 
+// cash_register#38 — the drawer settings are enforced on the SERVER (WASM handler with `reads`), and
+// each rule answers with its own domain code. The dashboard translates them instead of showing the
+// English fallback message.
+describe('los rechazos de dominio del servidor se traducen (cash_register#38)', () => {
+  const rechazo = (code: string) => async () => {
+    const e = new Error('server fallback message') as Error & { code: string };
+    e.code = code;
+    throw e;
+  };
+  const SESION_ABIERTA = { id: 's-open', session_number: 'S-OPEN', status: 'open', opening_balance: 0, expected_balance: null, closing_balance: null, difference: null };
+
+  it('abrir sin fondo cuando el ajuste lo exige → ui.errOpeningBalanceRequired', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = rechazo('cash_register.opening_balance_required');
+    const el = await montar();
+    const wc = el as unknown as { formError: string; openSession(e: Event): Promise<void> };
+    await wc.openSession(new Event('submit'));
+    expect(wc.formError).toBe('ui.errOpeningBalanceRequired');
+  });
+
+  it('cerrar sin recuento cuando el ajuste lo exige → ui.errClosingBalanceRequired', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = rechazo('cash_register.closing_balance_required');
+    const el = await montar();
+    const wc = el as unknown as { formError: string; target: unknown; closeBalance: string; closeSession(e: Event): Promise<void> };
+    wc.target = SESION_ABIERTA;
+    wc.closeBalance = '10';
+    await wc.closeSession(new Event('submit'));
+    expect(wc.formError).toBe('ui.errClosingBalanceRequired');
+  });
+
+  it('una salida que deja la caja en negativo → ui.errNegativeBalanceNotAllowed', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = rechazo('cash_register.negative_balance_not_allowed');
+    const el = await montar();
+    const wc = el as unknown as { formError: string; target: unknown; movType: string; movAmount: string; addMovement(e: Event): Promise<void> };
+    wc.target = SESION_ABIERTA;
+    wc.movType = 'out';
+    wc.movAmount = '500';
+    await wc.addMovement(new Event('submit'));
+    expect(wc.formError).toBe('ui.errNegativeBalanceNotAllowed');
+  });
+});
+
 // cash_register#12 — touch targets. `ion-button size="small"` renders ~27 px high; a finger needs
 // 44×44 (WCAG 2.5.5 / Ionic default size). The data-table already got its 44 px centrally in
 // OutfitKit (`9927a4c`); these are the module's OWN buttons: header, and every panel's submit and

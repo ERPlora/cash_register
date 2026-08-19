@@ -13,6 +13,10 @@ SELECT
   COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN m.amount ELSE 0 END),0)      AS total_cash_in,
   -COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN m.amount ELSE 0 END),0)      AS total_cash_out,
   COALESCE(SUM(m.gift_total),0) AS total_gifts,
+  -- Physical cash the drawer should hold now (opening + Σ cash movements, signed) — same rule as
+  -- `close_session.sql`/`current_session.expected` (hub#778: keyed on payment_method_TYPE). The
+  -- `movement.add` handler reads it to enforce `allow_negative_balance` (cash_register#38).
+  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END),0) AS expected_cash,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
 LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0 AND m.hub_id = :hub_id

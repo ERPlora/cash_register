@@ -64,6 +64,23 @@ function erplora(): ErploraClientLike {
   return c;
 }
 
+
+/** Domain codes the server answers with (`expect_rows` gates and the WASM handler, cash_register#38)
+ *  → the module's own translation. Anything else falls back to the error message / a generic key. */
+const DOMAIN_MESSAGES: Record<string, string> = {
+  'cash_register.session_already_open': 'ui.errSessionAlreadyOpen',
+  'cash_register.opening_balance_required': 'ui.errOpeningBalanceRequired',
+  'cash_register.closing_balance_required': 'ui.errClosingBalanceRequired',
+  'cash_register.negative_balance_not_allowed': 'ui.errNegativeBalanceNotAllowed',
+  'cash_register.session_unavailable': 'ui.errSessionUnavailable',
+};
+export function domainMessage(e: unknown, fallbackKey: string): string {
+  const code = (e as { code?: unknown } | null)?.code;
+  const key = typeof code === 'string' ? DOMAIN_MESSAGES[code] : undefined;
+  if (key) return erplora().t(CATALOG, key);
+  return e instanceof Error ? e.message : erplora().t(CATALOG, fallbackKey);
+}
+
 /** Nº de sesión generado por la UI: S-YYMMDD-HHMMSS (open_session.sql espera :session_number). */
 function sessionNumber(): string {
   const d = new Date();
@@ -256,14 +273,11 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.formMsg = erplora().t(CATALOG, 'ui.msgSessionOpened');
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
     } catch (e) {
-      // The domain refusal (`expect_rows` gate) travels as `code`: translate it, and re-read the
+      // The domain refusal travels as `code`: translate it (cash_register#11/#38), and re-read the
       // server so the button reflects the session that DID win.
-      const code = (e as { code?: unknown } | null)?.code;
-      if (code === 'cash_register.session_already_open') {
-        this.formError = erplora().t(CATALOG, 'ui.errSessionAlreadyOpen');
+      this.formError = domainMessage(e, 'ui.errOpenSession');
+      if ((e as { code?: unknown } | null)?.code === 'cash_register.session_already_open') {
         void Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
-      } else {
-        this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errOpenSession');
       }
     } finally {
       this.saving = false;
@@ -301,7 +315,7 @@ export class ErpCashRegisterDashboard extends LitElement {
           })
         : erplora().t(CATALOG, 'ui.msgSessionClosed');
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCloseSession');
+      this.formError = domainMessage(e, 'ui.errCloseSession');
     } finally {
       this.saving = false;
     }
@@ -338,7 +352,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.formMsg = msg;
       await this.ctrl.load();
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errAddMovement');
+      this.formError = domainMessage(e, 'ui.errAddMovement');
     } finally {
       this.saving = false;
     }

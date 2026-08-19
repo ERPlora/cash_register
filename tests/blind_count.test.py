@@ -41,6 +41,15 @@ import uuid
 MODULE_DIR = pathlib.Path(__file__).resolve().parent.parent
 MANIFEST = json.loads((MODULE_DIR / "module.json").read_text())
 
+# cash_register#38: the public open/close/movement commands are WASM handlers (settings enforced on
+# the server) that resolve to these internal SQL commands. This file drives the SQL directly, with
+# the ids the handler would have handed over (`session_id` / `movement_id` = new_ids[0]).
+SQL_OF = {
+    "cash_register.session.open": "cash_register._open_session_insert",
+    "cash_register.session.close": "cash_register._close_session_apply",
+    "cash_register.movement.add": "cash_register._movement_insert",
+}
+
 CONTAINER = os.environ.get("CASH_REGISTER_TEST_PG_CONTAINER", "erplora-test-pg-5433")
 DB = f"cash_register_blind_count_test_{os.getpid()}"
 HUB = "hub-a"
@@ -108,10 +117,13 @@ def system_params(payload: dict, hub: str = HUB) -> dict:
     params.setdefault("current_user_id", USER)
     params.setdefault("now", "2026-08-18T10:00:00Z")
     params.setdefault("new_id", str(uuid.uuid4()))
+    params.setdefault("session_id", params["new_id"])
+    params.setdefault("movement_id", params["new_id"])
     return params
 
 
 def run_command(name: str, payload: dict, hub: str = HUB) -> None:
+    name = SQL_OF.get(name, name)
     cmd = MANIFEST["commands"][name]
     params = system_params(payload, hub)
     script = (

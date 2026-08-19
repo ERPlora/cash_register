@@ -3386,6 +3386,10 @@ var es_default = {
     errSessionNotOpen: "La sesi\xF3n {session} no est\xE1 abierta",
     errOpenSession: "No se pudo abrir la sesi\xF3n",
     errSessionAlreadyOpen: "Ya hay una sesi\xF3n de caja abierta. Ci\xE9rrala antes de abrir otra.",
+    errOpeningBalanceRequired: "Este negocio exige fondo de apertura: indica el efectivo con el que empieza la caja.",
+    errClosingBalanceRequired: "Este negocio exige recuento al cierre: indica el efectivo contado.",
+    errNegativeBalanceNotAllowed: "Esta salida dejar\xEDa la caja en negativo y el saldo negativo no est\xE1 permitido.",
+    errSessionUnavailable: "Esa sesi\xF3n de caja no est\xE1 disponible: no existe en este negocio o se ha borrado.",
     errCloseSession: "No se pudo cerrar la sesi\xF3n",
     errInvalidAmount: "Importe inv\xE1lido",
     errAddMovement: "No se pudo registrar el movimiento",
@@ -3395,8 +3399,10 @@ var es_default = {
     toggleRequireOpening: "Exigir fondo de apertura",
     toggleRequireClosing: "Exigir recuento al cierre",
     toggleAllowNegative: "Permitir saldo negativo",
-    toggleAutoOpen: "Abrir sesi\xF3n al iniciar sesi\xF3n",
-    toggleAutoClose: "Cerrar sesi\xF3n al salir",
+    toggleRequireBlindCount: "Arqueo ciego (ocultar el efectivo esperado hasta contar)",
+    toggleAutoClose: "Cierre autom\xE1tico diario",
+    labelAutoCloseTime: "Hora del cierre autom\xE1tico",
+    autoClosedNote: "cerrada autom\xE1ticamente por horario",
     labelProtectedPosUrl: "URL del POS protegida",
     saveSettings: "Guardar ajustes",
     msgSettingsSaved: "Ajustes guardados",
@@ -3481,6 +3487,10 @@ var en_default = {
     errSessionNotOpen: "Session {session} is not open",
     errOpenSession: "Could not open the session",
     errSessionAlreadyOpen: "A cash session is already open. Close it before opening a new one.",
+    errOpeningBalanceRequired: "This business requires an opening float: enter the cash the drawer starts with.",
+    errClosingBalanceRequired: "This business requires the drawer to be counted at closing: enter the counted cash.",
+    errNegativeBalanceNotAllowed: "This cash-out would leave the drawer below zero, and negative balances are not allowed.",
+    errSessionUnavailable: "That cash session is not available: it does not exist in this business or it has been deleted.",
     errCloseSession: "Could not close the session",
     errInvalidAmount: "Invalid amount",
     errAddMovement: "Could not record the movement",
@@ -3490,8 +3500,10 @@ var en_default = {
     toggleRequireOpening: "Require opening float",
     toggleRequireClosing: "Require closing count",
     toggleAllowNegative: "Allow negative balance",
-    toggleAutoOpen: "Open session on login",
-    toggleAutoClose: "Close session on logout",
+    toggleRequireBlindCount: "Blind count (hide expected cash until counted)",
+    toggleAutoClose: "Automatic daily close",
+    labelAutoCloseTime: "Automatic close time",
+    autoClosedNote: "auto-closed by schedule",
     labelProtectedPosUrl: "Protected POS URL",
     saveSettings: "Save settings",
     msgSettingsSaved: "Settings saved",
@@ -3512,6 +3524,19 @@ function erplora() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
+}
+var DOMAIN_MESSAGES = {
+  "cash_register.session_already_open": "ui.errSessionAlreadyOpen",
+  "cash_register.opening_balance_required": "ui.errOpeningBalanceRequired",
+  "cash_register.closing_balance_required": "ui.errClosingBalanceRequired",
+  "cash_register.negative_balance_not_allowed": "ui.errNegativeBalanceNotAllowed",
+  "cash_register.session_unavailable": "ui.errSessionUnavailable"
+};
+function domainMessage(e5, fallbackKey) {
+  const code = e5?.code;
+  const key = typeof code === "string" ? DOMAIN_MESSAGES[code] : void 0;
+  if (key) return erplora().t(CATALOG, key);
+  return e5 instanceof Error ? e5.message : erplora().t(CATALOG, fallbackKey);
 }
 function sessionNumber() {
   const d3 = /* @__PURE__ */ new Date();
@@ -3673,12 +3698,9 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.formMsg = erplora().t(CATALOG, "ui.msgSessionOpened");
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
     } catch (e5) {
-      const code = e5?.code;
-      if (code === "cash_register.session_already_open") {
-        this.formError = erplora().t(CATALOG, "ui.errSessionAlreadyOpen");
+      this.formError = domainMessage(e5, "ui.errOpenSession");
+      if (e5?.code === "cash_register.session_already_open") {
         void Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
-      } else {
-        this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errOpenSession");
       }
     } finally {
       this.saving = false;
@@ -3713,7 +3735,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         difference: this.fmt(row.difference)
       }) : erplora().t(CATALOG, "ui.msgSessionClosed");
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCloseSession");
+      this.formError = domainMessage(e5, "ui.errCloseSession");
     } finally {
       this.saving = false;
     }
@@ -3749,7 +3771,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.formMsg = msg;
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errAddMovement");
+      this.formError = domainMessage(e5, "ui.errAddMovement");
     } finally {
       this.saving = false;
     }

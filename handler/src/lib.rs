@@ -8,11 +8,16 @@
 //!  - `record_sale`: listener de `sale.completed`. Añade un movimiento de caja con el
 //!    total de la venta a la sesión abierta del empleado. Como el guest no consulta la
 //!    BD, emite _movement_for_open_session, que resuelve la sesión abierta en SQL.
+//!  - `open_session` / `close_session` / `add_movement` (cash_register#38): the drawer settings
+//!    (`require_opening_balance`, `require_closing_balance`, `allow_negative_balance`) enforced on
+//!    the server. Each rule answers with its own domain code, read from the trusted settings row the
+//!    host preloads (`context.reads`, ADR-0069) — never from the payload. The writes themselves stay
+//!    in SQL (`_open_session_insert`, `_close_session_apply`, `_movement_insert`).
 
 use erplora_guest_sdk::money;
 use rust_decimal::Decimal;
 use std::str::FromStr;
-use erplora_guest_sdk::{Operation, Output};
+use erplora_guest_sdk::{DomainError, Operation, Output};
 use serde_json::{json, Map, Value};
 
 #[cfg(feature = "guest")]
@@ -28,6 +33,24 @@ pub fn add_count(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>
 #[plugin_fn]
 pub fn record_sale(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
     Ok(Json(record_sale_pure(input.into_inner().into_value())))
+}
+
+#[cfg(feature = "guest")]
+#[plugin_fn]
+pub fn open_session(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
+    Ok(Json(open_session_pure(input.into_inner().into_value())))
+}
+
+#[cfg(feature = "guest")]
+#[plugin_fn]
+pub fn close_session(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
+    Ok(Json(close_session_pure(input.into_inner().into_value())))
+}
+
+#[cfg(feature = "guest")]
+#[plugin_fn]
+pub fn add_movement(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
+    Ok(Json(add_movement_pure(input.into_inner().into_value())))
 }
 
 // El DINERO lo calcula `erplora_guest_sdk::money` (ADR-0123): una sola implementación para todo el
@@ -112,6 +135,111 @@ pub fn record_sale_pure(input: Value) -> Output {
     Output { operations: vec![Operation::sql("cash_register._movement_for_open_session", p)], events: vec![], ..Default::default() }
 }
 
+
+// ── cash_register#38: settings enforced on the server ────────────────────────────────────────
+
+/// Rows the host preloaded for `query` (`context.reads[query]`, ADR-0069). Empty if absent.
+fn read_rows<'a>(input: &'a Value, query: &str) -> &'a [Value] {
+    input.get("context").and_then(|c| c.get("reads")).and_then(|r| r.get(query)).and_then(|v| v.as_array())
+        .map(|a| a.as_slice()).unwrap_or(&[])
+}
+
+/// A 0/1 flag of the settings row (`cash_register.settings.get`). No row → `false`: a hub that
+/// never saved the settings keeps today's behaviour (nothing enforced) — the migration defaults are
+/// the UI's suggestion, not a rule the hub agreed to.
+fn setting_flag(input: &Value, key: &str) -> bool {
+    read_rows(input, "cash_register.settings.get").first()
+        .and_then(|row| row.get(key)).map(|v| f(v, 0.0) != 0.0).unwrap_or(false)
+}
+
+fn refuse(code: &str, message: &str) -> Output {
+    Output::new().with_error(DomainError::new(code, message))
+}
+
+/// Copies the caller's keys into the operation params (the SQL binds them by name; the host adds
+/// the system params on top).
+fn passthrough(payload: &Value, keys: &[&str]) -> Map<String, Value> {
+    let mut p = Map::new();
+    for k in keys {
+        p.insert((*k).to_string(), payload.get(*k).cloned().unwrap_or(Value::Null));
+    }
+    p
+}
+
+/// open_session: payload { register_id?, session_number?, opening_balance?, opening_notes? }.
+/// reads: `cash_register.settings.get`, `cash_register.current_session`.
+pub fn open_session_pure(input: Value) -> Output {
+    let payload = input.get("payload").cloned().unwrap_or(Value::Null);
+    // cash_register#11 on this path: the preloaded open session gives the translatable refusal;
+    // the partial unique index + `ON CONFLICT DO NOTHING` in `_open_session_insert` still guard a
+    // race between two devices.
+    if !read_rows(&input, "cash_register.current_session").is_empty() {
+        return refuse(
+            "cash_register.session_already_open",
+            "A cash session is already open for this business. Close it before opening a new one.",
+        );
+    }
+    let opening = money::from_json(payload.get("opening_balance").unwrap_or(&Value::Null), 0);
+    if setting_flag(&input, "require_opening_balance") && opening <= 0 {
+        return refuse(
+            "cash_register.opening_balance_required",
+            "This business requires an opening float: enter the cash the drawer starts with.",
+        );
+    }
+    let mut p = passthrough(&payload, &["register_id", "session_number", "opening_notes"]);
+    // The host is the id authority (§5.3): the session takes `new_ids[0]`, which is what the caller
+    // gets back as the created entity (hub#776).
+    p.insert("session_id".into(), new_id(&input, 0));
+    p.insert("opening_balance".into(), json!(opening));
+    Output::new().with_operation(Operation::sql("cash_register._open_session_insert", p))
+}
+
+/// close_session: payload { session_id, closing_balance?, closing_notes? }.
+/// reads: `cash_register.settings.get`.
+pub fn close_session_pure(input: Value) -> Output {
+    let payload = input.get("payload").cloned().unwrap_or(Value::Null);
+    let counted = payload.get("closing_balance").filter(|v| !v.is_null() && s(v).trim() != "");
+    if setting_flag(&input, "require_closing_balance") && counted.is_none() {
+        return refuse(
+            "cash_register.closing_balance_required",
+            "This business requires the drawer to be counted at closing: enter the counted cash.",
+        );
+    }
+    let mut p = passthrough(&payload, &["session_id", "closing_notes"]);
+    p.insert("closing_balance".into(), counted.map(|v| json!(money::from_json(v, 0))).unwrap_or(Value::Null));
+    Output::new().with_operation(Operation::sql("cash_register._close_session_apply", p))
+}
+
+/// add_movement: payload { session_id, movement_type, amount (signed, minor units), payment_method?,
+/// sale_reference?, description? }. reads: `cash_register.settings.get`,
+/// `cash_register.session.summary` (params session_id) — the summary carries `expected_cash`.
+pub fn add_movement_pure(input: Value) -> Output {
+    let payload = input.get("payload").cloned().unwrap_or(Value::Null);
+    // pm#146 on this path: a session that is not this hub's (or is deleted) is not preloaded → refuse
+    // before writing, so no `movement_added` is ever emitted for a row that does not exist.
+    let Some(session) = read_rows(&input, "cash_register.session.summary").first() else {
+        return refuse(
+            "cash_register.session_unavailable",
+            "That cash session is not available: it does not exist in this business or it has been deleted.",
+        );
+    };
+    let amount = money::from_json(payload.get("amount").unwrap_or(&Value::Null), 0);
+    let is_cash = sor(&payload, "payment_method", "cash").eq_ignore_ascii_case("cash");
+    if amount < 0 && is_cash && !setting_flag(&input, "allow_negative_balance") {
+        let expected_cash = money::from_json(session.get("expected_cash").unwrap_or(&Value::Null), 0);
+        if expected_cash + amount < 0 {
+            return refuse(
+                "cash_register.negative_balance_not_allowed",
+                "This cash-out would leave the drawer below zero, and this business does not allow a negative balance.",
+            );
+        }
+    }
+    let mut p = passthrough(&payload, &["session_id", "movement_type", "payment_method", "sale_reference", "description"]);
+    p.insert("movement_id".into(), new_id(&input, 0));
+    p.insert("amount".into(), json!(amount));
+    Output::new().with_operation(Operation::sql("cash_register._movement_insert", p))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -184,5 +312,130 @@ mod tests {
     fn record_sale_zero_is_noop() {
         let out = record_sale_pure(inp(json!({ "total": 0 }), 2));
         assert_eq!(out.operations.len(), 0);
+    }
+
+    // ── cash_register#38: the drawer settings are enforced on the SERVER ─────────────────────
+    // `require_opening_balance` / `require_closing_balance` / `allow_negative_balance` used to be
+    // looked at by the UI only. Each rule gets its own domain code (one `expect_rows` gate per SQL
+    // command could not tell "already open" from "float missing"), read from the trusted settings
+    // row the host preloads (ADR-0069 `reads`), never from the payload.
+
+    fn inp_reads(payload: Value, reads: Value) -> Value {
+        json!({ "payload": payload, "context": { "new_ids": ["id-0", "id-1"], "now": "2026-08-18T10:00:00+00:00", "reads": reads } })
+    }
+    fn settings(opening: i64, closing: i64, negative: i64) -> Value {
+        json!([{ "id": "cfg", "require_opening_balance": opening, "require_closing_balance": closing, "allow_negative_balance": negative }])
+    }
+
+    #[test]
+    fn open_session_refuses_without_float_when_the_setting_requires_it() {
+        let out = open_session_pure(inp_reads(
+            json!({ "opening_balance": 0, "session_number": "S-1" }),
+            json!({ "cash_register.settings.get": settings(1, 1, 0), "cash_register.current_session": [] }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.opening_balance_required"));
+        assert!(out.operations.is_empty());
+    }
+
+    #[test]
+    fn open_session_with_float_or_without_the_setting_inserts() {
+        for (opening, setting) in [(1500, 1), (0, 0)] {
+            let out = open_session_pure(inp_reads(
+                json!({ "opening_balance": opening, "session_number": "S-1", "register_id": null, "opening_notes": "" }),
+                json!({ "cash_register.settings.get": settings(setting, 1, 0), "cash_register.current_session": [] }),
+            ));
+            assert!(out.error.is_none(), "opening={opening} setting={setting}: {:?}", out.error);
+            assert_eq!(out.operations.len(), 1);
+            assert_eq!(out.operations[0].command, "cash_register._open_session_insert");
+            assert_eq!(out.operations[0].params["opening_balance"], json!(opening));
+            assert_eq!(out.operations[0].params["session_number"], json!("S-1"));
+            assert_eq!(out.operations[0].params["session_id"], json!("id-0"));
+        }
+    }
+
+    #[test]
+    fn open_session_without_a_settings_row_enforces_nothing() {
+        // A hub that never saved the settings keeps today's behaviour (nothing enforced).
+        let out = open_session_pure(inp_reads(
+            json!({ "opening_balance": 0 }),
+            json!({ "cash_register.settings.get": [], "cash_register.current_session": [] }),
+        ));
+        assert!(out.error.is_none());
+        assert_eq!(out.operations.len(), 1);
+    }
+
+    #[test]
+    fn open_session_refuses_when_one_is_already_open() {
+        // cash_register#11 kept: the read of the open session gives the translatable refusal; the
+        // partial unique index + ON CONFLICT DO NOTHING in `_open_session_insert` still guard a race.
+        let out = open_session_pure(inp_reads(
+            json!({ "opening_balance": 1000 }),
+            json!({ "cash_register.settings.get": settings(0, 0, 1), "cash_register.current_session": [{ "id": "s-open" }] }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_already_open"));
+    }
+
+    #[test]
+    fn close_session_refuses_without_counted_cash_when_the_setting_requires_it() {
+        for payload in [json!({ "session_id": "s1" }), json!({ "session_id": "s1", "closing_balance": null }), json!({ "session_id": "s1", "closing_balance": "" })] {
+            let out = close_session_pure(inp_reads(payload.clone(), json!({ "cash_register.settings.get": settings(0, 1, 0) })));
+            assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.closing_balance_required"), "{payload}");
+            assert!(out.operations.is_empty());
+        }
+    }
+
+    #[test]
+    fn close_session_applies_when_counted_or_not_required() {
+        let out = close_session_pure(inp_reads(
+            json!({ "session_id": "s1", "closing_balance": 12000, "closing_notes": "ok" }),
+            json!({ "cash_register.settings.get": settings(0, 1, 0) }),
+        ));
+        assert!(out.error.is_none());
+        assert_eq!(out.operations[0].command, "cash_register._close_session_apply");
+        assert_eq!(out.operations[0].params["closing_balance"], json!(12000));
+        assert_eq!(out.operations[0].params["session_id"], json!("s1"));
+        // Not required: a close without a count (e.g. API) is still allowed, closing_balance NULL.
+        let out = close_session_pure(inp_reads(json!({ "session_id": "s1" }), json!({ "cash_register.settings.get": settings(0, 0, 0) })));
+        assert!(out.error.is_none());
+        assert_eq!(out.operations[0].params["closing_balance"], Value::Null);
+    }
+
+    #[test]
+    fn add_movement_refuses_a_cash_out_that_empties_the_drawer_when_negative_is_not_allowed() {
+        // Drawer holds 10000 + 2500 = 12500 cash; a 13000 out would leave -500.
+        let out = add_movement_pure(inp_reads(
+            json!({ "session_id": "s1", "movement_type": "out", "amount": -13000, "payment_method": "cash" }),
+            json!({ "cash_register.settings.get": settings(0, 0, 0),
+                    "cash_register.session.summary": [{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": 12500 }] }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.negative_balance_not_allowed"));
+        assert!(out.operations.is_empty());
+    }
+
+    #[test]
+    fn add_movement_allows_a_cash_out_that_fits_or_when_negative_is_allowed() {
+        let summary = json!([{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": 12500 }]);
+        for (amount, allow) in [(-12500, 0), (-13000, 1), (500, 0)] {
+            let out = add_movement_pure(inp_reads(
+                json!({ "session_id": "s1", "movement_type": if amount < 0 { "out" } else { "in" }, "amount": amount, "payment_method": "cash", "description": "x" }),
+                json!({ "cash_register.settings.get": settings(0, 0, allow), "cash_register.session.summary": summary }),
+            ));
+            assert!(out.error.is_none(), "amount={amount} allow={allow}: {:?}", out.error);
+            assert_eq!(out.operations[0].command, "cash_register._movement_insert");
+            assert_eq!(out.operations[0].params["amount"], json!(amount));
+            assert_eq!(out.operations[0].params["session_id"], json!("s1"));
+            assert_eq!(out.operations[0].params["movement_id"], json!("id-0"));
+        }
+    }
+
+    #[test]
+    fn add_movement_refuses_an_unknown_session() {
+        // pm#146 kept on the WASM path: a session that is not this hub's (or is deleted) is not
+        // preloaded → the movement is refused, no event is emitted for a row that does not exist.
+        let out = add_movement_pure(inp_reads(
+            json!({ "session_id": "ghost", "movement_type": "in", "amount": 100 }),
+            json!({ "cash_register.settings.get": settings(0, 0, 1), "cash_register.session.summary": [] }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_unavailable"));
     }
 }
