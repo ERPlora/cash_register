@@ -1,4 +1,7 @@
--- Registra un movimiento resolviendo su sesión contra el hub inyectado (pm#146).
+-- Inserts a cash movement resolving its session against the injected hub (pm#146). Since
+-- cash_register#38 the public `cash_register.movement.add` is a WASM handler that enforces the
+-- drawer settings (`allow_negative_balance`) and refuses an unknown session BEFORE resolving to
+-- this SQL (`cash_register._movement_insert`); the row id comes as `:movement_id` (`new_ids[0]`).
 --
 -- `session_id` venía del payload sin comprobar nada, así que un movimiento de este hub podía quedar
 -- colgando de la sesión de otro. Y aquí la fila cruzada no es un dato feo: `session_summary` suma
@@ -15,7 +18,7 @@ INSERT INTO cash_register_movement
   (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT
-  :new_id, :hub_id, s.id, :movement_type, :amount, COALESCE(:payment_method, 'cash'),
+  :movement_id, :hub_id, s.id, :movement_type, :amount, COALESCE(:payment_method, 'cash'),
   COALESCE(:sale_reference, ''), COALESCE(:description, ''), :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM cash_register_session s

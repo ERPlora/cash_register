@@ -404,36 +404,62 @@
     },
     "cash_register.session.open": {
       "permission": "cash_register.add_session",
-      "transaction": true,
-      "sql": [
-        "commands/open_session.sql"
-      ],
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "open_session"
+      },
       "schema": "schemas/open_session.json",
+      "reads": [
+        {
+          "query": "cash_register.settings.get",
+          "required": true
+        },
+        {
+          "query": "cash_register.current_session",
+          "required": true
+        }
+      ],
       "emit": [
         "cash_register.session_opened"
       ],
-      "expect_rows": {
-        "op": "min",
-        "n": 1,
-        "error": "cash_register.session_already_open",
-        "message": "A cash session is already open for this business. Close it before opening a new one."
-      },
       "ai": {
-        "description": "Opens a new cash register session with the specified opening float. Fails with cash_register.session_already_open if the hub already has an open session."
+        "description": "Opens a new cash register session with the specified opening float. Fails with cash_register.session_already_open if the hub already has an open session, and with cash_register.opening_balance_required when the settings require a float and none is given."
       }
+    },
+    "cash_register._open_session_insert": {
+      "permission": "cash_register.add_session",
+      "transaction": true,
+      "sql": [
+        "commands/open_session.sql"
+      ]
     },
     "cash_register.session.close": {
       "permission": "cash_register.close_session",
-      "transaction": true,
-      "sql": [
-        "commands/close_session.sql"
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "close_session"
+      },
+      "reads": [
+        {
+          "query": "cash_register.settings.get",
+          "required": true
+        }
       ],
       "emit": [
         "cash_register.session_closed"
       ],
       "ai": {
-        "description": "Closes the active cash register session and records the final cash amount"
+        "description": "Closes the active cash register session and records the final cash amount. Fails with cash_register.closing_balance_required when the settings require the drawer to be counted and no closing_balance is given."
       }
+    },
+    "cash_register._close_session_apply": {
+      "permission": "cash_register.close_session",
+      "transaction": true,
+      "sql": [
+        "commands/close_session.sql"
+      ]
     },
     "cash_register._auto_close_sessions": {
       "permission": "cash_register.close_session",
@@ -447,22 +473,37 @@
     },
     "cash_register.movement.add": {
       "permission": "cash_register.add_movement",
-      "transaction": true,
-      "sql": [
-        "commands/add_movement.sql"
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "add_movement"
+      },
+      "reads": [
+        {
+          "query": "cash_register.settings.get",
+          "required": true
+        },
+        {
+          "query": "cash_register.session.summary",
+          "params": {
+            "session_id": "payload.session_id"
+          },
+          "required": true
+        }
       ],
       "emit": [
         "cash_register.movement_added"
       ],
       "ai": {
-        "description": "Records a cash movement (cash-in or cash-out) against the active register session"
-      },
-      "expect_rows": {
-        "op": "min",
-        "n": 1,
-        "error": "cash_register.session_unavailable",
-        "message": "That cash session is not available: it does not exist in this business or it has been deleted."
+        "description": "Records a cash movement (cash-in or cash-out) against a register session. Fails with cash_register.session_unavailable if the session is not this business's, and with cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it."
       }
+    },
+    "cash_register._movement_insert": {
+      "permission": "cash_register.add_movement",
+      "transaction": true,
+      "sql": [
+        "commands/add_movement.sql"
+      ]
     },
     "cash_register.count.add": {
       "permission": "cash_register.add_count",

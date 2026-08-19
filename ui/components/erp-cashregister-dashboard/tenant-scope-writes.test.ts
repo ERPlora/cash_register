@@ -25,12 +25,21 @@ const manifest = JSON.parse(readFileSync(join(ROOT, 'module.json'), 'utf8')) as 
     {
       sql?: string[];
       emit?: string[];
+      handler?: { type: string; file: string; function: string };
+      reads?: (string | { query: string; params?: Record<string, string>; required?: boolean })[];
       expect_rows?: { op: string; n: number; error: string; message?: string };
     }
   >;
+  queries: Record<string, { sql: string }>;
 };
 
 const COMMAND = 'cash_register.movement.add';
+// cash_register#38: the public command is a WASM handler (settings enforced on the server) that
+// resolves to this internal SQL. The two halves of the recipe move doors: hub scoping stays in the
+// SQL; "fail instead of a silent no-op" is now the handler refusing an unknown session BEFORE
+// writing (`reads` of `cash_register.session.summary` for the payload's session, required) —
+// covered by the handler's own tests (`add_movement_refuses_an_unknown_session`).
+const INSERT = 'cash_register._movement_insert';
 
 const sqlOf = (name: string) =>
   (manifest.commands[name].sql ?? [])
@@ -44,7 +53,7 @@ const sqlOf = (name: string) =>
 
 describe('un movimiento solo cuelga de una sesión del mismo hub (pm#146)', () => {
   it('la sesión se resuelve contra el hub inyectado, no contra el payload', () => {
-    const sql = sqlOf(COMMAND);
+    const sql = sqlOf(INSERT);
 
     expect(sql, 'toma cualquier session_id: también el de otro hub').toMatch(
       /cash_register_session/,
@@ -53,19 +62,23 @@ describe('un movimiento solo cuelga de una sesión del mismo hub (pm#146)', () =
   });
 
   it('falla en vez de no escribir, decir que sí y emitir el evento igual', () => {
-    const gate = manifest.commands[COMMAND].expect_rows;
+    const cmd = manifest.commands[COMMAND];
 
     expect(
-      manifest.commands[COMMAND].emit,
+      cmd.emit,
       'este command emite: por eso un no-op silencioso engaña también a quien escucha',
     ).toContain('cash_register.movement_added');
 
-    expect(gate, 'un INSERT condicional sin `expect_rows` es un no-op que aun así emite').toBeTruthy();
-    expect(gate!.op).toBe('min');
-    expect(gate!.n).toBeGreaterThanOrEqual(1);
-    expect(gate!.error.split('.')[0], 'el instalador exige el namespace del módulo').toBe(
-      manifest.id,
-    );
-    expect(gate!.message, 'ningún shell traduce estos códigos todavía: hace falta el texto').toBeTruthy();
+    // The door on the WASM path: the host preloads the payload's session (this hub only — the
+    // query scopes by :hub_id) and the handler refuses when it is not there.
+    expect(cmd.handler, 'movement.add es un handler WASM (cash_register#38)').toBeTruthy();
+    const read = (cmd.reads ?? []).find(
+      (r) => typeof r === 'object' && r.query === 'cash_register.session.summary',
+    ) as { query: string; params?: Record<string, string>; required?: boolean } | undefined;
+    expect(read, 'el handler tiene que recibir la sesión del payload precargada por el host').toBeTruthy();
+    expect(read!.params?.session_id).toBe('payload.session_id');
+    expect(read!.required, 'una read obligatoria que falla aborta en vez de degradar').toBe(true);
+    const summarySql = readFileSync(join(ROOT, manifest.queries['cash_register.session.summary'].sql), 'utf8');
+    expect(summarySql, 'la sesión precargada tiene que ser de ESTE hub').toMatch(/s\.hub_id\s*=\s*:hub_id/);
   });
 });
