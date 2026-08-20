@@ -67,7 +67,14 @@ jobs:
 
   bump:
     needs: gate
-    runs-on: ubuntu-latest
+    # Same switch as the gate it depends on: the organization's own runner when `CI_RUNNER_LABEL`
+    # is set, GitHub's image when it is not. Without this the job is INVISIBLY the weak link — the
+    # gate would go green on the org runner and the bump would die on a hosted image the Actions
+    # budget no longer pays for, so main would carry the merge with NO version bump. And no bump
+    # means no republish: the SaaS only uploads `modules/{id}/v{version}.zip` when that version does
+    # not exist yet, so the marketplace would keep serving the old code as if nothing had happened.
+    # `python3` (used below) ships with the runner's Ubuntu; bare `python` does not, hence python3.
+    runs-on: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
     # Anti-loop layer 2: never bump on top of a release commit.
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
     steps:
