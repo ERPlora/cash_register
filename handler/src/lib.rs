@@ -210,9 +210,31 @@ pub fn close_session_pure(input: Value) -> Output {
     Output::new().with_operation(Operation::sql("cash_register._close_session_apply", p))
 }
 
-/// add_movement: payload { session_id, movement_type, amount (signed, minor units), payment_method?,
-/// sale_reference?, description? }. reads: `cash_register.settings.get`,
-/// `cash_register.session.summary` (params session_id) — the summary carries `expected_cash`.
+/// The SIGN of a cash movement belongs to the SERVER (cash_register#48). It used to be a convention
+/// the CALLER had to honour — the module's own screen sent `-3000` for a cash-out, but nothing said
+/// so: `movement.add` declared no `schema`, the handler stored the amount as it arrived and the
+/// reading queries summed it blind. A cash-out sent with a positive amount therefore ADDED to the
+/// drawer, and `allow_negative_balance` — evaluated on `expected_cash + amount` — became
+/// unreachable through that door: the sum could never dip below zero. Taking 99.999 € out left the
+/// expected cash at 100.110,50 € and `ok: true`, and the closing reconciliation used the same
+/// formula, so the till "balanced" against a total that was already false.
+///
+/// Here the caller states WHAT the movement is (`movement_type`) and HOW MUCH (a magnitude); the
+/// sign is derived. Outflows (`out`, `refund`) are stored negative, inflows (`in`, `sale`) positive
+/// — the canonical convention `close_session.sql`, `session.summary` and `_reverse_sale.sql`
+/// already assume. An unknown type has no sign, so it has no place in the drawer.
+fn signed_amount(movement_type: &str, amount: i64) -> Option<i64> {
+    match movement_type {
+        "out" | "refund" => Some(-amount.abs()),
+        "in" | "sale" => Some(amount.abs()),
+        _ => None,
+    }
+}
+
+/// add_movement: payload { session_id, movement_type, amount (magnitude, minor units — the SERVER
+/// signs it, cash_register#48), payment_method?, sale_reference?, description? }.
+/// reads: `cash_register.settings.get`, `cash_register.session.summary` (params session_id) — the
+/// summary carries `expected_cash`.
 pub fn add_movement_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     // pm#146 on this path: a session that is not this hub's (or is deleted) is not preloaded → refuse
@@ -223,7 +245,23 @@ pub fn add_movement_pure(input: Value) -> Output {
             "That cash session is not available: it does not exist in this business or it has been deleted.",
         );
     };
-    let amount = money::from_json(payload.get("amount").unwrap_or(&Value::Null), 0);
+    // cash_register#48. `schemas/add_movement.json` is the manifest's half of this contract (it
+    // rejects an unknown type and a non-positive amount before the handler runs); these two
+    // refusals are the code's half, so the rule holds even for a caller the schema never saw.
+    let movement_type = sor(&payload, "movement_type", "");
+    let Some(amount) = signed_amount(&movement_type, money::from_json(payload.get("amount").unwrap_or(&Value::Null), 0))
+    else {
+        return refuse(
+            "cash_register.movement_type_unknown",
+            "That is not a kind of cash movement: use in, out, sale or refund.",
+        );
+    };
+    if amount == 0 {
+        return refuse(
+            "cash_register.amount_required",
+            "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
+        );
+    }
     let is_cash = sor(&payload, "payment_method", "cash").eq_ignore_ascii_case("cash");
     if amount < 0 && is_cash && !setting_flag(&input, "allow_negative_balance") {
         let expected_cash = money::from_json(session.get("expected_cash").unwrap_or(&Value::Null), 0);
@@ -234,8 +272,9 @@ pub fn add_movement_pure(input: Value) -> Output {
             );
         }
     }
-    let mut p = passthrough(&payload, &["session_id", "movement_type", "payment_method", "sale_reference", "description"]);
+    let mut p = passthrough(&payload, &["session_id", "payment_method", "sale_reference", "description"]);
     p.insert("movement_id".into(), new_id(&input, 0));
+    p.insert("movement_type".into(), json!(movement_type));
     p.insert("amount".into(), json!(amount));
     Output::new().with_operation(Operation::sql("cash_register._movement_insert", p))
 }
@@ -437,5 +476,97 @@ mod tests {
             json!({ "cash_register.settings.get": settings(0, 0, 1), "cash_register.session.summary": [] }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_unavailable"));
+    }
+}
+
+#[cfg(test)]
+mod sign_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn inp_reads(payload: Value, reads: Value) -> Value {
+        json!({ "payload": payload, "context": { "new_ids": ["id-0", "id-1"], "now": "2026-08-21T10:00:00+00:00", "reads": reads } })
+    }
+    fn settings(negative: i64) -> Value {
+        json!([{ "id": "cfg", "require_opening_balance": 0, "require_closing_balance": 0, "allow_negative_balance": negative }])
+    }
+    fn summary(expected_cash: i64) -> Value {
+        json!([{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": expected_cash }])
+    }
+
+    /// cash_register#48 — the SERVER puts the sign on a movement, not the caller. The exact
+    /// reproduction from the issue: the SAME cash-out sent with the two signs must land the SAME
+    /// amount in the drawer, and it must be a SUBTRACTION.
+    #[test]
+    fn a_cash_out_is_always_stored_negative_whatever_sign_the_caller_sent() {
+        for sent in [9999900_i64, -9999900] {
+            let out = add_movement_pure(inp_reads(
+                json!({ "session_id": "s1", "movement_type": "out", "amount": sent, "payment_method": "cash" }),
+                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(10010) }),
+            ));
+            assert!(out.error.is_none(), "sent={sent}: {:?}", out.error);
+            assert_eq!(out.operations[0].params["amount"], json!(-9999900), "sent={sent}");
+        }
+    }
+
+    /// The guard was UNREACHABLE through the positive-sign door: `expected_cash + amount` could
+    /// never dip below zero. With the sign normalized first, the refusal is inevitable.
+    #[test]
+    fn a_cash_out_bigger_than_the_drawer_is_refused_whatever_sign_the_caller_sent() {
+        for sent in [20000_i64, -20000] {
+            let out = add_movement_pure(inp_reads(
+                json!({ "session_id": "s1", "movement_type": "out", "amount": sent, "payment_method": "cash" }),
+                json!({ "cash_register.settings.get": settings(0), "cash_register.session.summary": summary(10000) }),
+            ));
+            assert_eq!(
+                out.error.as_ref().map(|e| e.code.as_str()),
+                Some("cash_register.negative_balance_not_allowed"),
+                "sent={sent}"
+            );
+            assert!(out.operations.is_empty(), "sent={sent}");
+        }
+    }
+
+    /// A refund is an OUTFLOW too (`_reverse_sale.sql` already persists it negative): the public
+    /// door must agree with the internal one.
+    #[test]
+    fn a_refund_is_an_outflow_and_an_inflow_is_positive() {
+        for (movement_type, sent, stored) in [
+            ("refund", 5000_i64, -5000_i64),
+            ("refund", -5000, -5000),
+            ("in", 5000, 5000),
+            ("in", -5000, 5000),
+            ("sale", -2500, 2500),
+        ] {
+            let out = add_movement_pure(inp_reads(
+                json!({ "session_id": "s1", "movement_type": movement_type, "amount": sent, "payment_method": "cash" }),
+                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+            ));
+            assert!(out.error.is_none(), "{movement_type}/{sent}: {:?}", out.error);
+            assert_eq!(out.operations[0].params["amount"], json!(stored), "{movement_type}/{sent}");
+        }
+    }
+
+    /// An unknown `movement_type` never reaches the drawer: the schema rejects it, and the handler
+    /// refuses too (belt and braces — the schema is the manifest's contract, this is the code's).
+    #[test]
+    fn an_unknown_movement_type_is_refused() {
+        let out = add_movement_pure(inp_reads(
+            json!({ "session_id": "s1", "movement_type": "withdrawal", "amount": 1000 }),
+            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.movement_type_unknown"));
+        assert!(out.operations.is_empty());
+    }
+
+    /// A zero movement is not a movement: it would add a row to the audit trail that moves no money.
+    #[test]
+    fn a_zero_amount_is_refused() {
+        let out = add_movement_pure(inp_reads(
+            json!({ "session_id": "s1", "movement_type": "out", "amount": 0 }),
+            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.amount_required"));
+        assert!(out.operations.is_empty());
     }
 }

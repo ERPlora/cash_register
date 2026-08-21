@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cash_register.movement.add payload",
+  "description": "Registra un movimiento de caja. El SIGNO lo pone el SERVIDOR a partir de `movement_type` (cash_register#48): salidas (`out`, `refund`) se almacenan en NEGATIVO y entradas (`in`, `sale`) en POSITIVO. Quien llama declara QUÉ es el movimiento y CUÁNTO dinero mueve; no negocia el signo. Importes en CÉNTIMOS (ADR-0007/0123): 30,00 € = 3000.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "session_id",
+    "movement_type",
+    "amount"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Sesión de caja abierta a la que se imputa el movimiento. Si no es de este negocio (o está borrada) el command responde `cash_register.session_unavailable`."
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "sale",
+        "refund"
+      ],
+      "description": "Qué es el movimiento: `in` entrada de efectivo, `out` retirada, `sale` cobro de una venta, `refund` devolución. Determina el signo con el que se almacena."
+    },
+    "amount": {
+      "type": "integer",
+      "not": {
+        "const": 0
+      },
+      "description": "Cuánto dinero mueve, en CÉNTIMOS y como MAGNITUD (siempre positivo): una salida de 30 € es `{\"movement_type\": \"out\", \"amount\": 3000}`, no `-3000`. Se tolera el negativo por compatibilidad —los llamantes anteriores a cash_register#48 firmaban el importe ellos mismos— pero se ignora: el servidor toma `abs(amount)` y le aplica el signo de `movement_type`, así que los dos envíos dejan el cajón igual. Cero se rechaza (`cash_register.amount_required`): un movimiento que no mueve dinero solo ensucia el rastro de auditoría.",
+      "examples": [
+        3000
+      ]
+    },
+    "payment_method": {
+      "type": "string",
+      "default": "cash",
+      "description": "Medio del movimiento. El cajón es efectivo FÍSICO: solo `cash` cuenta para el saldo esperado y para la guarda `allow_negative_balance`."
+    },
+    "sale_reference": {
+      "type": "string",
+      "default": ""
+    },
+    "description": {
+      "type": "string",
+      "default": "",
+      "description": "Concepto: por qué entra o sale el dinero (compra de cambio, pago a proveedor, retirada al banco…)."
+    }
+  }
+}

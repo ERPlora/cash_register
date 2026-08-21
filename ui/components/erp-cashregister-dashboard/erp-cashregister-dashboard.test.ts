@@ -149,10 +149,21 @@ describe('the manual movement crosses the same border as opening and closing', (
     expect(mov!.payload.amount).toBe(1234);
   });
 
-  it('a cash-out keeps the sign AND the scale', async () => {
+  // cash_register#48 — the SIGN is now the SERVER's (`schemas/add_movement.json`): the screen says
+  // WHAT the movement is and HOW MUCH, and the handler stores an `out` negative. This test used to
+  // demand `-1234` because the sign was a convention the caller had to honour — which is exactly
+  // what broke: nothing forced any OTHER caller to honour it, so an `out` sent positive ADDED to
+  // the drawer. The scale half of the assertion (1234, not 12.34) is untouched.
+  it('a cash-out sends the MAGNITUDE: the server puts the sign on it', async () => {
     const comandos = spyCommands();
     await addMovement('12,34', 'out');
-    expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.amount).toBe(-1234);
+    expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.amount).toBe(1234);
+  });
+
+  it('and it says WHAT the movement is, which is what the sign is derived from', async () => {
+    const comandos = spyCommands();
+    await addMovement('12,34', 'out');
+    expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.movement_type).toBe('out');
   });
 
   // Same trap as every other border: the scale belongs to the hub's currency. In JPY the minor
@@ -296,6 +307,32 @@ describe('los rechazos de dominio del servidor se traducen (cash_register#38)', 
     wc.movAmount = '500';
     await wc.addMovement(new Event('submit'));
     expect(wc.formError).toBe('ui.errNegativeBalanceNotAllowed');
+  });
+
+  // cash_register#48 — the two refusals the movement contract gained. A raw code on screen is the
+  // same as no message: the person at the till cannot act on `cash_register.amount_required`.
+  it('un tipo de movimiento desconocido → ui.errMovementTypeUnknown', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = rechazo('cash_register.movement_type_unknown');
+    const el = await montar();
+    const wc = el as unknown as { formError: string; target: unknown; movType: string; movAmount: string; addMovement(e: Event): Promise<void> };
+    wc.target = SESION_ABIERTA;
+    wc.movType = 'out';
+    wc.movAmount = '500';
+    await wc.addMovement(new Event('submit'));
+    expect(wc.formError).toBe('ui.errMovementTypeUnknown');
+  });
+
+  it('un importe de cero → ui.errAmountRequired', async () => {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.command = rechazo('cash_register.amount_required');
+    const el = await montar();
+    const wc = el as unknown as { formError: string; target: unknown; movType: string; movAmount: string; addMovement(e: Event): Promise<void> };
+    wc.target = SESION_ABIERTA;
+    wc.movType = 'in';
+    wc.movAmount = '500';
+    await wc.addMovement(new Event('submit'));
+    expect(wc.formError).toBe('ui.errAmountRequired');
   });
 });
 

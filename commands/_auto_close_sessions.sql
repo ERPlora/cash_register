@@ -22,6 +22,9 @@
 -- `CAST(:now AS TEXT)`: Postgres deduces a bind's type from its first use and the runtime binds it
 -- as a string, so a bare `(:now)::timestamptz` would deduce timestamptz and the statement would not
 -- even PREPARE next to the TEXT columns (whatsapp_inbox#24).
+-- SIGNO (cash_register#48): el sentido lo da `movement_type`, no el signo guardado — `-ABS()` para
+-- `out`/`refund`, `ABS()` para `in`/`sale`. Una fila mal firmada (salida en positivo) hacía que el
+-- cierre cuadrase contra un esperado falso y el cajero pagaba un descuadre que no cometió.
 WITH clock AS (
   SELECT erp_dt(CAST(:now AS TEXT)) AS now_utc
 ), zone AS (
@@ -64,7 +67,7 @@ SET status = 'closed',
     closed_at = CAST(:now AS TEXT),
     closing_balance = NULL,
     expected_balance = s.opening_balance + COALESCE((
-        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END)
+        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END ELSE 0 END)
         FROM cash_register_movement m
         WHERE m.session_id = s.id AND m.is_deleted = 0
     ), 0),

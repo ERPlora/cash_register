@@ -1,22 +1,31 @@
 -- Resumen de una sesión: totales por tipo de movimiento. Portado de get_session_summary.
 --
--- FIX SIGNO (QA 2026-06-25): los importes se almacenan CON SIGNO — entradas (`sale`,`in`)
--- en positivo y SALIDAS (`out`,`refund`) en NEGATIVO. Para que el desglose se lea como
--- MAGNITUDES POSITIVAS (un refund de 50€ = 50, no -50), se niega el SUM de las salidas
--- (`-SUM(...)`). El expected_total/efectivo neto sigue siendo `opening + SUM(amount)`
--- (entradas y salidas con su signo), igual que el arqueo de cierre. NO cambia el
--- almacenamiento del refund (sigue en negativo): solo la presentación del desglose.
+-- SIGNO SERVER-AUTHORITATIVE (cash_register#48): el sentido de un movimiento lo dice su
+-- `movement_type`, NO el signo con el que quedó guardado el importe. Hasta #48 el signo era una
+-- convención que tenía que respetar quien llamaba, así que una SALIDA enviada en positivo SUMABA al
+-- cajón (sacar 99.999 € dejaba el esperado en 100.110,50 €). El handler ya normaliza lo que se
+-- escribe de aquí en adelante, pero las filas mal firmadas que YA existen envenenarían el arqueo
+-- para siempre —y el cierre usa esta misma fórmula, así que el descuadre saldría cuadrado contra un
+-- esperado falso—. Por eso la LECTURA deriva el signo: `-ABS(amount)` para `out`/`refund` y
+-- `ABS(amount)` para `in`/`sale`. Es idempotente sobre las filas bien firmadas.
+--
+-- El DESGLOSE se lee como MAGNITUDES POSITIVAS (un refund de 50 € = 50, una salida de 30 € = 30):
+-- «Salidas: −99.959,00 €» era la otra cara del mismo bug. El `expected_cash` sí lleva el signo
+-- (entradas suman, salidas restan), igual que el arqueo de cierre.
 SELECT
   s.id, s.session_number, s.status, s.opening_balance,
-  COALESCE(SUM(CASE WHEN m.movement_type='sale'   THEN m.amount ELSE 0 END),0)      AS total_sales,
-  -COALESCE(SUM(CASE WHEN m.movement_type='refund' THEN m.amount ELSE 0 END),0)      AS total_refunds,
-  COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN m.amount ELSE 0 END),0)      AS total_cash_in,
-  -COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN m.amount ELSE 0 END),0)      AS total_cash_out,
+  COALESCE(SUM(CASE WHEN m.movement_type='sale'   THEN ABS(m.amount) ELSE 0 END),0) AS total_sales,
+  COALESCE(SUM(CASE WHEN m.movement_type='refund' THEN ABS(m.amount) ELSE 0 END),0) AS total_refunds,
+  COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_in,
+  COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_out,
   COALESCE(SUM(m.gift_total),0) AS total_gifts,
-  -- Physical cash the drawer should hold now (opening + Σ cash movements, signed) — same rule as
-  -- `close_session.sql`/`current_session.expected` (hub#778: keyed on payment_method_TYPE). The
-  -- `movement.add` handler reads it to enforce `allow_negative_balance` (cash_register#38).
-  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END),0) AS expected_cash,
+  -- Physical cash the drawer should hold now (opening + Σ cash movements, signed by their KIND) —
+  -- same rule as `close_session.sql`/`current_session.expected` (hub#778: keyed on
+  -- payment_method_TYPE). The `movement.add` handler reads it to enforce `allow_negative_balance`
+  -- (cash_register#38), so a wrong number here also disarms that guard.
+  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
+                                        THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
+                                        ELSE 0 END),0) AS expected_cash,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
 LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0 AND m.hub_id = :hub_id

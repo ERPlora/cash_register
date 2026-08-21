@@ -478,6 +478,7 @@
         "file": "dist/handler.wasm",
         "function": "add_movement"
       },
+      "schema": "schemas/add_movement.json",
       "reads": [
         {
           "query": "cash_register.settings.get",
@@ -495,7 +496,7 @@
         "cash_register.movement_added"
       ],
       "ai": {
-        "description": "Records a cash movement (cash-in or cash-out) against a register session. Fails with cash_register.session_unavailable if the session is not this business's, and with cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it."
+        "description": "Records a cash movement against an open register session. `movement_type` says WHAT the movement is (`in` cash into the drawer, `out` cash taken out, `sale`, `refund`) and `amount` says HOW MUCH, in minor units and ALWAYS POSITIVE (30.00 EUR = 3000): the server applies the sign, storing outflows negative. Fails with cash_register.session_unavailable if the session is not this business's, cash_register.movement_type_unknown for any other type, cash_register.amount_required for a zero amount, and cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it."
       }
     },
     "cash_register._movement_insert": {
