@@ -14,11 +14,23 @@
 -- `expect_rows` lo convierte en un error de negocio. Sin esa guarda sería PEOR que el bug: el
 -- command devolvería OK y emitiría `cash_register.movement_added` igualmente, así que quien
 -- escuche el evento contaría un movimiento que no existe.
+--
+-- ⚠️ `payment_method_type` faltaba en esta lista de columnas (cash_register#54) — el MISMO defecto
+-- que cash_register#33, por la otra puerta. El tipo CANÓNICO (`cash`|`card`|`transfer`|`other`,
+-- hub#778) es contra el que comparan las cinco lecturas del arqueo; el `name` de al lado está
+-- localizado y no sirve. Como el INSERT no la nombraba, la columna se quedaba con el `DEFAULT
+-- 'cash'` de su migración (`003_payment_method_type.sql`, sin backfill) y un movimiento manual
+-- registrado con `payment_method: "card"` entraba en el cajón COMO EFECTIVO: fondo de 100 € + un
+-- movimiento de TARJETA de 50 € dejaba `expected_cash` en 150 €, dinero que la caja no tiene.
+-- El tipo lo deriva el handler del método (una sola vez, en `payment_method_type()`), así que la
+-- guarda `allow_negative_balance` y esta fila no pueden volver a discrepar.
 INSERT INTO cash_register_movement
-  (id, hub_id, session_id, movement_type, amount, payment_method, sale_reference, description, employee_id,
+  (id, hub_id, session_id, movement_type, amount, payment_method, payment_method_type,
+   sale_reference, description, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT
   :movement_id, :hub_id, s.id, :movement_type, :amount, COALESCE(:payment_method, 'cash'),
+  COALESCE(NULLIF(CAST(:payment_method_type AS TEXT), ''), 'cash'),
   COALESCE(:sale_reference, ''), COALESCE(:description, ''), :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM cash_register_session s

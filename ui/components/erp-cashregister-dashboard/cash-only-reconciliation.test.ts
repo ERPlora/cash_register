@@ -91,6 +91,11 @@ describe('el movimiento GUARDA con qué se pagó, no solo lo lee', () => {
     'commands/_movement_for_open_session.sql',
     // El espejo: anular esa venta. Ya lo llevaba, y ese contraste fue lo que delató al de arriba.
     'commands/_reverse_sale.sql',
+    // La puerta MANUAL: un movimiento de caja registrado a mano (la pantalla, el asistente, la
+    // API). Faltaba de esta lista, y por eso #33 se cerró con el bug todavía vivo en ella
+    // (cash_register#54): el arreglo se hizo fichero a fichero en vez de sobre «todo el que
+    // escribe en cash_register_movement».
+    'commands/add_movement.sql',
   ];
 
   it.each(WRITERS)('%s escribe payment_method_type', (file) => {

@@ -36,8 +36,14 @@
     },
     "payment_method": {
       "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "transfer",
+        "other"
+      ],
       "default": "cash",
-      "description": "Medio del movimiento. El cajón es efectivo FÍSICO: solo `cash` cuenta para el saldo esperado y para la guarda `allow_negative_balance`."
+      "description": "Medio del movimiento, en el vocabulario CANÓNICO del hub (`cash`|`card`|`transfer`|`other`, hub#778) — no el nombre localizado del catálogo de `sales` («Efectivo», «Tarjeta»), que entra en la caja por la puerta de la venta con su tipo ya resuelto. El cajón es efectivo FÍSICO: solo `cash` cuenta para el saldo esperado y para la guarda `allow_negative_balance`, y era un string libre lo que permitía saltarse esa guarda llamando con el nombre traducido (cash_register#54). Un medio fuera de la lista responde `cash_register.payment_method_unknown`."
     },
     "sale_reference": {
       "type": "string",

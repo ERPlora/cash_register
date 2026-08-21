@@ -80,6 +80,7 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   'cash_register.session_unavailable': 'ui.errSessionUnavailable',
   'cash_register.movement_type_unknown': 'ui.errMovementTypeUnknown',
   'cash_register.amount_required': 'ui.errAmountRequired',
+  'cash_register.payment_method_unknown': 'ui.errPaymentMethodUnknown',
 };
 export function domainMessage(e: unknown, fallbackKey: string): string {
   const code = (e as { code?: unknown } | null)?.code;

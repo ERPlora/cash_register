@@ -114,7 +114,8 @@
       "migrations/postgres/004_one_open_session_per_hub.sql",
       "migrations/postgres/005_require_blind_count.sql",
       "migrations/postgres/006_auto_close.sql",
-      "migrations/postgres/007_session_counter.sql"
+      "migrations/postgres/007_session_counter.sql",
+      "migrations/postgres/008_backfill_payment_method_type.sql"
     ]
   },
   "queries": {
@@ -503,7 +504,7 @@
         "cash_register.movement_added"
       ],
       "ai": {
-        "description": "Records a cash movement against an open register session. `movement_type` says WHAT the movement is (`in` cash into the drawer, `out` cash taken out, `sale`, `refund`) and `amount` says HOW MUCH, in minor units and ALWAYS POSITIVE (30.00 EUR = 3000): the server applies the sign, storing outflows negative. Fails with cash_register.session_unavailable if the session is not this business's, cash_register.movement_type_unknown for any other type, cash_register.amount_required for a zero amount, and cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it."
+        "description": "Records a cash movement against an open register session. `movement_type` says WHAT the movement is (`in` cash into the drawer, `out` cash taken out, `sale`, `refund`) and `amount` says HOW MUCH, in minor units and ALWAYS POSITIVE (30.00 EUR = 3000): the server applies the sign, storing outflows negative. Fails with cash_register.session_unavailable if the session is not this business's, cash_register.movement_type_unknown for any other type, cash_register.amount_required for a zero amount, cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it, and cash_register.payment_method_unknown for a `payment_method` outside cash|card|transfer|other (the localized names of the sales catalogue are NOT valid here: only cash counts for the drawer and for the negative-balance guard)."
       }
     },
     "cash_register._movement_insert": {
