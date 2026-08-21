@@ -74,6 +74,8 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   'cash_register.closing_balance_required': 'ui.errClosingBalanceRequired',
   'cash_register.negative_balance_not_allowed': 'ui.errNegativeBalanceNotAllowed',
   'cash_register.session_unavailable': 'ui.errSessionUnavailable',
+  'cash_register.movement_type_unknown': 'ui.errMovementTypeUnknown',
+  'cash_register.amount_required': 'ui.errAmountRequired',
 };
 export function domainMessage(e: unknown, fallbackKey: string): string {
   const code = (e as { code?: unknown } | null)?.code;
@@ -324,7 +326,11 @@ export class ErpCashRegisterDashboard extends LitElement {
     }
   }
 
-  // — Movimiento manual → cash_register.movement.add (out se registra en negativo) —
+  // — Movimiento manual → cash_register.movement.add —
+  // El SIGNO lo pone el SERVIDOR desde `movement_type` (cash_register#48): esta pantalla mandaba
+  // `-amount` para una salida y era la ÚNICA que lo hacía bien, porque el signo era una convención
+  // no escrita. Cualquier otro llamante (el asistente, la app instalable, una integración) mandaba
+  // la salida en positivo y SUMABA al cajón. Ahora se manda la MAGNITUD y el tipo.
   private async addMovement(ev: Event) {
     ev.preventDefault();
     if (!this.target || !this.movAmount) return;
@@ -341,7 +347,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       await erplora().command('cash_register.movement.add', {
         session_id: this.target.id,
         movement_type: this.movType,
-        amount: this.movType === 'out' ? -amount : amount,
+        amount,
         payment_method: 'cash',
         sale_reference: '',
         description: this.movDescription.trim(),

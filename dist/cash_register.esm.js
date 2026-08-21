@@ -3560,6 +3560,8 @@ var es_default = {
     errClosingBalanceRequired: "Este negocio exige recuento al cierre: indica el efectivo contado.",
     errNegativeBalanceNotAllowed: "Esta salida dejar\xEDa la caja en negativo y el saldo negativo no est\xE1 permitido.",
     errSessionUnavailable: "Esa sesi\xF3n de caja no est\xE1 disponible: no existe en este negocio o se ha borrado.",
+    errMovementTypeUnknown: "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devoluci\xF3n.",
+    errAmountRequired: "Un movimiento de caja necesita un importe: indica cu\xE1nto dinero entra o sale del caj\xF3n.",
     errCloseSession: "No se pudo cerrar la sesi\xF3n",
     errInvalidAmount: "Importe inv\xE1lido",
     errAddMovement: "No se pudo registrar el movimiento",
@@ -3677,6 +3679,8 @@ var en_default = {
     errClosingBalanceRequired: "This business requires the drawer to be counted at closing: enter the counted cash.",
     errNegativeBalanceNotAllowed: "This cash-out would leave the drawer below zero, and negative balances are not allowed.",
     errSessionUnavailable: "That cash session is not available: it does not exist in this business or it has been deleted.",
+    errMovementTypeUnknown: "That is not a kind of cash movement: use in, out, sale or refund.",
+    errAmountRequired: "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
     errCloseSession: "Could not close the session",
     errInvalidAmount: "Invalid amount",
     errAddMovement: "Could not record the movement",
@@ -3870,7 +3874,9 @@ var DOMAIN_MESSAGES = {
   "cash_register.opening_balance_required": "ui.errOpeningBalanceRequired",
   "cash_register.closing_balance_required": "ui.errClosingBalanceRequired",
   "cash_register.negative_balance_not_allowed": "ui.errNegativeBalanceNotAllowed",
-  "cash_register.session_unavailable": "ui.errSessionUnavailable"
+  "cash_register.session_unavailable": "ui.errSessionUnavailable",
+  "cash_register.movement_type_unknown": "ui.errMovementTypeUnknown",
+  "cash_register.amount_required": "ui.errAmountRequired"
 };
 function domainMessage(e6, fallbackKey) {
   const code = e6?.code;
@@ -4082,7 +4088,11 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.saving = false;
     }
   }
-  // — Movimiento manual → cash_register.movement.add (out se registra en negativo) —
+  // — Movimiento manual → cash_register.movement.add —
+  // El SIGNO lo pone el SERVIDOR desde `movement_type` (cash_register#48): esta pantalla mandaba
+  // `-amount` para una salida y era la ÚNICA que lo hacía bien, porque el signo era una convención
+  // no escrita. Cualquier otro llamante (el asistente, la app instalable, una integración) mandaba
+  // la salida en positivo y SUMABA al cajón. Ahora se manda la MAGNITUD y el tipo.
   async addMovement(ev) {
     ev.preventDefault();
     if (!this.target || !this.movAmount) return;
@@ -4098,7 +4108,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       await erplora2().command("cash_register.movement.add", {
         session_id: this.target.id,
         movement_type: this.movType,
-        amount: this.movType === "out" ? -amount : amount,
+        amount,
         payment_method: "cash",
         sale_reference: "",
         description: this.movDescription.trim()

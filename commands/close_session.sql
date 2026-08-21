@@ -1,6 +1,9 @@
 -- Cierra y reconcilia: expected = opening + Σ movimientos no borrados;
 -- difference = closing - expected. Fiel a CashSession.close_session. Todo en SQL,
 -- sin read-back. Runtime inyecta :hub_id, :current_user_id, :now.
+-- SIGNO (cash_register#48): el sentido lo da `movement_type`, no el signo guardado — `-ABS()` para
+-- `out`/`refund`, `ABS()` para `in`/`sale`. Una fila mal firmada (salida en positivo) hacía que el
+-- cierre cuadrase contra un esperado falso y el cajero pagaba un descuadre que no cometió.
 UPDATE cash_register_session
 -- El CAJÓN es efectivo FÍSICO (QA 07-16, P0 del arqueo): expected/difference solo
 -- suman movimientos cash — con día mixto (tarjeta) el arqueo cuadra contra lo contado.
@@ -10,12 +13,12 @@ SET status = 'closed',
     closed_at = :now,
     closing_balance = :closing_balance,
     expected_balance = opening_balance + COALESCE((
-        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END)
+        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END ELSE 0 END)
         FROM cash_register_movement m
         WHERE m.session_id = cash_register_session.id AND m.is_deleted = 0
     ), 0),
     difference = :closing_balance - (opening_balance + COALESCE((
-        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN m.amount ELSE 0 END)
+        SELECT SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash' THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END ELSE 0 END)
         FROM cash_register_movement m
         WHERE m.session_id = cash_register_session.id AND m.is_deleted = 0
     ), 0)),

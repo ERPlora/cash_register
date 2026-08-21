@@ -70,6 +70,8 @@
     "errClosingBalanceRequired": "Este negocio exige recuento al cierre: indica el efectivo contado.",
     "errNegativeBalanceNotAllowed": "Esta salida dejaría la caja en negativo y el saldo negativo no está permitido.",
     "errSessionUnavailable": "Esa sesión de caja no está disponible: no existe en este negocio o se ha borrado.",
+    "errMovementTypeUnknown": "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devolución.",
+    "errAmountRequired": "Un movimiento de caja necesita un importe: indica cuánto dinero entra o sale del cajón.",
     "errCloseSession": "No se pudo cerrar la sesión",
     "errInvalidAmount": "Importe inválido",
     "errAddMovement": "No se pudo registrar el movimiento",

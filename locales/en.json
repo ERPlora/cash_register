@@ -69,6 +69,8 @@
     "errClosingBalanceRequired": "This business requires the drawer to be counted at closing: enter the counted cash.",
     "errNegativeBalanceNotAllowed": "This cash-out would leave the drawer below zero, and negative balances are not allowed.",
     "errSessionUnavailable": "That cash session is not available: it does not exist in this business or it has been deleted.",
+    "errMovementTypeUnknown": "That is not a kind of cash movement: use in, out, sale or refund.",
+    "errAmountRequired": "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
     "errCloseSession": "Could not close the session",
     "errInvalidAmount": "Invalid amount",
     "errAddMovement": "Could not record the movement",
