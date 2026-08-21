@@ -6,6 +6,10 @@ import '@erplora/outfitkit/ok-data-table';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
 import { createListController, majorToMinor } from '@erplora/module-sdk';
+// Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
+// la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
+// `staff/ui/lib/enums.ts` (staff#37).
+import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions } from '../../lib/enums';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
 // Catálogo i18n del módulo (ADR-0055): esbuild inlinea estos JSON en el `dist` del WC. Los textos
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
@@ -160,7 +164,20 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text' },
-      { key: 'status', header: t('ui.colStatus'), sortable: true, filterable: true, filterType: 'text' },
+      {
+        key: 'status',
+        header: t('ui.colStatus'),
+        sortable: true,
+        filterable: true,
+        // Dominio CERRADO: el estado se ELIGE, no se teclea (Odoo, Square y Business Central lo
+        // resuelven igual en sus listados). El desplegable enseña la etiqueta traducida y manda al
+        // servidor el valor crudo, que es contra lo que filtra el `eq` de `sessions.list`. El
+        // buscador libre sigue siendo por número: es lo ÚNICO que el `search` del servidor mira, y
+        // prometer «o estado» en su placeholder era una promesa que la pantalla no podía cumplir.
+        filterType: 'select',
+        options: enumOptions(SESSION_STATUS_KEY),
+        format: (r) => enumLabel(SESSION_STATUS_KEY, r.status),
+      },
       { key: 'opening_balance', header: t('ui.colOpening'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.opening_balance as number | null) },
       { key: 'expected_balance', header: t('ui.colExpected'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.expected_balance as number | null) },
       { key: 'closing_balance', header: t('ui.colCounted'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.closing_balance as number | null) },
@@ -447,8 +464,13 @@ export class ErpCashRegisterDashboard extends LitElement {
       <h3>${t('ui.movementTitle')} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e: Event) => this.addMovement(e)}>
         <ion-select fill="outline" label=${t('ui.labelType')} label-placement="floating" .value=${this.movType} @ionChange=${(e: any) => (this.movType = e.target.value)}>
-          <ion-select-option value="in">${t('ui.movementIn')}</ion-select-option>
-          <ion-select-option value="out">${t('ui.movementOut')}</ion-select-option>
+          ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
+                «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
+                mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
+                saca a mano—; `sale`/`refund` los escribe el sistema al cobrar o al anular. */ ''}
+          ${enumOptions({ in: MOVEMENT_TYPE_KEY.in, out: MOVEMENT_TYPE_KEY.out }).map(
+            (o) => html`<ion-select-option value=${o.value}>${o.label}</ion-select-option>`,
+          )}
         </ion-select>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
@@ -461,7 +483,11 @@ export class ErpCashRegisterDashboard extends LitElement {
   private renderCountPanel() {
     if (!this.target) return nothing;
     const t = (k: string): string => erplora().t(CATALOG, k);
-    const denomInput = (k: string) => html`<ion-input fill="outline" type="number" label=${`${k} €`} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
+    // La etiqueta es DINERO, así que se formatea como dinero (cash_register#50): era el literal
+    // `${k} €`, y en un hub español convivían «0.50 €» con punto y «Total contado 141,50 €» con
+    // coma en la misma tarjeta. La CLAVE no cambia (es el contrato con el handler WASM, que la lee
+    // como euros); solo lo que lee la persona.
+    const denomInput = (k: string) => html`<ion-input fill="outline" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
     return html`<section class="panel">
       <h3>${t('ui.countTitle')} · ${this.target.session_number}</h3>
       <form @submit=${(e: Event) => this.addCount(e)}>
