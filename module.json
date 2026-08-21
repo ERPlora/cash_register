@@ -113,7 +113,8 @@
       "migrations/postgres/003_payment_method_type.sql",
       "migrations/postgres/004_one_open_session_per_hub.sql",
       "migrations/postgres/005_require_blind_count.sql",
-      "migrations/postgres/006_auto_close.sql"
+      "migrations/postgres/006_auto_close.sql",
+      "migrations/postgres/007_session_counter.sql"
     ]
   },
   "queries": {
@@ -426,6 +427,12 @@
       "ai": {
         "description": "Opens a new cash register session with the specified opening float. Fails with cash_register.session_already_open if the hub already has an open session, and with cash_register.opening_balance_required when the settings require a float and none is given."
       }
+    },
+    "cash_register._bump_counter": {
+      "permission": "cash_register.add_session",
+      "sql": [
+        "commands/_bump_counter.sql"
+      ]
     },
     "cash_register._open_session_insert": {
       "permission": "cash_register.add_session",

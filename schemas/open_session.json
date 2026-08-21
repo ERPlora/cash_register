@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "cash_register.session.open payload",
-  "description": "Abre una sesión de caja. Pensado para que el binder de defaults (ADR-0073) rellene los campos opcionales con NOT NULL cuando la API manda un payload mínimo. `session_number` es OPCIONAL: si la API no lo aporta, el SQL (`open_session.sql`) lo deriva de `:new_id` (el binder no genera valores; solo rellena literales estáticos).",
+  "description": "Abre una sesión de caja. Pensado para que el binder de defaults (ADR-0073) rellene los campos opcionales con NOT NULL cuando la API manda un payload mínimo. El NÚMERO DE TURNO ya no se negocia: lo acuña el servidor con un contador atómico por (hub, día) y sale como `S-YYMMDD-NNNN` (cash_register#49), venga la apertura de la pantalla, del asistente o de una integración.",
   "type": "object",
   "additionalProperties": true,
   "required": [],
@@ -14,7 +14,9 @@
       "default": null
     },
     "session_number": {
-      "type": "string"
+      "type": "string",
+      "deprecated": true,
+      "description": "DEPRECADO e IGNORADO desde cash_register#49: el número de turno lo acuña el servidor (`S-YYMMDD-NNNN`, contador atómico por hub y día). Se mantiene declarado para que un llamante que aún lo envíe entienda por qué su valor no aparece; no se lee en ningún sitio."
     },
     "opening_balance": {
       "type": "integer",

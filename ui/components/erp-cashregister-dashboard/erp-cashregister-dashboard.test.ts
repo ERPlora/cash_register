@@ -166,6 +166,21 @@ describe('the manual movement crosses the same border as opening and closing', (
     expect(comandos.find((c) => c.name === 'cash_register.movement.add')!.payload.movement_type).toBe('out');
   });
 
+  // cash_register#49 — same habit, other field: the shift number was the caller's too. The
+  // dashboard composed `S-YYMMDD-HHMMSS`; the assistant and the installable app composed nothing,
+  // so the SQL fell back to `S-<uuid>`. It is the server's now.
+  it('abrir la caja NO manda el número de turno: lo acuña el servidor', async () => {
+    const comandos = spyCommands();
+    const el = await montar();
+    const wc = el as unknown as { openBalance: string; openNotes: string; registerId: string; openSession(e: Event): Promise<void> };
+    wc.openBalance = '100';
+    wc.openNotes = '';
+    await wc.openSession(new Event('submit'));
+    const abrir = comandos.find((c) => c.name === 'cash_register.session.open');
+    expect(abrir, 'session.open was not called').toBeTruthy();
+    expect(abrir!.payload).not.toHaveProperty('session_number');
+  });
+
   // Same trap as every other border: the scale belongs to the hub's currency. In JPY the minor
   // unit IS the yen, so a fixed ×100 books a movement 100 times too big.
   it('uses the hub currency scale, not a hardcoded 2 decimals', async () => {

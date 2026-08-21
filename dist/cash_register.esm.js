@@ -3884,11 +3884,6 @@ function domainMessage(e6, fallbackKey) {
   if (key) return erplora2().t(CATALOG2, key);
   return e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, fallbackKey);
 }
-function sessionNumber() {
-  const d3 = /* @__PURE__ */ new Date();
-  const p4 = (n6, l3 = 2) => String(n6).padStart(l3, "0");
-  return `S-${p4(d3.getFullYear() % 100)}${p4(d3.getMonth() + 1)}${p4(d3.getDate())}-${p4(d3.getHours())}${p4(d3.getMinutes())}${p4(d3.getSeconds())}`;
-}
 var ErpCashRegisterDashboard = class extends i3 {
   constructor() {
     super(...arguments);
@@ -4035,7 +4030,6 @@ var ErpCashRegisterDashboard = class extends i3 {
     try {
       await erplora2().command("cash_register.session.open", {
         register_id: this.openRegisterId || null,
-        session_number: sessionNumber(),
         opening_balance: toMinorUnits(this.openBalance),
         opening_notes: this.openNotes.trim()
       });
@@ -4350,11 +4344,6 @@ function aCentimos(v3) {
   const n6 = Number(String(v3).replace(",", "."));
   return Number.isFinite(n6) ? Math.round(n6 * 100) : 0;
 }
-function numeroSesion() {
-  const d3 = /* @__PURE__ */ new Date();
-  const p4 = (n6) => String(n6).padStart(2, "0");
-  return `CS-${String(d3.getFullYear()).slice(2)}${p4(d3.getMonth() + 1)}${p4(d3.getDate())}-${p4(d3.getHours())}${p4(d3.getMinutes())}`;
-}
 var ErpCashregisterOpen = class extends i3 {
   constructor() {
     super(...arguments);
@@ -4398,7 +4387,6 @@ var ErpCashregisterOpen = class extends i3 {
     try {
       await erplora3().command("cash_register.session.open", {
         register_id: this.registerId || null,
-        session_number: numeroSesion(),
         opening_balance: aCentimos(this.balance),
         opening_notes: this.notes
       });

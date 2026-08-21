@@ -166,8 +166,26 @@ fn passthrough(payload: &Value, keys: &[&str]) -> Map<String, Value> {
     p
 }
 
-/// open_session: payload { register_id?, session_number?, opening_balance?, opening_notes? }.
+/// `YYYYMMDD` of the HOST clock (`context.now`). The counter is keyed by (hub, day), so the day
+/// can never come from the payload: two terminals with different local settings would otherwise
+/// open two series for the same shift. Same idiom as `payments`.
+fn day_from_now(now: &str) -> String {
+    let date = now.split('T').next().unwrap_or("");
+    let digits: String = date.chars().filter(|c| c.is_ascii_digit()).collect();
+    if digits.len() >= 8 { digits[..8].to_string() } else { "00000000".to_string() }
+}
+
+/// open_session: payload { register_id?, opening_balance?, opening_notes? }.
 /// reads: `cash_register.settings.get`, `cash_register.current_session`.
+///
+/// The SHIFT NUMBER is the server's (cash_register#49). It used to be whatever the caller sent,
+/// with the SQL falling back to `'S-' || :session_id` — so opening by command (the assistant, the
+/// installable app, an integration) left the turn as `S-898dbda8-39d7-4a13-b1c5-6d1a71b85b6a`: 38
+/// characters, in the very column the manager talks about a shift by and searches the list with.
+/// Now it is minted here like `sales` and `payments` mint theirs: an atomic per-(hub, day) counter
+/// bumped in the SAME transaction as the insert, and `S-YYMMDD-NNNN` composed in SQL from it. That
+/// also closes the collision the old `S-YYMMDD-HHMMSS` had between two terminals opening in the
+/// same second.
 pub fn open_session_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     // cash_register#11 on this path: the preloaded open session gives the translatable refusal;
@@ -186,12 +204,29 @@ pub fn open_session_pure(input: Value) -> Output {
             "This business requires an opening float: enter the cash the drawer starts with.",
         );
     }
-    let mut p = passthrough(&payload, &["register_id", "session_number", "opening_notes"]);
+    // The day of the counter and the day the person reads. Both derived here so the SQL binds
+    // literals and never has to do string surgery on a date.
+    let now = s(input.get("context").and_then(|c| c.get("now")).unwrap_or(&Value::Null));
+    let day = day_from_now(&now);
+    let session_day = day[2..].to_string(); // YYMMDD — `S-260821-0001`, the shape the till already showed
+
+    let mut bump = Map::new();
+    bump.insert("day".into(), json!(day));
+
+    // `session_number` is NOT read from the payload any more (cash_register#49): a caller that
+    // still sends one is ignored, so the screen and the API cannot drift apart.
+    let mut p = passthrough(&payload, &["register_id", "opening_notes"]);
     // The host is the id authority (§5.3): the session takes `new_ids[0]`, which is what the caller
     // gets back as the created entity (hub#776).
     p.insert("session_id".into(), new_id(&input, 0));
     p.insert("opening_balance".into(), json!(opening));
-    Output::new().with_operation(Operation::sql("cash_register._open_session_insert", p))
+    p.insert("day".into(), json!(day));
+    p.insert("session_day".into(), json!(session_day));
+    // Order matters and the transaction is one: the counter is bumped, then the insert reads it
+    // back with a subquery (the guest never does a read-back — pattern sales/payments/kitchen).
+    Output::new()
+        .with_operation(Operation::sql("cash_register._bump_counter", bump))
+        .with_operation(Operation::sql("cash_register._open_session_insert", p))
 }
 
 /// close_session: payload { session_id, closing_balance?, closing_notes? }.
@@ -384,11 +419,14 @@ mod tests {
                 json!({ "cash_register.settings.get": settings(setting, 1, 0), "cash_register.current_session": [] }),
             ));
             assert!(out.error.is_none(), "opening={opening} setting={setting}: {:?}", out.error);
-            assert_eq!(out.operations.len(), 1);
-            assert_eq!(out.operations[0].command, "cash_register._open_session_insert");
-            assert_eq!(out.operations[0].params["opening_balance"], json!(opening));
-            assert_eq!(out.operations[0].params["session_number"], json!("S-1"));
-            assert_eq!(out.operations[0].params["session_id"], json!("id-0"));
+            // cash_register#49: the open is now TWO operations in one transaction — bump the daily
+            // counter, then insert reading it back. The assertion on `session_number` moved out
+            // with the number itself: the caller no longer supplies it (see `session_number_tests`).
+            assert_eq!(out.operations.len(), 2);
+            assert_eq!(out.operations[0].command, "cash_register._bump_counter");
+            assert_eq!(out.operations[1].command, "cash_register._open_session_insert");
+            assert_eq!(out.operations[1].params["opening_balance"], json!(opening));
+            assert_eq!(out.operations[1].params["session_id"], json!("id-0"));
         }
     }
 
@@ -400,7 +438,7 @@ mod tests {
             json!({ "cash_register.settings.get": [], "cash_register.current_session": [] }),
         ));
         assert!(out.error.is_none());
-        assert_eq!(out.operations.len(), 1);
+        assert_eq!(out.operations.len(), 2); // counter + insert (cash_register#49)
     }
 
     #[test]
@@ -567,6 +605,64 @@ mod sign_tests {
             json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.amount_required"));
+        assert!(out.operations.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod session_number_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn inp(payload: Value) -> Value {
+        json!({ "payload": payload, "context": {
+            "new_ids": ["id-0", "id-1"], "now": "2026-08-21T19:45:46+00:00",
+            "reads": { "cash_register.settings.get": [], "cash_register.current_session": [] } } })
+    }
+
+    /// cash_register#49 — the shift number is the SERVER's. Opening by command used to leave the
+    /// turn as `S-<uuid>`, 38 characters, in the very column the manager talks about a shift by.
+    #[test]
+    fn opening_bumps_the_daily_counter_before_inserting() {
+        let out = open_session_pure(inp(json!({ "opening_balance": 5000 })));
+        assert!(out.error.is_none(), "{:?}", out.error);
+        let commands: Vec<&str> = out.operations.iter().map(|o| o.command.as_str()).collect();
+        assert_eq!(
+            commands,
+            vec!["cash_register._bump_counter", "cash_register._open_session_insert"],
+            "the counter must be bumped FIRST, in the same transaction"
+        );
+    }
+
+    /// The counter is keyed by (hub, day) — the day comes from the HOST clock, never from the
+    /// payload, so two terminals with different local settings share one series.
+    #[test]
+    fn the_counter_day_and_the_readable_day_come_from_the_host_clock() {
+        let out = open_session_pure(inp(json!({ "opening_balance": 5000 })));
+        assert_eq!(out.operations[0].params["day"], json!("20260821"));
+        assert_eq!(out.operations[1].params["day"], json!("20260821"));
+        assert_eq!(out.operations[1].params["session_day"], json!("260821"));
+    }
+
+    /// The number is no longer negotiable: whatever the caller sends is ignored, so opening from
+    /// the screen and opening by command cannot drift apart.
+    #[test]
+    fn a_caller_supplied_session_number_is_ignored() {
+        let out = open_session_pure(inp(json!({ "opening_balance": 5000, "session_number": "S-MINE" })));
+        let params = &out.operations[1].params;
+        assert!(
+            !params.values().any(|v| v == &json!("S-MINE")),
+            "the caller's session_number reached the insert: {params:?}"
+        );
+    }
+
+    /// A refusal must not burn a number: nothing is written at all.
+    #[test]
+    fn a_refused_open_bumps_nothing() {
+        let out = open_session_pure(json!({ "payload": { "opening_balance": 5000 }, "context": {
+            "new_ids": ["id-0"], "now": "2026-08-21T19:45:46+00:00",
+            "reads": { "cash_register.settings.get": [], "cash_register.current_session": [{ "id": "s-open" }] } } }));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_already_open"));
         assert!(out.operations.is_empty());
     }
 }

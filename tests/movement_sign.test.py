@@ -109,6 +109,13 @@ def sys_params(payload: dict) -> dict:
 def run_sql_command(name: str, payload: dict) -> None:
     cmd = MANIFEST["commands"][name]
     p = sys_params(payload)
+    # cash_register#49: the shift number is minted by an atomic per-(hub, day) counter that the
+    # open bumps in the SAME transaction, so the insert has something to read back. Without it the
+    # session would simply not be written.
+    if name == "cash_register._open_session_insert":
+        p.setdefault("day", "20260818")
+        p.setdefault("session_day", "260818")
+        cmd = {"sql": MANIFEST["commands"]["cash_register._bump_counter"]["sql"] + cmd["sql"]}
     psql([], db=DB, stdin="\n".join(
         ["BEGIN;"] + [bind((MODULE_DIR / r).read_text(), p) for r in cmd["sql"]] + ["COMMIT;"]))
 

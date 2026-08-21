@@ -100,6 +100,21 @@ describe('erp-cashregister-open', () => {
     expect(abrir.payload.opening_balance).toBe(15050);
   });
 
+  // cash_register#49 — el NÚMERO DE TURNO lo acuña el servidor con un contador atómico por (hub,
+  // día). Esta pantalla componía `S-YYMMDD-HHMMSS`, que además podía COLISIONAR entre dos
+  // terminales que abrieran caja el mismo segundo. Si sigue mandándolo, hay dos formatos vivos
+  // según por dónde se abra la caja — que es justo el fallo.
+  it('no compone el número de turno: eso es del servidor', async () => {
+    registros = [CAJONES[0]];
+    const el = await montar();
+    teclear(el, 'ion-input[type="number"]', '150.50');
+    el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const abrir = comandos.find((c) => c.name === 'cash_register.session.open')!;
+    expect(abrir.payload).not.toHaveProperty('session_number');
+  });
+
   // cash_register#11: two devices on the guard screen press "Open" at once → the database keeps ONE
   // and refuses the other with `cash_register.session_already_open`. The loser reads it in their
   // language, not the raw English fallback of the server.
