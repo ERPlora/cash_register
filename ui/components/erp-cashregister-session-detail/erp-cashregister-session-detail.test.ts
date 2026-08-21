@@ -93,3 +93,45 @@ describe('la ficha de una sesión de caja (cash_register#2)', () => {
     expect(byLabel['ui.colExpected'], 'live expected cash while open').toBe('125.00 €');
   });
 });
+
+// cash_register#50 — the detail printed the database, not the language. `Estado open` sat two
+// hundred pixels under a green badge that already said «Sesión abierta»; the movements table
+// printed `out` in the TYPE column and `2026-08-21T17:52:13.198500671+00:00` in the WHEN column.
+// Everything a person reads goes through i18n (`ui/lib/enums.ts`) and the locale formatter.
+describe('la ficha no enseña datos en crudo (cash_register#50)', () => {
+  const columnsOf = (el: HTMLElement, getter: 'movementColumns' | 'countColumns') =>
+    (el as unknown as Record<string, { key: string; format?: (r: Record<string, unknown>) => unknown }[]>)[getter];
+
+  it('el estado de la sesión va traducido, no `closed`', async () => {
+    const el = await montar();
+    const items = (el as unknown as { summaryItems: { label: string; value: unknown }[] }).summaryItems;
+    const estado = items.find((i) => i.label === 'ui.colStatus');
+    expect(estado?.value).toBe('ui.statusClosed');
+  });
+
+  it('el TIPO de cada movimiento va traducido, no `out`', async () => {
+    const el = await montar();
+    const col = columnsOf(el, 'movementColumns').find((c) => c.key === 'movement_type')!;
+    expect(col.format, 'la columna TIPO no formatea nada: imprime el enum crudo').toBeTruthy();
+    expect(col.format!({ movement_type: 'out' })).toBe('ui.movementOut');
+    expect(col.format!({ movement_type: 'refund' })).toBe('ui.movementRefund');
+  });
+
+  it('el TIPO de arqueo va traducido, no `closing`', async () => {
+    const el = await montar();
+    const col = columnsOf(el, 'countColumns').find((c) => c.key === 'count_type')!;
+    expect(col.format!({ count_type: 'closing' })).toBe('ui.countClosing');
+  });
+
+  it('ninguna fecha visible lleva `T` ni el offset UTC', async () => {
+    const el = await montar();
+    const when = columnsOf(el, 'movementColumns').find((c) => c.key === 'created_at')!;
+    const shown = String(when.format!({ created_at: '2026-08-21T17:52:13.198500671+00:00' }));
+    expect(shown).not.toContain('T');
+    expect(shown).not.toContain('+00:00');
+    expect(shown).toMatch(/^\d{2}\/\d{2}\/\d{4}/);
+
+    const counted = columnsOf(el, 'countColumns').find((c) => c.key === 'counted_at')!;
+    expect(String(counted.format!({ counted_at: '2026-08-18T20:00:00Z' }))).not.toContain('T');
+  });
+});

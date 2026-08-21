@@ -3515,9 +3515,12 @@ var es_default = {
     optional: "(opcional)",
     loading: "Cargando\u2026",
     noSessions: "Sin sesiones de caja.",
-    searchPlaceholder: "Buscar sesi\xF3n o estado\u2026",
+    searchPlaceholder: "Buscar sesi\xF3n\u2026",
     colSession: "Sesi\xF3n",
     colStatus: "Estado",
+    statusOpen: "Abierta",
+    statusClosed: "Cerrada",
+    statusSuspended: "Suspendida",
     colOpening: "Apertura",
     colExpected: "Esperado",
     colCounted: "Contado",
@@ -3537,6 +3540,8 @@ var es_default = {
     labelType: "Tipo",
     movementIn: "Entrada",
     movementOut: "Salida",
+    movementSale: "Venta",
+    movementRefund: "Devoluci\xF3n",
     labelAmount: "Importe",
     labelConcept: "Concepto",
     countTitle: "Arqueo de caja",
@@ -3634,9 +3639,12 @@ var en_default = {
     optional: "(optional)",
     loading: "Loading\u2026",
     noSessions: "No cash sessions.",
-    searchPlaceholder: "Search session or status\u2026",
+    searchPlaceholder: "Search session\u2026",
     colSession: "Session",
     colStatus: "Status",
+    statusOpen: "Open",
+    statusClosed: "Closed",
+    statusSuspended: "Suspended",
     colOpening: "Opening",
     colExpected: "Expected",
     colCounted: "Counted",
@@ -3656,6 +3664,8 @@ var en_default = {
     labelType: "Type",
     movementIn: "In",
     movementOut: "Out",
+    movementSale: "Sale",
+    movementRefund: "Refund",
     labelAmount: "Amount",
     labelConcept: "Concept",
     countTitle: "Cash count",
@@ -3717,9 +3727,64 @@ var en_default = {
   }
 };
 
-// modules/cash_register/ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
+// modules/cash_register/ui/lib/enums.ts
 var CATALOG = { es: es_default, en: en_default };
 function erplora() {
+  const c5 = globalThis.erplora;
+  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
+  return c5;
+}
+var SESSION_STATUS_KEY = {
+  open: "ui.statusOpen",
+  closed: "ui.statusClosed",
+  suspended: "ui.statusSuspended"
+};
+var MOVEMENT_TYPE_KEY = {
+  in: "ui.movementIn",
+  out: "ui.movementOut",
+  sale: "ui.movementSale",
+  refund: "ui.movementRefund"
+};
+var COUNT_TYPE_KEY = {
+  opening: "ui.countOpening",
+  closing: "ui.countClosing"
+};
+function enumLabel(keys, value) {
+  const raw = value == null ? "" : String(value);
+  const key = keys[raw];
+  return key ? erplora().t(CATALOG, key) : raw;
+}
+function enumOptions(keys) {
+  return Object.keys(keys).map((value) => ({ value, label: enumLabel(keys, value) }));
+}
+function formatDateTime(value) {
+  const raw = value == null ? "" : String(value);
+  if (!raw) return "";
+  const d3 = new Date(raw);
+  if (Number.isNaN(d3.getTime())) return raw;
+  try {
+    return new Intl.DateTimeFormat(erplora().locale || "es", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(d3);
+  } catch {
+    return raw;
+  }
+}
+function denominationLabel(denomination) {
+  const client = erplora();
+  const decimals = typeof client.currencyDecimals === "number" ? client.currencyDecimals : 2;
+  const major = Number(denomination);
+  if (!Number.isFinite(major)) return denomination;
+  return client.formatMoney(Math.round(major * 10 ** decimals));
+}
+
+// modules/cash_register/ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
+var CATALOG2 = { es: es_default, en: en_default };
+function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK not initialised by the shell");
   return c5;
@@ -3759,18 +3824,18 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     this.error = "";
     this.summary = null;
     try {
-      const rows2 = await erplora().query("cash_register.session.summary", { session_id: session.id });
+      const rows2 = await erplora2().query("cash_register.session.summary", { session_id: session.id });
       this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
     } catch (e6) {
-      this.error = e6 instanceof Error ? e6.message : erplora().t(CATALOG, "ui.errLoadDetail");
+      this.error = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errLoadDetail");
     }
-    this.movements = createListController(erplora(), "cash_register.movements.list", () => this.requestUpdate(), {
+    this.movements = createListController(erplora2(), "cash_register.movements.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "created_at",
       dir: "desc",
       context: { session_id: session.id }
     });
-    this.counts = createListController(erplora(), "cash_register.counts.list", () => this.requestUpdate(), {
+    this.counts = createListController(erplora2(), "cash_register.counts.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "id",
       dir: "asc",
@@ -3780,15 +3845,15 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     this.requestUpdate();
   }
   fmt(n6) {
-    return n6 == null ? "\u2014" : erplora().formatMoney(Number(n6));
+    return n6 == null ? "\u2014" : erplora2().formatMoney(Number(n6));
   }
   get summaryItems() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     const s5 = this.summary;
     const row = this.session;
     const closed = (row?.status ?? s5?.status) === "closed";
     return [
-      { label: t5("ui.colStatus"), value: row?.status ?? s5?.status ?? "\u2014" },
+      { label: t5("ui.colStatus"), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s5?.status) || "\u2014" },
       { label: t5("ui.detailMovements"), value: s5 ? String(s5.movement_count) : "\u2014" },
       { label: t5("ui.labelOpeningBalance"), value: this.fmt(s5?.opening_balance ?? row?.opening_balance) },
       { label: t5("ui.detailCashSales"), value: this.fmt(s5?.total_sales) },
@@ -3805,20 +3870,20 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     ];
   }
   get movementColumns() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "created_at", header: t5("ui.colWhen"), sortable: true },
-      { key: "movement_type", header: t5("ui.labelType"), sortable: true },
+      { key: "created_at", header: t5("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.created_at) },
+      { key: "movement_type", header: t5("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
       { key: "amount", header: t5("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
       { key: "payment_method", header: t5("ui.colMethod"), sortable: true },
       { key: "description", header: t5("ui.labelConcept"), sortable: true }
     ];
   }
   get countColumns() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "counted_at", header: t5("ui.colWhen"), sortable: true },
-      { key: "count_type", header: t5("ui.labelCountType"), sortable: true },
+      { key: "counted_at", header: t5("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.counted_at) },
+      { key: "count_type", header: t5("ui.labelCountType"), sortable: true, format: (r6) => enumLabel(COUNT_TYPE_KEY, r6.count_type) },
       { key: "total", header: t5("ui.totalCounted"), align: "right", sortable: true, format: (r6) => this.fmt(r6.total) },
       { key: "notes", header: t5("ui.labelNotes") }
     ];
@@ -3827,13 +3892,13 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     if (!ctrl) return A;
     return b2`<ok-data-table .serverSide=${true} .columns=${columns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
-      .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, "ui.loading") : empty}
+      .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : empty}
       @pageChange=${(e6) => ctrl.setPage(e6.detail)}
       @sortChange=${(e6) => ctrl.setSort(e6.detail.sort, e6.detail.dir)}></ok-data-table>`;
   }
   render() {
     if (!this.session) return A;
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`
       <h3>${t5("ui.detailTitle")} · ${this.session.session_number}</h3>
       ${this.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : A}
@@ -3857,14 +3922,14 @@ __decorateClass([
 define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
 
 // modules/cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
-var CATALOG2 = { es: es_default, en: en_default };
+var CATALOG3 = { es: es_default, en: en_default };
 function toMinorUnits(v3) {
-  const decimals = erplora2().currencyDecimals;
+  const decimals = erplora3().currencyDecimals;
   return majorToMinor(String(v3 ?? "").replace(",", "."), typeof decimals === "number" ? decimals : 2);
 }
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
-function erplora2() {
+function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
@@ -3881,8 +3946,8 @@ var DOMAIN_MESSAGES = {
 function domainMessage(e6, fallbackKey) {
   const code = e6?.code;
   const key = typeof code === "string" ? DOMAIN_MESSAGES[code] : void 0;
-  if (key) return erplora2().t(CATALOG2, key);
-  return e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, fallbackKey);
+  if (key) return erplora3().t(CATALOG3, key);
+  return e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, fallbackKey);
 }
 var ErpCashRegisterDashboard = class extends i3 {
   constructor() {
@@ -3931,10 +3996,23 @@ var ErpCashRegisterDashboard = class extends i3 {
   // Getter (no campo): se re-evalúa en cada render, así los textos cambian con el idioma activo
   // (ADR-0055). `connectedCallback` re-renderiza al recibir `erplora:locale-changed`.
   get columns() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return [
       { key: "session_number", header: t5("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
-      { key: "status", header: t5("ui.colStatus"), sortable: true, filterable: true, filterType: "text" },
+      {
+        key: "status",
+        header: t5("ui.colStatus"),
+        sortable: true,
+        filterable: true,
+        // Dominio CERRADO: el estado se ELIGE, no se teclea (Odoo, Square y Business Central lo
+        // resuelven igual en sus listados). El desplegable enseña la etiqueta traducida y manda al
+        // servidor el valor crudo, que es contra lo que filtra el `eq` de `sessions.list`. El
+        // buscador libre sigue siendo por número: es lo ÚNICO que el `search` del servidor mira, y
+        // prometer «o estado» en su placeholder era una promesa que la pantalla no podía cumplir.
+        filterType: "select",
+        options: enumOptions(SESSION_STATUS_KEY),
+        format: (r6) => enumLabel(SESSION_STATUS_KEY, r6.status)
+      },
       { key: "opening_balance", header: t5("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
       { key: "expected_balance", header: t5("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
       { key: "closing_balance", header: t5("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
@@ -3942,7 +4020,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     ];
   }
   get rowActions() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return [
       // Solo icono (ADR-0133): el `label` viaja como title + aria-label del botón, no como texto.
       // `detail` (cash_register#2) works on ANY session — a closed one is read-only, not invisible.
@@ -3955,7 +4033,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
-    this.ctrl = createListController(erplora2(), "cash_register.sessions.list", () => this.requestUpdate(), {
+    this.ctrl = createListController(erplora3(), "cash_register.sessions.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "id",
       dir: "asc"
@@ -3966,8 +4044,8 @@ var ErpCashRegisterDashboard = class extends i3 {
         void this.ctrl.load();
         void this.loadCurrentSession();
       };
-      const a3 = erplora2().on("cash_register.session_opened", refresh);
-      const b3 = erplora2().on("cash_register.session_closed", refresh);
+      const a3 = erplora3().on("cash_register.session_opened", refresh);
+      const b3 = erplora3().on("cash_register.session_closed", refresh);
       this.unsub = () => {
         a3();
         b3();
@@ -3984,18 +4062,18 @@ var ErpCashRegisterDashboard = class extends i3 {
   /** Balances de sesión en CÉNTIMOS (ADR-0123) → formatMoney divide. Con formatAmount
    *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
   fmt(n6) {
-    return n6 == null ? "\u2014" : erplora2().formatMoney(Number(n6));
+    return n6 == null ? "\u2014" : erplora3().formatMoney(Number(n6));
   }
   async loadRegisters() {
     try {
-      const res = await erplora2().queryAll("cash_register.registers.list");
+      const res = await erplora3().queryAll("cash_register.registers.list");
       this.registers = Array.isArray(res) ? res : [];
     } catch {
     }
   }
   async loadCurrentSession() {
     try {
-      const rows2 = await erplora2().query("cash_register.current_session");
+      const rows2 = await erplora3().query("cash_register.current_session");
       this.hasOpenSession = Array.isArray(rows2) && rows2.length > 0;
     } catch {
     }
@@ -4008,7 +4086,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   openPanel(panel, session) {
     if (panel !== "detail" && session.status !== "open") {
       this.formMsg = "";
-      this.formError = erplora2().t(CATALOG2, "ui.errSessionNotOpen", { session: session.session_number });
+      this.formError = erplora3().t(CATALOG3, "ui.errSessionNotOpen", { session: session.session_number });
       return;
     }
     this.target = session;
@@ -4028,7 +4106,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora2().command("cash_register.session.open", {
+      await erplora3().command("cash_register.session.open", {
         register_id: this.openRegisterId || null,
         opening_balance: toMinorUnits(this.openBalance),
         opening_notes: this.openNotes.trim()
@@ -4037,7 +4115,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.openBalance = "0";
       this.openNotes = "";
       this.resetPanel();
-      this.formMsg = erplora2().t(CATALOG2, "ui.msgSessionOpened");
+      this.formMsg = erplora3().t(CATALOG3, "ui.msgSessionOpened");
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
     } catch (e6) {
       this.formError = domainMessage(e6, "ui.errOpenSession");
@@ -4057,7 +4135,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora2().command("cash_register.session.close", {
+      await erplora3().command("cash_register.session.close", {
         session_id: sessionId,
         // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
         // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
@@ -4070,12 +4148,12 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.resetPanel();
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
       const row = (this.ctrl.rows ?? []).find((r6) => String(r6.id) === String(sessionId));
-      this.formMsg = row ? erplora2().t(CATALOG2, "ui.msgSessionClosedDetail", {
+      this.formMsg = row ? erplora3().t(CATALOG3, "ui.msgSessionClosedDetail", {
         session: row.session_number,
         expected: this.fmt(row.expected_balance),
         counted: this.fmt(row.closing_balance),
         difference: this.fmt(row.difference)
-      }) : erplora2().t(CATALOG2, "ui.msgSessionClosed");
+      }) : erplora3().t(CATALOG3, "ui.msgSessionClosed");
     } catch (e6) {
       this.formError = domainMessage(e6, "ui.errCloseSession");
     } finally {
@@ -4092,14 +4170,14 @@ var ErpCashRegisterDashboard = class extends i3 {
     if (!this.target || !this.movAmount) return;
     const amount = Math.abs(toMinorUnits(this.movAmount));
     if (amount <= 0) {
-      this.formError = erplora2().t(CATALOG2, "ui.errInvalidAmount");
+      this.formError = erplora3().t(CATALOG3, "ui.errInvalidAmount");
       return;
     }
     this.saving = true;
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora2().command("cash_register.movement.add", {
+      await erplora3().command("cash_register.movement.add", {
         session_id: this.target.id,
         movement_type: this.movType,
         amount,
@@ -4107,8 +4185,8 @@ var ErpCashRegisterDashboard = class extends i3 {
         sale_reference: "",
         description: this.movDescription.trim()
       });
-      const msg = erplora2().t(CATALOG2, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
-        amount: erplora2().formatMoney(amount)
+      const msg = erplora3().t(CATALOG3, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
+        amount: erplora3().formatMoney(amount)
         // minor units in, hub currency out
       });
       this.movAmount = "";
@@ -4149,7 +4227,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formError = "";
     this.formMsg = "";
     try {
-      await erplora2().command("cash_register.count.add", {
+      await erplora3().command("cash_register.count.add", {
         session_id: this.target.id,
         count_type: this.countType,
         denominations: this.denominationsPayload(),
@@ -4159,15 +4237,15 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.denomCounts = {};
       this.countNotes = "";
       this.resetPanel();
-      this.formMsg = erplora2().t(CATALOG2, "ui.msgCountAdded", { total: erplora2().formatMoney(totalCents) });
+      this.formMsg = erplora3().t(CATALOG3, "ui.msgCountAdded", { total: erplora3().formatMoney(totalCents) });
     } catch (e6) {
-      this.formError = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errAddCount");
+      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errAddCount");
     } finally {
       this.saving = false;
     }
   }
   renderOpenPanel() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.openSessionTitle")}</h3>
       <form class="form" @submit=${(e6) => this.openSession(e6)}>
@@ -4183,7 +4261,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderClosePanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e6) => this.closeSession(e6)}>
@@ -4196,13 +4274,19 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderMovementPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
       <form class="form" @submit=${(e6) => this.addMovement(e6)}>
         <ion-select fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
-          <ion-select-option value="in">${t5("ui.movementIn")}</ion-select-option>
-          <ion-select-option value="out">${t5("ui.movementOut")}</ion-select-option>
+          ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
+        «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
+        mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
+        saca a mano—; `sale`/`refund` los escribe el sistema al cobrar o al anular. */
+    ""}
+          ${enumOptions({ in: MOVEMENT_TYPE_KEY.in, out: MOVEMENT_TYPE_KEY.out }).map(
+      (o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`
+    )}
         </ion-select>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
         <ion-input fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
@@ -4213,8 +4297,8 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderCountPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
-    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${`${k2} \u20AC`} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
       <form @submit=${(e6) => this.addCount(e6)}>
@@ -4229,7 +4313,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${erplora2().formatMoney(this.countTotalCents())}</p>
+        <p class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(this.countTotalCents())}</p>
         <div class="form">
           <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
@@ -4239,14 +4323,14 @@ var ErpCashRegisterDashboard = class extends i3 {
   }
   renderDetailPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
       <div class="form"><ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.back")}</ion-button></div>
     </section>`;
   }
   render() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<div>
         <header>
           <h2>${t5("ui.title")}</h2>
@@ -4329,8 +4413,8 @@ __decorateClass([
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
 // modules/cash_register/ui/components/erp-cashregister-open/erp-cashregister-open.ts
-var CATALOG3 = { es: es_default, en: en_default };
-function erplora3() {
+var CATALOG4 = { es: es_default, en: en_default };
+function erplora4() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
@@ -4373,32 +4457,32 @@ var ErpCashregisterOpen = class extends i3 {
   }
   async load() {
     this.registers = rows(
-      await erplora3().query("cash_register.registers.list").catch(() => [])
+      await erplora4().query("cash_register.registers.list").catch(() => [])
     );
     if (this.registers.length === 1) this.registerId = this.registers[0].id;
   }
   async openSession() {
     if (this.registers.length > 1 && !this.registerId) {
-      this.error = erplora3().t(CATALOG3, "ui.labelRegister");
+      this.error = erplora4().t(CATALOG4, "ui.labelRegister");
       return;
     }
     this.saving = true;
     this.error = "";
     try {
-      await erplora3().command("cash_register.session.open", {
+      await erplora4().command("cash_register.session.open", {
         register_id: this.registerId || null,
         opening_balance: aCentimos(this.balance),
         opening_notes: this.notes
       });
     } catch (e6) {
       const code = e6?.code;
-      this.error = code === "cash_register.session_already_open" ? erplora3().t(CATALOG3, "ui.errSessionAlreadyOpen") : e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errOpenSession");
+      this.error = code === "cash_register.session_already_open" ? erplora4().t(CATALOG4, "ui.errSessionAlreadyOpen") : e6 instanceof Error ? e6.message : erplora4().t(CATALOG4, "ui.errOpenSession");
     } finally {
       this.saving = false;
     }
   }
   render() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t5 = (k2) => erplora4().t(CATALOG4, k2);
     return b2`
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>

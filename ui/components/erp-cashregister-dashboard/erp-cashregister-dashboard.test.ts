@@ -392,3 +392,77 @@ describe('la ficha de sesión desde la tabla (cash_register#2)', () => {
     expect(detail?.session?.id).toBe('s0');
   });
 });
+
+// cash_register#50 — the list printed the database, not the language: `open`/`closed` in the STATUS
+// column, and the search box promised «Buscar sesión o estado…» over a server-side search that only
+// looks at `session_number`. A promise the screen cannot keep is worse than no promise.
+describe('el listado no enseña datos en crudo (cash_register#50)', () => {
+  const columnsOf = (el: HTMLElement) =>
+    (el as unknown as { columns: { key: string; format?: (r: Record<string, unknown>) => unknown; filterType?: string; options?: { value: string; label: string }[] }[] }).columns;
+
+  it('el ESTADO va traducido, no `open`/`closed`', async () => {
+    const el = await montar();
+    const col = columnsOf(el).find((c) => c.key === 'status')!;
+    expect(col.format, 'la columna ESTADO no formatea nada: imprime el enum crudo').toBeTruthy();
+    expect(col.format!({ status: 'open' })).toBe('ui.statusOpen');
+    expect(col.format!({ status: 'closed' })).toBe('ui.statusClosed');
+  });
+
+  // El estado es un dominio CERRADO: se ELIGE, no se teclea — es lo que hacen Odoo, Square y
+  // Business Central con un estado en un listado. Así el filtro ofrece la etiqueta traducida (que
+  // es lo que el placeholder prometía) y manda al servidor el valor crudo, que es lo que filtra.
+  it('el ESTADO se filtra con un desplegable de opciones traducidas, no con texto libre', async () => {
+    const el = await montar();
+    const col = columnsOf(el).find((c) => c.key === 'status')!;
+    expect(col.filterType).toBe('select');
+    expect(col.options).toEqual([
+      { value: 'open', label: 'ui.statusOpen' },
+      { value: 'closed', label: 'ui.statusClosed' },
+      { value: 'suspended', label: 'ui.statusSuspended' },
+    ]);
+  });
+
+  it('el buscador ya no promete buscar por estado: la búsqueda del servidor es por número', async () => {
+    const es = JSON.parse(JSON.stringify((await import('../../../locales/es.json')).default)) as { ui: Record<string, string> };
+    expect(es.ui.searchPlaceholder.toLowerCase()).not.toContain('estado');
+  });
+
+  it('las etiquetas de denominación del arqueo usan el separador decimal del locale', async () => {
+    // El `formatMoney` del shell REAL es un `Intl.NumberFormat` con la moneda y el locale del hub,
+    // así que aquí se usa uno de verdad: con el de juguete del arnés (que imprime `toFixed(2)`, con
+    // punto) esta aserción no probaría nada — pasaría igual con el literal que se está arreglando.
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.formatMoney = (cents: number) =>
+      new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format((cents || 0) / 100);
+
+    const el = await montar();
+    const wc = el as unknown as { panel: string | null; target: unknown; updateComplete: Promise<unknown> };
+    wc.panel = 'count';
+    wc.target = { id: 's1', session_number: 'S-1', status: 'open' };
+    await wc.updateComplete;
+    const labels = [...el.shadowRoot!.querySelectorAll('.denoms ion-input')].map((i) => i.getAttribute('label'));
+    // 15, no 16: el euro tiene 7 billetes (500…5) y 8 monedas (2 €…0,01 €). El issue decía 16.
+    expect(labels.length, 'no se pintaron las 15 denominaciones del euro').toBe(15);
+    // NINGUNA etiqueta lleva ya el punto decimal que tenía el literal («0.50 €»), junto a un
+    // «Total contado» escrito con coma en la misma tarjeta.
+    expect(labels.filter((l) => /\d\.\d/.test(l ?? ''))).toEqual([]);
+    expect(labels.some((l) => (l ?? '').startsWith('0,50'))).toBe(true);
+  });
+
+  // Una sola fuente para el vocabulario: el desplegable «Tipo» del formulario y la tabla del
+  // detalle nombran lo mismo, así que salen del mismo catálogo (`ui/lib/enums.ts`).
+  it('el desplegable de tipo de movimiento sale del mismo catálogo que las tablas', async () => {
+    const el = await montar();
+    const wc = el as unknown as { panel: string | null; target: unknown; updateComplete: Promise<unknown> };
+    wc.panel = 'movement';
+    wc.target = { id: 's1', session_number: 'S-1', status: 'open' };
+    await wc.updateComplete;
+    const options = [...el.shadowRoot!.querySelectorAll('ion-select ion-select-option')].map((o) => ({
+      value: o.getAttribute('value'), label: o.textContent?.trim(),
+    }));
+    expect(options).toEqual([
+      { value: 'in', label: 'ui.movementIn' },
+      { value: 'out', label: 'ui.movementOut' },
+    ]);
+  });
+});

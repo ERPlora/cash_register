@@ -12,6 +12,12 @@ import enLocale from '../../../locales/en.json';
 
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
+// Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50): la
+// ficha imprimía `Estado open` a dos centímetros de un rótulo que ya decía «Sesión abierta», y la
+// columna CUÁNDO soltaba `2026-08-21T17:52:13.198500671+00:00` — el timestamp del motor con nueve
+// decimales de segundo. Mismo patrón que `staff/ui/lib/enums.ts` (staff#37).
+import { COUNT_TYPE_KEY, MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, enumLabel, formatDateTime } from '../../lib/enums';
+
 /** The session row as the dashboard table has it (`cash_register.sessions.list`). */
 export interface SessionRow {
   id: string;
@@ -136,7 +142,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     const row = this.session;
     const closed = (row?.status ?? s?.status) === 'closed';
     return [
-      { label: t('ui.colStatus'), value: row?.status ?? s?.status ?? '—' },
+      { label: t('ui.colStatus'), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s?.status) || '—' },
       { label: t('ui.detailMovements'), value: s ? String(s.movement_count) : '—' },
       { label: t('ui.labelOpeningBalance'), value: this.fmt(s?.opening_balance ?? row?.opening_balance) },
       { label: t('ui.detailCashSales'), value: this.fmt(s?.total_sales) },
@@ -156,8 +162,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private get movementColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'created_at', header: t('ui.colWhen'), sortable: true },
-      { key: 'movement_type', header: t('ui.labelType'), sortable: true },
+      { key: 'created_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.created_at) },
+      { key: 'movement_type', header: t('ui.labelType'), sortable: true, format: (r) => enumLabel(MOVEMENT_TYPE_KEY, r.movement_type) },
       { key: 'amount', header: t('ui.labelAmount'), align: 'right', sortable: true, format: (r) => this.fmt(r.amount as number) },
       { key: 'payment_method', header: t('ui.colMethod'), sortable: true },
       { key: 'description', header: t('ui.labelConcept'), sortable: true },
@@ -167,8 +173,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private get countColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'counted_at', header: t('ui.colWhen'), sortable: true },
-      { key: 'count_type', header: t('ui.labelCountType'), sortable: true },
+      { key: 'counted_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.counted_at) },
+      { key: 'count_type', header: t('ui.labelCountType'), sortable: true, format: (r) => enumLabel(COUNT_TYPE_KEY, r.count_type) },
       { key: 'total', header: t('ui.totalCounted'), align: 'right', sortable: true, format: (r) => this.fmt(r.total as number) },
       { key: 'notes', header: t('ui.labelNotes') },
     ];
