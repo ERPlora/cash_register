@@ -84,13 +84,6 @@ export function domainMessage(e: unknown, fallbackKey: string): string {
   return e instanceof Error ? e.message : erplora().t(CATALOG, fallbackKey);
 }
 
-/** Nº de sesión generado por la UI: S-YYMMDD-HHMMSS (open_session.sql espera :session_number). */
-function sessionNumber(): string {
-  const d = new Date();
-  const p = (n: number, l = 2) => String(n).padStart(l, '0');
-  return `S-${p(d.getFullYear() % 100)}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-}
-
 export class ErpCashRegisterDashboard extends LitElement {
   static styles = css`
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color,#1c1b18); }
@@ -265,9 +258,12 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.formError = '';
     this.formMsg = '';
     try {
+      // El NÚMERO DE TURNO no viaja: lo acuña el servidor (`S-YYMMDD-NNNN`, contador atómico por
+      // hub y día — cash_register#49). Esta pantalla componía `S-YYMMDD-HHMMSS`, la de apertura del
+      // TPV componía `CS-YYMMDD-HHMM` y la API no componía nada (caía a `S-<uuid>`): tres formatos
+      // vivos para el mismo turno, según por dónde se abriera la caja.
       await erplora().command('cash_register.session.open', {
         register_id: this.openRegisterId || null,
-        session_number: sessionNumber(),
         opening_balance: toMinorUnits(this.openBalance),
         opening_notes: this.openNotes.trim(),
       });

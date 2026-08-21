@@ -45,13 +45,6 @@ function aCentimos(v: string): number {
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
-/** Número de sesión legible por humanos: el turno de hoy. */
-function numeroSesion(): string {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `CS-${String(d.getFullYear()).slice(2)}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
-}
-
 export class ErpCashregisterOpen extends LitElement {
   static styles = css`
     :host { display:flex; align-items:center; justify-content:center; height:100%; padding:1rem;
@@ -95,9 +88,10 @@ export class ErpCashregisterOpen extends LitElement {
     this.saving = true;
     this.error = '';
     try {
+      // Sin `session_number`: lo acuña el servidor (cash_register#49). Esta pantalla componía
+      // `CS-YYMMDD-HHMM`, un TERCER formato distinto del que componía el dashboard.
       await erplora().command('cash_register.session.open', {
         register_id: this.registerId || null,
-        session_number: numeroSesion(),
         opening_balance: aCentimos(this.balance),
         opening_notes: this.notes,
       });

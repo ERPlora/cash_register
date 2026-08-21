@@ -40,7 +40,7 @@ MANIFEST = json.loads((MODULE_DIR / "module.json").read_text())
 # the server) that resolve to these internal SQL commands. This file drives the SQL directly, with
 # the ids the handler would have handed over (`session_id` / `movement_id` = new_ids[0]).
 SQL_OF = {
-    "cash_register.session.open": "cash_register._open_session_insert",
+    "cash_register.session.open": "cash_register._open_session_insert",  # + the counter, see run_command
     "cash_register.session.close": "cash_register._close_session_apply",
     "cash_register.movement.add": "cash_register._movement_insert",
 }
@@ -115,6 +115,16 @@ def run_command(name: str, payload: dict, hub: str = HUB) -> int:
     params.setdefault("new_id", str(uuid.uuid4()))
     params.setdefault("session_id", params["new_id"])
     params.setdefault("movement_id", params["new_id"])
+    params.setdefault("day", "20260818")
+    params.setdefault("session_day", "260818")
+    # cash_register#49: an open is TWO commands — the atomic per-(hub, day) counter, then the insert
+    # that reads it back to compose `S-YYMMDD-NNNN`. The counter is bumped OUTSIDE the counted
+    # script on purpose: `affected` is what the `expect_rows` gate sees, and this file's subject is
+    # the partial unique index — a second `INSERT 0 1` from the counter would just blur it. (A
+    # burnt number when the insert loses the race is the intended behaviour, not a leak.)
+    if name == "cash_register._open_session_insert":
+        for rel in MANIFEST["commands"]["cash_register._bump_counter"]["sql"]:
+            psql([], db=DB, stdin=bind((MODULE_DIR / rel).read_text(), params))
     affected = 0
     script = ["BEGIN;"]
     for rel in cmd["sql"]:

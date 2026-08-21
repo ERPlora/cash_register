@@ -44,8 +44,12 @@ MANIFEST = json.loads((MODULE_DIR / "module.json").read_text())
 # cash_register#38: the public open/close/movement commands are WASM handlers (settings enforced on
 # the server) that resolve to these internal SQL commands. This file drives the SQL directly, with
 # the ids the handler would have handed over (`session_id` / `movement_id` = new_ids[0]).
+# cash_register#49: opening is TWO commands in one transaction — the atomic per-(hub, day)
+# counter, then the insert that reads it back to compose `S-YYMMDD-NNNN`. The shift number stopped
+# being the caller's, so a harness that runs only the insert would produce a session with no number
+# at all.
 SQL_OF = {
-    "cash_register.session.open": "cash_register._open_session_insert",
+    "cash_register.session.open": ["cash_register._bump_counter", "cash_register._open_session_insert"],
     "cash_register.session.close": "cash_register._close_session_apply",
     "cash_register.movement.add": "cash_register._movement_insert",
 }
@@ -119,16 +123,19 @@ def system_params(payload: dict, hub: str = HUB) -> dict:
     params.setdefault("new_id", str(uuid.uuid4()))
     params.setdefault("session_id", params["new_id"])
     params.setdefault("movement_id", params["new_id"])
+    params.setdefault("day", "20260818")
+    params.setdefault("session_day", "260818")
     return params
 
 
 def run_command(name: str, payload: dict, hub: str = HUB) -> None:
-    name = SQL_OF.get(name, name)
-    cmd = MANIFEST["commands"][name]
+    names = SQL_OF.get(name, name)
+    names = [names] if isinstance(names, str) else list(names)
+    sql_files = [rel for n in names for rel in MANIFEST["commands"][n]["sql"]]
     params = system_params(payload, hub)
     script = (
         ["BEGIN;"]
-        + [bind((MODULE_DIR / rel).read_text(), params) for rel in cmd["sql"]]
+        + [bind((MODULE_DIR / rel).read_text(), params) for rel in sql_files]
         + ["COMMIT;"]
     )
     psql([], db=DB, stdin="\n".join(script))
