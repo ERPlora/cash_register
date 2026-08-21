@@ -1770,12 +1770,53 @@ var o6 = e4(class extends i4 {
 
 // ../outfitkit/dist/ok-data-table.js
 var CSV_BOM = "\uFEFF";
+var WINDOWS_1252_C1 = [
+  8364,
+  129,
+  8218,
+  402,
+  8222,
+  8230,
+  8224,
+  8225,
+  710,
+  8240,
+  352,
+  8249,
+  338,
+  141,
+  381,
+  143,
+  144,
+  8216,
+  8217,
+  8220,
+  8221,
+  8226,
+  8211,
+  8212,
+  732,
+  8482,
+  353,
+  8250,
+  339,
+  157,
+  382,
+  376
+];
+function decodeWindows1252(bytes) {
+  let text = "";
+  for (const byte of bytes) {
+    text += String.fromCharCode(byte >= 128 && byte <= 159 ? WINDOWS_1252_C1[byte - 128] : byte);
+  }
+  return text;
+}
 function decodeCsvBuffer(buf) {
   let text;
   try {
     text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
   } catch {
-    text = new TextDecoder("windows-1252").decode(buf);
+    text = decodeWindows1252(new Uint8Array(buf));
   }
   return text.charCodeAt(0) === 65279 ? text.slice(1) : text;
 }
@@ -3567,6 +3608,7 @@ var es_default = {
     errSessionUnavailable: "Esa sesi\xF3n de caja no est\xE1 disponible: no existe en este negocio o se ha borrado.",
     errMovementTypeUnknown: "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devoluci\xF3n.",
     errAmountRequired: "Un movimiento de caja necesita un importe: indica cu\xE1nto dinero entra o sale del caj\xF3n.",
+    errPaymentMethodUnknown: "Ese medio de pago no lo conoce la caja: usa efectivo, tarjeta, transferencia u otro.",
     errCloseSession: "No se pudo cerrar la sesi\xF3n",
     errInvalidAmount: "Importe inv\xE1lido",
     errAddMovement: "No se pudo registrar el movimiento",
@@ -3691,6 +3733,7 @@ var en_default = {
     errSessionUnavailable: "That cash session is not available: it does not exist in this business or it has been deleted.",
     errMovementTypeUnknown: "That is not a kind of cash movement: use in, out, sale or refund.",
     errAmountRequired: "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
+    errPaymentMethodUnknown: "That is not a way of paying the drawer knows: use cash, card, transfer or other.",
     errCloseSession: "Could not close the session",
     errInvalidAmount: "Invalid amount",
     errAddMovement: "Could not record the movement",
@@ -3941,7 +3984,8 @@ var DOMAIN_MESSAGES = {
   "cash_register.negative_balance_not_allowed": "ui.errNegativeBalanceNotAllowed",
   "cash_register.session_unavailable": "ui.errSessionUnavailable",
   "cash_register.movement_type_unknown": "ui.errMovementTypeUnknown",
-  "cash_register.amount_required": "ui.errAmountRequired"
+  "cash_register.amount_required": "ui.errAmountRequired",
+  "cash_register.payment_method_unknown": "ui.errPaymentMethodUnknown"
 };
 function domainMessage(e6, fallbackKey) {
   const code = e6?.code;

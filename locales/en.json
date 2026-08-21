@@ -76,6 +76,7 @@
     "errSessionUnavailable": "That cash session is not available: it does not exist in this business or it has been deleted.",
     "errMovementTypeUnknown": "That is not a kind of cash movement: use in, out, sale or refund.",
     "errAmountRequired": "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
+    "errPaymentMethodUnknown": "That is not a way of paying the drawer knows: use cash, card, transfer or other.",
     "errCloseSession": "Could not close the session",
     "errInvalidAmount": "Invalid amount",
     "errAddMovement": "Could not record the movement",

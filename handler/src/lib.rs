@@ -266,6 +266,34 @@ fn signed_amount(movement_type: &str, amount: i64) -> Option<i64> {
     }
 }
 
+/// The CANONICAL type of a payment method (`cash`|`card`|`transfer`|`other`, hub#778) — the only
+/// thing the drawer can key on, and the only vocabulary this door speaks (cash_register#54).
+///
+/// The guard used to ask `payment_method == "cash"` about the value the caller sent, while the five
+/// readings (`session.summary`, `current_session`, `current_session.expected`, `close_session`,
+/// `_auto_close_sessions`) all key on `payment_method_type`. The two halves of the same operation
+/// therefore disagreed in BOTH directions: a movement sent as `card` was excluded from the guard
+/// and included in the expected cash (the write never persisted the type, so the column kept its
+/// `DEFAULT 'cash'`), and a movement sent as «Efectivo» —the LOCALIZED name of cash, which never
+/// equals `'cash'` in a case-sensitive comparison— was excluded from the guard while being real
+/// money leaving the till. A hub in Spanish emptied the drawer below zero just by naming the method
+/// in its own language. A guard you dodge by changing language is not a guard.
+///
+/// So the type is derived HERE, once, and it feeds both the guard and the INSERT — they cannot
+/// drift apart again. A method outside the vocabulary is `None`: refusing it is the only safe
+/// answer, because filing it as "not cash" hides real money leaving the till and filing it as
+/// "cash" is the bug above. The localized CATALOGUE of methods belongs to `sales` and reaches the
+/// drawer through `record_sale`, which carries the type the catalogue already knows.
+fn payment_method_type(method: &str) -> Option<&'static str> {
+    match method.trim().to_ascii_lowercase().as_str() {
+        "" | "cash" => Some("cash"),
+        "card" => Some("card"),
+        "transfer" => Some("transfer"),
+        "other" => Some("other"),
+        _ => None,
+    }
+}
+
 /// add_movement: payload { session_id, movement_type, amount (magnitude, minor units — the SERVER
 /// signs it, cash_register#48), payment_method?, sale_reference?, description? }.
 /// reads: `cash_register.settings.get`, `cash_register.session.summary` (params session_id) — the
@@ -297,8 +325,16 @@ pub fn add_movement_pure(input: Value) -> Output {
             "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
         );
     }
-    let is_cash = sor(&payload, "payment_method", "cash").eq_ignore_ascii_case("cash");
-    if amount < 0 && is_cash && !setting_flag(&input, "allow_negative_balance") {
+    // cash_register#54: the canonical type decides, not the name the caller wrote. Same rule the
+    // readings apply, derived once and used twice — for the guard just below and for the row.
+    let method = sor(&payload, "payment_method", "cash");
+    let Some(method_type) = payment_method_type(&method) else {
+        return refuse(
+            "cash_register.payment_method_unknown",
+            "That is not a way of paying the drawer knows: use cash, card, transfer or other.",
+        );
+    };
+    if amount < 0 && method_type == "cash" && !setting_flag(&input, "allow_negative_balance") {
         let expected_cash = money::from_json(session.get("expected_cash").unwrap_or(&Value::Null), 0);
         if expected_cash + amount < 0 {
             return refuse(
@@ -307,10 +343,16 @@ pub fn add_movement_pure(input: Value) -> Output {
             );
         }
     }
-    let mut p = passthrough(&payload, &["session_id", "payment_method", "sale_reference", "description"]);
+    let mut p = passthrough(&payload, &["session_id", "sale_reference", "description"]);
     p.insert("movement_id".into(), new_id(&input, 0));
     p.insert("movement_type".into(), json!(movement_type));
     p.insert("amount".into(), json!(amount));
+    // Both columns, as `_movement_for_open_session.sql` has written them since #33. Through THIS
+    // door the name IS the canonical token —there are no localized names here— so it is stored
+    // normalized: `movements.list` filters `payment_method` with `eq`, and `Card` and `card` must
+    // not be two different things in that filter.
+    p.insert("payment_method".into(), json!(method_type));
+    p.insert("payment_method_type".into(), json!(method_type));
     Output::new().with_operation(Operation::sql("cash_register._movement_insert", p))
 }
 
@@ -663,6 +705,131 @@ mod session_number_tests {
             "new_ids": ["id-0"], "now": "2026-08-21T19:45:46+00:00",
             "reads": { "cash_register.settings.get": [], "cash_register.current_session": [{ "id": "s-open" }] } } }));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_already_open"));
+        assert!(out.operations.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod payment_method_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn inp_reads(payload: Value, reads: Value) -> Value {
+        json!({ "payload": payload, "context": { "new_ids": ["id-0", "id-1"], "now": "2026-08-21T10:00:00+00:00", "reads": reads } })
+    }
+    fn settings(negative: i64) -> Value {
+        json!([{ "id": "cfg", "require_opening_balance": 0, "require_closing_balance": 0, "allow_negative_balance": negative }])
+    }
+    fn summary(expected_cash: i64) -> Value {
+        json!([{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": expected_cash }])
+    }
+    fn add(payload: Value, negative: i64, expected_cash: i64) -> Output {
+        add_movement_pure(inp_reads(
+            payload,
+            json!({ "cash_register.settings.get": settings(negative),
+                    "cash_register.session.summary": summary(expected_cash) }),
+        ))
+    }
+
+    /// cash_register#54, first half — the same bug as #33 through the OTHER door. The manual
+    /// movement carried no `payment_method_type`, so `add_movement.sql` left the column on its
+    /// `DEFAULT 'cash'`: a 50,00 € movement paid by CARD raised the expected cash of a drawer that
+    /// never saw that money (opening 100 € → `expected_cash` 150 €).
+    #[test]
+    fn a_manual_movement_is_written_with_the_canonical_type_of_its_method() {
+        for (method, method_type) in [("cash", "cash"), ("card", "card"), ("transfer", "transfer"), ("other", "other")] {
+            let out = add(json!({ "session_id": "s1", "movement_type": "in", "amount": 5000, "payment_method": method }), 1, 10000);
+            assert!(out.error.is_none(), "{method}: {:?}", out.error);
+            assert_eq!(out.operations[0].command, "cash_register._movement_insert");
+            assert_eq!(out.operations[0].params["payment_method_type"], json!(method_type), "method={method}");
+            // Both columns are written: the reversal and `movements.list` read the name, the
+            // arqueo reads the type. Leaving one of them to a DDL default is the whole bug.
+            assert_eq!(out.operations[0].params["payment_method"], json!(method), "method={method}");
+        }
+    }
+
+    /// A caller that says nothing still means the drawer: same default the column has had since
+    /// migration 003, now stated by the writer instead of inherited from the DDL. Blank counts as
+    /// nothing said — refusing it would only differ from the absent key by an invisible character.
+    #[test]
+    fn a_movement_without_a_method_is_cash() {
+        for payload in [
+            json!({ "session_id": "s1", "movement_type": "in", "amount": 5000 }),
+            json!({ "session_id": "s1", "movement_type": "in", "amount": 5000, "payment_method": "" }),
+            json!({ "session_id": "s1", "movement_type": "in", "amount": 5000, "payment_method": "  " }),
+        ] {
+            let out = add(payload.clone(), 1, 10000);
+            assert!(out.error.is_none(), "{payload}: {:?}", out.error);
+            assert_eq!(out.operations[0].params["payment_method_type"], json!("cash"), "{payload}");
+        }
+    }
+
+    /// cash_register#54, second half — the WORST one. The guard decided `is_cash` on the
+    /// LOCALIZED NAME while the five readings key on the canonical TYPE, so a hub in Spanish
+    /// emptied the drawer below zero just by calling the command with «Efectivo»: the name never
+    /// equals `'cash'` in a case-sensitive comparison, the guard filed it as "not physical cash"
+    /// and waved it through. A guard you dodge by changing language is not a guard.
+    #[test]
+    fn the_localized_name_of_cash_cannot_dodge_the_negative_balance_guard() {
+        for name in ["Efectivo", "efectivo", "Contant", "Espèces", "Bargeld"] {
+            let out = add(json!({ "session_id": "s1", "movement_type": "out", "amount": 20000, "payment_method": name }), 0, 10000);
+            assert!(
+                out.error.is_some(),
+                "«{name}» went through: the drawer would be left at −100,00 € with allow_negative_balance off"
+            );
+            assert!(out.operations.is_empty(), "«{name}» wrote a row");
+        }
+    }
+
+    /// The door of the manual movement speaks the CANONICAL vocabulary (`cash`|`card`|`transfer`|
+    /// `other`), not the catalogue of localized names — that one belongs to `sales`, and it reaches
+    /// the drawer through `record_sale`, which carries the type the catalogue already knows. So an
+    /// unrecognised method is REFUSED, with its own translated domain code: filing it as "not cash"
+    /// would silently take it out of the drawer, and filing it as "cash" is the bug above.
+    #[test]
+    fn an_unknown_payment_method_is_refused() {
+        for method in ["Efectivo", "bizum", "crypto", "efectivo/cash"] {
+            let out = add(json!({ "session_id": "s1", "movement_type": "in", "amount": 5000, "payment_method": method }), 1, 10000);
+            assert_eq!(
+                out.error.as_ref().map(|e| e.code.as_str()),
+                Some("cash_register.payment_method_unknown"),
+                "method={method:?}"
+            );
+            assert!(out.operations.is_empty(), "method={method:?}");
+        }
+    }
+
+    /// Case is not part of the contract: `CASH` and `Card` are the same tokens.
+    #[test]
+    fn the_canonical_tokens_are_case_insensitive() {
+        for (method, method_type) in [("CASH", "cash"), ("Card", "card"), (" transfer ", "transfer")] {
+            let out = add(json!({ "session_id": "s1", "movement_type": "in", "amount": 5000, "payment_method": method }), 1, 10000);
+            assert!(out.error.is_none(), "{method}: {:?}", out.error);
+            assert_eq!(out.operations[0].params["payment_method_type"], json!(method_type), "method={method}");
+            // …and the name is stored normalized, so the `eq` filter of `movements.list` does not
+            // see `Card` and `card` as two different methods.
+            assert_eq!(out.operations[0].params["payment_method"], json!(method_type), "method={method}");
+        }
+    }
+
+    /// The mirror image: money that never enters the drawer is not held back by the drawer's
+    /// guard. A card refund bigger than the cash in the till is legitimate — the till holds no
+    /// card money to run out of — and the readings exclude it from `expected_cash` anyway.
+    #[test]
+    fn a_non_cash_movement_is_outside_the_drawer_and_outside_its_guard() {
+        for method in ["card", "transfer", "other"] {
+            let out = add(json!({ "session_id": "s1", "movement_type": "out", "amount": 20000, "payment_method": method }), 0, 10000);
+            assert!(out.error.is_none(), "{method}: {:?}", out.error);
+            assert_eq!(out.operations[0].params["amount"], json!(-20000), "method={method}");
+        }
+    }
+
+    /// And the guard still fires for real cash — the fix must not disarm what #38 and #48 left
+    /// working.
+    #[test]
+    fn a_cash_out_bigger_than_the_drawer_is_still_refused() {
+        let out = add(json!({ "session_id": "s1", "movement_type": "out", "amount": 20000, "payment_method": "cash" }), 0, 10000);
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.negative_balance_not_allowed"));
         assert!(out.operations.is_empty());
     }
 }
