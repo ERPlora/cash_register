@@ -267,6 +267,20 @@ def check_manifest() -> None:
         ok(
             "dead settings auto_open_session_on_login / auto_close_session_on_logout are gone from the schema"
         )
+    # cash_register#41: the bridge is over. `additionalProperties: true` was a temporary crutch
+    # (cash_register#23) for callers that still sent the retired keys; the last one was the hub's
+    # own e2e (ERPlora/hub#1028, merged via hub#1062). With it gone, an unknown key must be
+    # REJECTED again — a typo in a settings key silently doing nothing is exactly what
+    # `additionalProperties: false` exists to catch.
+    if schema.get("additionalProperties") is not False:
+        fail(
+            "settings schema must be `additionalProperties: false` again — the hub e2e no longer "
+            "sends the retired keys (hub#1028), so the bridge of cash_register#23 is over"
+        )
+    elif "$comment" in schema:
+        fail("the bridge `$comment` of cash_register#23 must go with the bridge")
+    else:
+        ok("settings schema rejects unknown keys again (additionalProperties: false, no bridge)")
 
     for lang in ("en", "es"):
         ui = json.loads((MODULE_DIR / "locales" / f"{lang}.json").read_text()).get(
