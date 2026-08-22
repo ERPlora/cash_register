@@ -466,3 +466,36 @@ describe('el listado no enseña datos en crudo (cash_register#50)', () => {
     ]);
   });
 });
+
+// ── pm#155 (outfitkit#67, second half) ────────────────────────────────────────────────────────
+//
+// At 1440 px the «Actions» column fell off the screen with nothing hinting the table went on to
+// the right, so the only door into a session was a button nobody could see. OutfitKit 0.1.44
+// pins that column, but the other half of the fix is opt-in: `rowClickable` turns the whole row
+// into a door — the first thing a user tries. The list has to ask for it, and wire `rowClick`
+// to the same detail panel the «detail» action opens (and it must work on ANY session: a closed
+// one is read-only, not invisible — cash_register#2).
+describe('clicking the row opens the session (pm#155)', () => {
+  const SESION = { id: 's1', session_number: 'S-0001', status: 'closed', opening_balance: 0, expected_balance: null, closing_balance: null, difference: null };
+  const tabla = (el: HTMLElement & { shadowRoot: ShadowRoot }) =>
+    el.shadowRoot.querySelector('ok-data-table') as (HTMLElement & { rowClickable: boolean }) | null;
+
+  it('the table declares `rowClickable` → the whole row is a door, not just the action button', async () => {
+    const el = await montar();
+    expect(
+      tabla(el)?.rowClickable,
+      'without `rowClickable` the row is dead: if the actions column is off-screen there is no way in',
+    ).toBe(true);
+  });
+
+  it('`rowClick` opens the session detail, same as the «detail» action (also on a CLOSED session)', async () => {
+    const el = await montar();
+    tabla(el)!.dispatchEvent(new CustomEvent('rowClick', { detail: { row: SESION } }));
+    await new Promise((r) => setTimeout(r, 0));
+    await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+    expect(
+      el.shadowRoot.querySelector('erp-cashregister-session-detail'),
+      'the row was clicked and the session detail did not open',
+    ).toBeTruthy();
+  });
+});
