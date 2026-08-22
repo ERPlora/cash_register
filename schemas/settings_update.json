@@ -3,7 +3,7 @@
   "title": "cash_register.settings.update",
   "description": "Configuración de caja (singleton por hub). La UI envía el snapshot completo (upsert).",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "enable_cash_register": {
       "type": "boolean",
@@ -79,6 +79,5 @@
     "auto_close_enabled",
     "auto_close_time",
     "protected_pos_url"
-  ],
-  "$comment": "additionalProperties:true only as a bridge (cash_register#23): callers older than this schema still send the retired auto_open_session_on_login/auto_close_session_on_logout keys; no SQL binds them, so they are ignored. Flip back to false once hub/crates/runtime/tests/protects_guard_e2e.rs drops them."
+  ]
 }
