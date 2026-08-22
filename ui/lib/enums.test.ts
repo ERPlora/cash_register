@@ -69,9 +69,42 @@ describe('the closed domains have ONE catalogue (cash_register#50)', () => {
 });
 
 describe('dates are read by a person, not by the engine', () => {
+  // The instant from the QA capture. 17:52 UTC — which is 19:52 in Madrid in summer, 18:52 in
+  // winter, and 13:52 in New York. That is the whole point of what follows.
+  const QA_INSTANT = '2026-08-21T17:52:13.198500671+00:00';
+
   it('a timestamp with nanoseconds and offset becomes a readable local date and time', () => {
-    // The exact string from the QA capture.
-    expect(formatDateTime('2026-08-21T17:52:13.198500671+00:00')).toBe('21/08/2026, 19:52');
+    // 🔴 This used to assert the literal `'21/08/2026, 19:52'`, and that is a UTC+2 hardcoded into
+    // a test: GREEN only in Madrid, and only in SUMMER. Red under TZ=UTC (what CI runs), red in
+    // New York, and red on Ioan's own laptop from the October DST switch onwards.
+    //
+    // What the function actually promises is «render this instant in the reader's LOCAL time», so
+    // that is what gets asserted — and through a DIFFERENT route than the one under test
+    // (`Date.getHours()` vs `Intl.DateTimeFormat`), because comparing `Intl` against `Intl` would
+    // only prove that the machine agrees with itself.
+    const d = new Date(QA_INSTANT);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const out = formatDateTime(QA_INSTANT);
+
+    expect(out, 'dd/mm/yyyy, hh:mm').toMatch(/^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}$/);
+    expect(out).toContain(`${pad(d.getHours())}:${pad(d.getMinutes())}`);
+    expect(out).toContain(`${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`);
+  });
+
+  it('renders in LOCAL time, not UTC — the guard against pinning a timeZone', () => {
+    // A cashier closing the till at 00:30 has to see today's date, not yesterday's. If someone ever
+    // pinned `timeZone: 'UTC'` in `formatDateTime`, the test above would still pass under TZ=UTC —
+    // so this one exists to catch it wherever the runtime zone is NOT UTC.
+    const d = new Date(QA_INSTANT);
+    const utcHour = String(d.getUTCHours()).padStart(2, '0');
+    const localHour = String(d.getHours()).padStart(2, '0');
+    if (utcHour === localHour) {
+      // Explicit, never a silent pass: under TZ=UTC there is nothing to tell apart.
+      console.log('SKIPPED: the runtime is on UTC, so local and UTC render identically here');
+      return;
+    }
+    expect(formatDateTime(QA_INSTANT)).toContain(`${localHour}:`);
+    expect(formatDateTime(QA_INSTANT)).not.toContain(`${utcHour}:`);
   });
 
   it('never leaks the ISO markers', () => {
