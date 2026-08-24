@@ -528,6 +528,7 @@
     },
     "cash_register.record_sale": {
       "permission": "cash_register.add_movement",
+      "internal": true,
       "emit": [
         "cash_register.movement_added"
       ],
@@ -535,9 +536,6 @@
         "type": "wasm",
         "file": "dist/handler.wasm",
         "function": "record_sale"
-      },
-      "ai": {
-        "description": "Records the cash movement corresponding to a completed sale"
       }
     },
     "cash_register._insert_count": {

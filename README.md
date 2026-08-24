@@ -30,7 +30,7 @@ versión instalada y cita la de TU versión, no la de la última publicada. En i
 | command | `cash_register.movement.add` | `add_movement` |
 | command | `cash_register.count.add` (WASM) | `add_count` |
 | command | `cash_register.registers.create` / `.settings.update` | `manage_settings` (solo admin) |
-| escucha | `sale.completed` → `record_sale` (WASM) · `sale.voided` → `_reverse_sale` | — |
+| escucha | `sale.completed` → `record_sale` (WASM, **un movimiento por pata de cobro** — ADR-0386) · `sale.voided` → `_reverse_sale` | — |
 | emite | `cash_register.session_opened` / `.session_closed` / `.settings_updated` | — |
 
 Navegación: `erp-cashregister-dashboard`; ajustes declarativos (ADR-0082).

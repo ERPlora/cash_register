@@ -108,8 +108,58 @@ pub fn add_count_pure(input: Value) -> Output {
     Output { operations: vec![Operation::sql("cash_register._insert_count", p)], events: vec![], ..Default::default() }
 }
 
-/// record_sale: listener de sale.completed → movimiento de caja (tipo 'sale') en la
-/// sesión abierta del empleado. El payload del evento trae total y (opcional) sale_id.
+/// One leg of a payment, as the drawer needs it: how much it covered, and with what.
+///
+/// `amount` is what the leg COVERED, never what was handed over: the change went back to the
+/// customer out of the cash leg (ADR-0386 decision 2), so `amount_tendered` is money that did not
+/// stay in the till. `kind` is the CANONICAL type of the method (`cash`|`card`|`transfer`|`other`,
+/// hub#778) and it is the only thing the count keys on; `name` is the localized label the cashier
+/// reads on the movements list.
+struct Leg {
+    amount: i64,
+    name: String,
+    kind: String,
+}
+
+/// The legs of a `sale.completed`, in the order the cashier took them (ADR-0386).
+///
+/// `payments[]` is the mixed-payment form, present in every event `sales` ≥ 2.16.0 emits — a
+/// one-tender sale is a list of one. Its absence is NOT an error: a hub still running an older
+/// `sales`, and every sale recorded before it upgraded, emits only the scalars, and that event is a
+/// one-tender sale that has to keep booking exactly the movement it booked yesterday. An empty
+/// list degrades the same way, so no emitter can make a sale disappear from the drawer.
+fn legs_of(payload: &Value, total: i64) -> Vec<Leg> {
+    let declared = payload.get("payments").and_then(|v| v.as_array());
+    match declared {
+        Some(legs) if !legs.is_empty() => legs
+            .iter()
+            .map(|leg| Leg {
+                amount: money::from_json(leg.get("amount").unwrap_or(&Value::Null), 0),
+                name: sor(leg, "payment_method_name", "cash"),
+                kind: sor(leg, "payment_method_type", "cash"),
+            })
+            .collect(),
+        _ => vec![Leg {
+            amount: total,
+            name: sor(payload, "payment_method_name", "cash"),
+            kind: sor(payload, "payment_method_type", "cash"),
+        }],
+    }
+}
+
+/// record_sale: listener de sale.completed → un movimiento de caja (tipo 'sale') POR PATA de cobro,
+/// en la sesión abierta del empleado. El payload del evento trae total, las patas y (opcional)
+/// sale_id.
+///
+/// 🔴 **Por qué una pata, un movimiento** (cash_register#59, ADR-0386). Hasta aquí se escribía UN
+/// movimiento por el total entero, tipado con el ESCALAR del evento — que con pago mixto es el
+/// tender PRINCIPAL (la pata mayor). Una venta de 121,00 € cobrada con 50,00 € en tarjeta y
+/// 71,00 € en efectivo dejaba un movimiento de 121,00 € tipo `cash`: el cajón esperaba 121,00 €
+/// cuando solo entraron 71,00 €, y el arqueo salía corto en 50,00 € **en silencio**, todos los
+/// días. Con el principal en tarjeta pasaba lo contrario y salía largo.
+///
+/// Las LECTURAS ya aguantaban N movimientos por venta (`session_summary.sql` suma solo los `cash`,
+/// `_reverse_sale.sql` revierte su `SUM`), así que lo único que faltaba era escribir la verdad.
 pub fn record_sale_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let total = money::from_json(payload.get("total").unwrap_or(&Value::Null), 0); // céntimos (de sale.completed)
@@ -119,20 +169,47 @@ pub fn record_sale_pure(input: Value) -> Output {
     if total <= 0 && gift_total <= 0 {
         return Output { operations: vec![], events: vec![], ..Default::default() };
     }
-    let mut p = Map::new();
-    p.insert("movement_id".into(), new_id(&input, 0));
-    p.insert("movement_type".into(), json!("sale"));
-    p.insert("amount".into(), json!(total));
-    p.insert("gift_total".into(), json!(gift_total));
-    p.insert("payment_method".into(), json!(sor(&payload, "payment_method_name", "cash")));
-    // Tipo CANÓNICO del método (`cash`|`card`|`transfer`|`other`), de sale.completed (hub#778):
-    // el cajón compara contra este, no contra el `name` localizado. Default `cash` para ventas de
-    // eventos antiguos o emisores que aún no lo envíen (degradación: igual que antes del fix).
-    p.insert("payment_method_type".into(), json!(sor(&payload, "payment_method_type", "cash")));
-    p.insert("sale_reference".into(), payload.get("sale_id").cloned().unwrap_or(json!("")));
-    p.insert("description".into(), json!(format!("Sale {}", s(payload.get("sale_id").unwrap_or(&Value::Null)))));
-    // La sesión abierta del usuario activo la resuelve el SQL (subquery por current_user_id).
-    Output { operations: vec![Operation::sql("cash_register._movement_for_open_session", p)], events: vec![], ..Default::default() }
+
+    let legs = legs_of(&payload, total);
+    let sale_id = payload.get("sale_id").cloned().unwrap_or(json!(""));
+    let description = json!(format!("Sale {}", s(payload.get("sale_id").unwrap_or(&Value::Null))));
+
+    let mut operations = Vec::with_capacity(legs.len());
+    for (i, leg) in legs.iter().enumerate() {
+        // Cada movimiento necesita SU id, y el guest no puede generarlos (sandbox sin
+        // aleatoriedad): salen del lote de `context.new_ids`. El host entrega 256, así que quedarse
+        // corto es inalcanzable en la práctica — razón de más para RECHAZAR en voz alta en vez de
+        // insertar una fila con la clave primaria vacía, que nadie podría anular después.
+        let movement_id = new_id(&input, i);
+        if movement_id.is_null() {
+            return refuse(
+                "cash_register.not_enough_ids",
+                "the host did not hand out one id per payment leg",
+            );
+        }
+        let mut p = Map::new();
+        p.insert("movement_id".into(), movement_id);
+        p.insert("movement_type".into(), json!("sale"));
+        // Lo que la pata CUBRIÓ. El cambio ya salió del cajón (ADR-0386), así que `amount_tendered`
+        // no es dinero que se quedara dentro y no se mira aquí.
+        p.insert("amount".into(), json!(leg.amount));
+        // Las invitaciones son de la VENTA, no de una pata: `session_summary.sql` hace
+        // `SUM(m.gift_total)`, así que repetirlas en cada pata las multiplicaría por el número de
+        // formas de pagar. Viajan en la primera y solo en la primera.
+        p.insert("gift_total".into(), json!(if i == 0 { gift_total } else { 0 }));
+        p.insert("payment_method".into(), json!(leg.name));
+        // Tipo CANÓNICO del método (`cash`|`card`|`transfer`|`other`), de sale.completed (hub#778):
+        // el cajón compara contra este, no contra el `name` localizado. Default `cash` para ventas de
+        // eventos antiguos o emisores que aún no lo envíen (degradación: igual que antes del fix).
+        p.insert("payment_method_type".into(), json!(leg.kind));
+        // La MISMA referencia de venta en todas las patas: es lo que `_reverse_sale.sql` agrupa
+        // para anular (`SUM` de las patas en efectivo), y lo que ata las N filas a un tique.
+        p.insert("sale_reference".into(), sale_id.clone());
+        p.insert("description".into(), description.clone());
+        // La sesión abierta del usuario activo la resuelve el SQL (subquery por current_user_id).
+        operations.push(Operation::sql("cash_register._movement_for_open_session", p));
+    }
+    Output { operations, events: vec![], ..Default::default() }
 }
 
 

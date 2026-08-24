@@ -78,6 +78,7 @@
     "errMovementTypeUnknown": "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devolución.",
     "errAmountRequired": "Un movimiento de caja necesita un importe: indica cuánto dinero entra o sale del cajón.",
     "errPaymentMethodUnknown": "Ese medio de pago no lo conoce la caja: usa efectivo, tarjeta, transferencia u otro.",
+    "errNotEnoughIds": "La venta no ha podido anotarse en la caja: uno de sus cobros se quedó sin apunte. No se ha registrado nada: vuelve a cobrar la venta.",
     "errCloseSession": "No se pudo cerrar la sesión",
     "errInvalidAmount": "Importe inválido",
     "errAddMovement": "No se pudo registrar el movimiento",
