@@ -115,7 +115,8 @@
       "migrations/postgres/005_require_blind_count.sql",
       "migrations/postgres/006_auto_close.sql",
       "migrations/postgres/007_session_counter.sql",
-      "migrations/postgres/008_backfill_payment_method_type.sql"
+      "migrations/postgres/008_backfill_payment_method_type.sql",
+      "migrations/postgres/009_refund_document.sql"
     ]
   },
   "queries": {
@@ -538,6 +539,31 @@
         "function": "record_sale"
       }
     },
+    "cash_register._record_refund": {
+      "permission": "cash_register.add_movement",
+      "internal": true,
+      "reads": [
+        {
+          "query": "cash_register.current_session",
+          "required": true
+        }
+      ],
+      "emit": [
+        "cash_register.movement_added"
+      ],
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "record_refund"
+      }
+    },
+    "cash_register._refund_movement_for_open_session": {
+      "permission": "cash_register.add_movement",
+      "internal": true,
+      "sql": [
+        "commands/_refund_movement_for_open_session.sql"
+      ]
+    },
     "cash_register._insert_count": {
       "permission": "cash_register.add_count",
       "sql": [
@@ -568,6 +594,9 @@
       },
       "sale.voided": {
         "command": "cash_register._reverse_sale"
+      },
+      "sale.refunded": {
+        "command": "cash_register._record_refund"
       }
     },
     "emits": [

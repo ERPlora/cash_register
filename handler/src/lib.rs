@@ -8,6 +8,9 @@
 //!  - `record_sale`: listener de `sale.completed`. Añade un movimiento de caja con el
 //!    total de la venta a la sesión abierta del empleado. Como el guest no consulta la
 //!    BD, emite _movement_for_open_session, que resuelve la sesión abierta en SQL.
+//!  - `record_refund`: listener de `sale.refunded`. Un movimiento de SALIDA por pata devuelta,
+//!    tipado por el DESTINO al que vuelve el dinero (no por el cobro del que sale), e idempotente
+//!    por documento (`refund_ref`).
 //!  - `open_session` / `close_session` / `add_movement` (cash_register#38): the drawer settings
 //!    (`require_opening_balance`, `require_closing_balance`, `allow_negative_balance`) enforced on
 //!    the server. Each rule answers with its own domain code, read from the trusted settings row the
@@ -33,6 +36,12 @@ pub fn add_count(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>
 #[plugin_fn]
 pub fn record_sale(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
     Ok(Json(record_sale_pure(input.into_inner().into_value())))
+}
+
+#[cfg(feature = "guest")]
+#[plugin_fn]
+pub fn record_refund(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
+    Ok(Json(record_refund_pure(input.into_inner().into_value())))
 }
 
 #[cfg(feature = "guest")]
@@ -210,6 +219,134 @@ pub fn record_sale_pure(input: Value) -> Output {
         operations.push(Operation::sql("cash_register._movement_for_open_session", p));
     }
     Output { operations, events: vec![], ..Default::default() }
+}
+
+
+/// record_refund: listener de `sale.refunded` → un movimiento de SALIDA por pata devuelta, en la
+/// sesión de caja abierta.
+///
+/// 🔴 **El tipo lo pone el DESTINO, no el origen** (cash_register#62, sales#160, ADR-0386 dec. 3).
+/// Cada entrada de `payments[]` trae dos cosas que NO son la misma:
+///
+///   - `payment_id` — la pata de cobro de la que sale el dinero. Manda sobre el TOPE (`sales` ya
+///     lo aplicó: no se devuelve por una tarjeta más de lo que esa tarjeta cobró). Aquí solo sirve
+///     para distinguir las patas de un mismo documento en el índice de idempotencia.
+///   - `payment_method_type` — por dónde VUELVE el dinero. Manda sobre el CAJÓN, y es lo único que
+///     decide si esta pata mueve efectivo.
+///
+/// Una venta cobrada con TARJETA puede devolverse en EFECTIVO cuando esa tarjeta ya no existe (el
+/// caso de Square): sale dinero de un cajón en el que esa venta nunca entró. Y al revés, una venta
+/// en efectivo devuelta a una tarjeta NO saca nada del cajón. Tipar por el origen se equivoca en
+/// los dos, en direcciones opuestas.
+///
+/// Por eso `_reverse_sale` no vale: agrupa la venta ENTERA (`SUM` por sesión) y se tipa por el
+/// movimiento original. Una devolución es parcial y repetible —15,00 € hoy, 35,00 € la semana que
+/// viene— y cada documento es su propio movimiento.
+///
+/// El importe viaja POSITIVO (como en el evento) y lo niega el SQL: el signo de un movimiento lo
+/// decide su tipo, no quien lo manda (cash_register#48).
+pub fn record_refund_pure(input: Value) -> Output {
+    let payload = input.get("payload").cloned().unwrap_or(Value::Null);
+
+    // El documento. Sin él no hay idempotencia posible: una reentrega del evento sacaría el dinero
+    // del cajón otra vez y el descuadre sería exactamente del tamaño de la devolución. Se RECHAZA
+    // en voz alta en vez de anotar una fila que nadie podría reconocer como ya vista.
+    let refund_ref = sor(&payload, "refund_ref", "");
+    if refund_ref.is_empty() {
+        return refuse(
+            "cash_register.refund_ref_required",
+            "a refund with no stable document reference cannot be booked idempotently",
+        );
+    }
+
+    // 🔴 La sesión abierta sale de `context.reads`, NUNCA del payload (ADR-0069). Y se lee de
+    // verdad, no solo se declara en el manifest: si no hay caja abierta, el INSERT…SELECT de
+    // `_refund_movement_for_open_session` no produciría fila y el dinero saldría del cajón sin
+    // dejar rastro — el fallo mudo que esta issue existe para cerrar. El evento se rechaza para que
+    // caiga al dead-letter del outbox, donde SÍ se ve.
+    if read_rows(&input, "cash_register.current_session").is_empty() {
+        return refuse(
+            "cash_register.refund_no_open_session",
+            "the refund was issued with no cash session open: the drawer has nowhere to book it",
+        );
+    }
+
+    let legs = refund_legs(&payload);
+    if legs.is_empty() {
+        // Una devolución sin patas no es un error: es un documento que no movió dinero por ninguna
+        // puerta que el cajón conozca. No se inventa un movimiento por el `total`, que tiparía a
+        // ciegas lo que el emisor no dijo.
+        return Output { operations: vec![], events: vec![], ..Default::default() };
+    }
+
+    let sale_id = payload.get("sale_id").cloned().unwrap_or(json!(""));
+    let description = json!(format!("Refund {} · sale {}", refund_ref, s(&sale_id)));
+
+    let mut operations = Vec::with_capacity(legs.len());
+    for (i, leg) in legs.iter().enumerate() {
+        // Un id por pata, del lote de `context.new_ids`. Quedarse corto se rechaza en voz alta:
+        // anotar media devolución descuadra la caja igual que no anotar ninguna, pero encima
+        // parece cuadrada.
+        let movement_id = new_id(&input, i);
+        if movement_id.is_null() {
+            return refuse(
+                "cash_register.refund_not_enough_ids",
+                "the host did not hand out one id per refunded leg",
+            );
+        }
+        let mut p = Map::new();
+        p.insert("movement_id".into(), movement_id);
+        p.insert("amount".into(), json!(leg.amount));
+        p.insert("payment_method".into(), json!(leg.name));
+        // El tipo del DESTINO. Es la línea de la que depende todo lo de arriba.
+        p.insert("payment_method_type".into(), json!(leg.kind));
+        p.insert("sale_reference".into(), sale_id.clone());
+        p.insert("refund_reference".into(), json!(refund_ref));
+        // La pata de ORIGEN: lo que hace única cada fila de un documento repartido entre varios
+        // destinos. El índice único de la migración 009 se apoya en ella.
+        p.insert("source_payment_id".into(), json!(leg.source));
+        p.insert("description".into(), description.clone());
+        operations.push(Operation::sql("cash_register._refund_movement_for_open_session", p));
+    }
+    Output { operations, events: vec![], ..Default::default() }
+}
+
+/// Una pata DEVUELTA: cuánto vuelve, por dónde vuelve (destino) y de qué cobro sale (origen).
+struct RefundLeg {
+    amount: i64,
+    name: String,
+    kind: String,
+    source: String,
+}
+
+/// Las patas de un `sale.refunded`. Solo las que mueven dinero de verdad: un importe <= 0 no es una
+/// devolución (un negativo aquí sería un COBRO disfrazado), y `sales` ya lo rechaza en su puerta
+/// (`sales.refund_amount_invalid`) — esto es la segunda cerradura, no la primera.
+///
+/// Sin `payments[]` no se anota nada: a diferencia del cobro, aquí NO se puede degradar al escalar
+/// del evento, porque el escalar que decide el cajón —el destino— no existe fuera de las patas.
+/// Inventarlo sería tipar a ciegas justo el dato que esta issue vino a arreglar.
+fn refund_legs(payload: &Value) -> Vec<RefundLeg> {
+    payload
+        .get("payments")
+        .and_then(|v| v.as_array())
+        .map(|legs| {
+            legs.iter()
+                .filter_map(|leg| {
+                    let amount = money::from_json(leg.get("amount").unwrap_or(&Value::Null), 0);
+                    if amount <= 0 {
+                        return None;
+                    }
+                    Some(RefundLeg {
+                        amount,
+                        name: sor(leg, "payment_method_name", "cash"),
+                        kind: sor(leg, "payment_method_type", "cash"),
+                        source: sor(leg, "payment_id", ""),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 
@@ -1119,5 +1256,265 @@ mod payment_method_tests {
         let out = add(json!({ "session_id": "s1", "movement_type": "out", "amount": 20000, "payment_method": "cash" }), 0, 10000);
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.negative_balance_not_allowed"));
         assert!(out.operations.is_empty());
+    }
+
+    // ── cash_register#62 · sales#160 · ADR-0386 dec. 3 ────────────────────────────────────────
+    //
+    // A refund handed back IN CASH takes money out of the till. The drawer did not listen, so it
+    // left no movement: the count came out short by exactly the refund and nothing explained it.
+    //
+    // The event carries the origin tender (`payment_id`, which caps the refund) and the
+    // destination (`payment_method_type`, which decides the drawer) SEPARATELY. Every test below
+    // exists to keep those two from being collapsed into one.
+
+    /// A `sale.refunded` with an open drawer behind it. `reads` is what the host preloads for the
+    /// listener's declared `reads` block — the session comes from THERE, never from the payload.
+    fn refund_inp(payload: Value, ids: usize) -> Value {
+        let new_ids: Vec<Value> = (0..ids).map(|i| json!(format!("id-{i}"))).collect();
+        json!({
+            "payload": payload,
+            "context": {
+                "new_ids": new_ids,
+                "now": "2026-08-24T12:00:00+00:00",
+                "reads": { "cash_register.current_session": [{ "id": "sess-open" }] },
+            }
+        })
+    }
+
+    /// Every operation this handler emitted against the refund door, in order.
+    fn refund_ops(out: &Output) -> Vec<&Operation> {
+        out.operations
+            .iter()
+            .filter(|op| op.command == "cash_register._refund_movement_for_open_session")
+            .collect()
+    }
+
+    /// What the DRAWER will actually move, in cents out: only the legs whose DESTINATION is cash.
+    /// The SQL negates the amount, so this counts the positive magnitudes the handler emitted.
+    fn out_of_drawer(out: &Output) -> i64 {
+        refund_ops(out)
+            .iter()
+            .filter(|op| op.params["payment_method_type"] == json!("cash"))
+            .map(|op| op.params["amount"].as_i64().unwrap_or(0))
+            .sum()
+    }
+
+    /// The issue's own case: 70,00 € charged on a CARD, 50,00 € of it handed back IN CASH because
+    /// the card is gone. `payment_id` still names the card leg — that is what capped it.
+    fn card_sale_refunded_in_cash() -> Value {
+        json!({
+            "sender": "sales", "sale_id": "sale-paid-by-card", "sale_number": "20260824-0007",
+            "refund_id": "refund-doc-0001", "refund_ref": "refund-doc-0001",
+            "total": 5000, "reason": "returned", "fully_refunded": false,
+            "payments": [
+                { "payment_id": "pay-card", "payment_method_id": "pm-cash",
+                  "payment_method_name": "Efectivo", "payment_method_type": "cash", "amount": 5000 }
+            ]
+        })
+    }
+
+    #[test]
+    fn a_cash_refund_leaves_its_entry_in_the_drawer() {
+        let out = record_refund_pure(refund_inp(card_sale_refunded_in_cash(), 2));
+        assert!(out.error.is_none(), "{:?}", out.error);
+        let ops = refund_ops(&out);
+        assert_eq!(ops.len(), 1, "one movement per refunded leg");
+        assert_eq!(ops[0].params["amount"], json!(5000));
+        assert_eq!(ops[0].params["sale_reference"], json!("sale-paid-by-card"));
+        assert_eq!(ops[0].params["refund_reference"], json!("refund-doc-0001"));
+        assert_eq!(out_of_drawer(&out), 5000, "50,00 € leaves the till");
+    }
+
+    #[test]
+    fn the_movement_is_typed_after_the_destination_not_the_tender_it_came_from() {
+        // 🔴 THE issue. The money came out of a CARD payment and went back as CASH. Typing after
+        // the origin would book `card` and the till would never move — the silent shortfall.
+        let out = record_refund_pure(refund_inp(card_sale_refunded_in_cash(), 2));
+        let ops = refund_ops(&out);
+        assert_eq!(ops[0].params["payment_method_type"], json!("cash"), "the DESTINATION");
+        assert_eq!(ops[0].params["payment_method"], json!("Efectivo"));
+        // …and the origin tender is still carried, because idempotency keys on it.
+        assert_eq!(ops[0].params["source_payment_id"], json!("pay-card"));
+    }
+
+    #[test]
+    fn a_cash_sale_refunded_onto_a_card_never_touches_the_drawer() {
+        // The mirror image, and the half that makes the two rules distinguishable: typing after
+        // the ORIGIN here would take 30,00 € out of a till that keeps every cent of it.
+        let payload = json!({
+            "sale_id": "sale-paid-in-cash", "refund_ref": "refund-doc-0002", "total": 3000,
+            "payments": [
+                { "payment_id": "pay-cash", "payment_method_id": "pm-card",
+                  "payment_method_name": "Tarjeta", "payment_method_type": "card", "amount": 3000 }
+            ]
+        });
+        let out = record_refund_pure(refund_inp(payload, 2));
+        let ops = refund_ops(&out);
+        assert_eq!(ops.len(), 1, "it is still on the record as a refund");
+        assert_eq!(ops[0].params["payment_method_type"], json!("card"));
+        assert_eq!(out_of_drawer(&out), 0, "no cash leaves the till");
+    }
+
+    #[test]
+    fn a_refund_split_across_destinations_books_one_movement_per_leg() {
+        // One document, two destinations. Both legs share `refund_ref`, so the ORIGIN tender is
+        // what keeps them apart in the unique index — assert it is actually carried per leg.
+        let payload = json!({
+            "sale_id": "sale-mixed", "refund_ref": "refund-doc-0004", "total": 4000,
+            "payments": [
+                { "payment_id": "pay-a", "payment_method_name": "Efectivo",
+                  "payment_method_type": "cash", "amount": 1500 },
+                { "payment_id": "pay-b", "payment_method_name": "Tarjeta",
+                  "payment_method_type": "card", "amount": 2500 }
+            ]
+        });
+        let out = record_refund_pure(refund_inp(payload, 4));
+        let ops = refund_ops(&out);
+        assert_eq!(ops.len(), 2);
+        let sources: Vec<&Value> = ops.iter().map(|op| &op.params["source_payment_id"]).collect();
+        assert_eq!(sources, vec![&json!("pay-a"), &json!("pay-b")], "each leg keeps its own origin");
+        assert_eq!(out_of_drawer(&out), 1500, "only the cash leg moves the till");
+        for op in &ops {
+            assert_eq!(op.params["refund_reference"], json!("refund-doc-0004"), "one document");
+        }
+    }
+
+    #[test]
+    fn every_leg_carries_the_document_reference_that_makes_it_idempotent() {
+        // The reference is what the unique index keys on. A movement without it would be booked
+        // again on every redelivery of the event, and the till would pay the refund twice.
+        let out = record_refund_pure(refund_inp(card_sale_refunded_in_cash(), 2));
+        for op in refund_ops(&out) {
+            assert_eq!(op.params["refund_reference"], json!("refund-doc-0001"));
+            assert_ne!(op.params["refund_reference"], json!(""));
+        }
+    }
+
+    #[test]
+    fn a_refund_without_a_document_reference_is_refused_out_loud() {
+        let mut payload = card_sale_refunded_in_cash();
+        payload["refund_ref"] = json!("");
+        let out = record_refund_pure(refund_inp(payload, 2));
+        assert!(out.operations.is_empty(), "nothing is booked without a reference");
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.refund_ref_required")
+        );
+    }
+
+    #[test]
+    fn a_refund_with_no_open_session_is_refused_instead_of_vanishing() {
+        // 🔴 The silent-failure guard. The INSERT…SELECT resolves the OPEN session: with none, it
+        // produces no row and the cash would leave the drawer with nothing to show for it. The
+        // session comes from `context.reads`, never from the payload — a caller could otherwise
+        // claim a session that is not open.
+        let no_session = json!({
+            "payload": card_sale_refunded_in_cash(),
+            "context": {
+                "new_ids": ["id-0", "id-1"], "now": "2026-08-24T12:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        });
+        let out = record_refund_pure(no_session);
+        assert!(out.operations.is_empty(), "nothing is booked with the drawer closed");
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.refund_no_open_session")
+        );
+    }
+
+    #[test]
+    fn the_open_session_is_read_from_the_host_not_from_the_payload() {
+        // kitchen#54: declaring the read in the manifest does NOT prove the handler uses it. A
+        // payload that claims a session while the host says there is none must still be refused.
+        let mut payload = card_sale_refunded_in_cash();
+        payload["session_id"] = json!("sess-i-made-up");
+        payload["current_session"] = json!([{ "id": "sess-i-made-up" }]);
+        let forged = json!({
+            "payload": payload,
+            "context": {
+                "new_ids": ["id-0", "id-1"], "now": "2026-08-24T12:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        });
+        let out = record_refund_pure(forged);
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.refund_no_open_session"),
+            "the payload does not get a vote on whether the drawer is open"
+        );
+    }
+
+    #[test]
+    fn running_out_of_ids_refuses_instead_of_booking_half_a_refund() {
+        let payload = json!({
+            "sale_id": "s", "refund_ref": "r-1", "total": 4000,
+            "payments": [
+                { "payment_id": "a", "payment_method_type": "cash", "amount": 1500 },
+                { "payment_id": "b", "payment_method_type": "cash", "amount": 2500 }
+            ]
+        });
+        let out = record_refund_pure(refund_inp(payload, 1));
+        assert!(out.operations.is_empty(), "half a refund is worse than none: it looks square");
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.refund_not_enough_ids")
+        );
+    }
+
+    #[test]
+    fn a_refund_event_with_no_legs_books_nothing_rather_than_guessing_the_destination() {
+        // 🔴 No degrading to the scalar `total`, unlike the sale path. The datum that decides the
+        // drawer — where the money went BACK to — does not exist outside `payments[]`. Inventing
+        // it would type blind exactly the field this issue came to fix.
+        for payload in [
+            json!({ "sale_id": "s", "refund_ref": "r-2", "total": 5000 }),
+            json!({ "sale_id": "s", "refund_ref": "r-3", "total": 5000, "payments": [] }),
+        ] {
+            let out = record_refund_pure(refund_inp(payload, 2));
+            assert!(out.operations.is_empty());
+            assert!(out.error.is_none(), "not an error: a document that moved no money we know of");
+        }
+    }
+
+    #[test]
+    fn a_leg_that_moves_no_money_is_not_booked() {
+        // A zero or negative leg is not a refund — a negative one would be a CHARGE in disguise,
+        // and booking it would ADD money to the drawer through the refund door.
+        let payload = json!({
+            "sale_id": "s", "refund_ref": "r-4", "total": 1000,
+            "payments": [
+                { "payment_id": "a", "payment_method_type": "cash", "amount": 0 },
+                { "payment_id": "b", "payment_method_type": "cash", "amount": -5000 },
+                { "payment_id": "c", "payment_method_type": "cash", "amount": 1000 }
+            ]
+        });
+        let out = record_refund_pure(refund_inp(payload, 4));
+        let ops = refund_ops(&out);
+        assert_eq!(ops.len(), 1);
+        assert_eq!(ops[0].params["amount"], json!(1000));
+        assert_eq!(out_of_drawer(&out), 1000, "never more than what came back");
+    }
+
+    #[test]
+    fn the_amount_travels_positive_and_the_sql_is_what_negates_it() {
+        // cash_register#48: the sense of a movement is its TYPE, not the sign it arrives with.
+        // The handler passes the event's positive cents; `-ABS(...)` in the SQL is what makes it
+        // an outgoing amount, so an emitter cannot flip a refund into a deposit.
+        let out = record_refund_pure(refund_inp(card_sale_refunded_in_cash(), 2));
+        assert_eq!(refund_ops(&out)[0].params["amount"], json!(5000));
+    }
+
+    #[test]
+    fn a_refund_never_carries_a_gift_total() {
+        // `session_summary.sql` does `SUM(m.gift_total)` across the session. The invitations belong
+        // to the SALE and already rode in on its first leg (#59); repeating them here would count
+        // them twice. The SQL hard-codes 0 — this pins that the handler does not send one either.
+        let mut payload = card_sale_refunded_in_cash();
+        payload["gift_total"] = json!(800);
+        let out = record_refund_pure(refund_inp(payload, 2));
+        for op in refund_ops(&out) {
+            assert!(op.params.get("gift_total").is_none(), "the refund door fixes it at 0");
+        }
     }
 }
