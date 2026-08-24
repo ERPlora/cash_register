@@ -77,6 +77,7 @@
     "errMovementTypeUnknown": "That is not a kind of cash movement: use in, out, sale or refund.",
     "errAmountRequired": "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
     "errPaymentMethodUnknown": "That is not a way of paying the drawer knows: use cash, card, transfer or other.",
+    "errNotEnoughIds": "The sale could not be booked into the drawer: one of its payments was left without an entry. Nothing was recorded — take the sale again.",
     "errCloseSession": "Could not close the session",
     "errInvalidAmount": "Invalid amount",
     "errAddMovement": "Could not record the movement",

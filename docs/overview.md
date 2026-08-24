@@ -38,11 +38,20 @@ without anyone typing it in.
 
 | Event | Runs | Effect |
 |---|---|---|
-| `sale.completed` (from `sales`) | `cash_register.record_sale` | Records a `sale` movement in the open session for the sale total |
-| `sale.voided` (from `sales`) | `cash_register._reverse_sale` | If that sale had produced a **cash** movement, posts a compensating refund in the same session |
+| `sale.completed` (from `sales`) | `cash_register.record_sale` | Records **one `sale` movement per leg of the payment** in the open session — each with its own amount and its canonical type |
+| `sale.voided` (from `sales`) | `cash_register._reverse_sale` | If that sale had produced **cash** movements, posts one compensating refund for their sum, in the same session |
 
 Both are no-ops in the cases that should be no-ops: a sale with a total of zero or less records
 nothing, and voiding a card or transfer sale touches no cash.
+
+**One sale, N ways of paying** (ADR-0386). A sale charged with 50,00 € on a card and 71,00 € in
+cash books **two** movements, not one: only the 71,00 € is drawer money, and the count says so. The
+change goes out of the cash leg, so a leg records what it **covered**, never what was handed over.
+An event with no `payments[]` — a hub still running `sales` < 2.16.0, and every sale taken before
+it upgraded — is a one-tender sale and books exactly the single movement it always booked.
+
+`record_sale` is **internal**: only the runtime's event relay invokes it. Its payload decides how
+much money the drawer expects, and it is not a door a caller may knock on.
 
 ## Where its numbers come from
 
