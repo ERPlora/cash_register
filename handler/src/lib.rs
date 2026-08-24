@@ -430,6 +430,217 @@ mod tests {
         assert_eq!(out.operations.len(), 0);
     }
 
+    // ── cash_register#59 · ADR-0386: one movement per TENDER, not one per sale ────────────────
+    //
+    // The drawer's READS already survive N movements per sale (`session_summary.sql` sums the
+    // `cash` ones, `_reverse_sale.sql` reverses their SUM). What did not was the WRITE: a mixed
+    // sale landed as ONE movement for the whole total, typed after the principal leg.
+
+    /// Every operation this handler emitted against the drawer's insert door, in order.
+    fn movements(out: &Output) -> Vec<&Operation> {
+        out.operations
+            .iter()
+            .filter(|op| op.command == "cash_register._movement_for_open_session")
+            .collect()
+    }
+
+    /// The cents this output puts into the physical drawer: the `cash` legs, and only those.
+    fn into_drawer(out: &Output) -> i64 {
+        movements(out)
+            .iter()
+            .filter(|op| op.params["payment_method_type"] == json!("cash"))
+            .map(|op| op.params["amount"].as_i64().unwrap_or(0))
+            .sum()
+    }
+
+    /// The event `sales` v2.16.1 emits for the issue's sale: 121,00 € charged as 50,00 € on a card
+    /// and 71,00 € in cash, of which 90,00 € was handed over (19,00 € of change). The scalars are
+    /// the PRINCIPAL leg — the cash one, because 71 > 50 — exactly as `decide_checkout` derives
+    /// them, which is what made the descuadre silent.
+    fn mixed_sale_event() -> Value {
+        json!({
+            "sale_id": "sale-mixed",
+            "total": 12100,
+            "payment_method_id": "pm-cash",
+            "payment_method_name": "Efectivo",
+            "payment_method_type": "cash",
+            "payments": [
+                { "payment_method_id": "pm-card", "payment_method_name": "Tarjeta",
+                  "payment_method_type": "card", "amount": 5000, "amount_tendered": 5000,
+                  "change_due": 0, "sort_order": 0, "reference": "" },
+                { "payment_method_id": "pm-cash", "payment_method_name": "Efectivo",
+                  "payment_method_type": "cash", "amount": 7100, "amount_tendered": 9000,
+                  "change_due": 1900, "sort_order": 1, "reference": "" }
+            ]
+        })
+    }
+
+    #[test]
+    fn a_mixed_sale_puts_only_its_cash_leg_in_the_drawer() {
+        // 🔴 THE issue (cash_register#59). Before the fix this was ONE movement of 121,00 € typed
+        // `cash`: the drawer expected 121,00 € when 71,00 € had entered it, and the cashier
+        // counted 50,00 € short every single mixed sale — silently, because nothing anywhere says
+        // the number is wrong.
+        let out = record_sale_pure(inp(mixed_sale_event(), 4));
+        assert_eq!(into_drawer(&out), 7100, "only the cash leg is drawer money");
+    }
+
+    #[test]
+    fn a_mixed_sale_books_one_movement_per_leg_with_its_own_type() {
+        let out = record_sale_pure(inp(mixed_sale_event(), 4));
+        let ops = movements(&out);
+        assert_eq!(ops.len(), 2, "one movement per leg of the payment");
+
+        assert_eq!(ops[0].params["payment_method_type"], json!("card"));
+        assert_eq!(ops[0].params["payment_method"], json!("Tarjeta"));
+        assert_eq!(ops[0].params["amount"], json!(5000));
+        assert_eq!(ops[0].params["movement_type"], json!("sale"));
+        assert_eq!(ops[0].params["sale_reference"], json!("sale-mixed"));
+
+        assert_eq!(ops[1].params["payment_method_type"], json!("cash"));
+        assert_eq!(ops[1].params["payment_method"], json!("Efectivo"));
+        // The CHANGE came out of the drawer (ADR-0386 decision 2), so what stayed in it is the
+        // 71,00 € the leg covered — never the 90,00 € handed over.
+        assert_eq!(ops[1].params["amount"], json!(7100));
+
+        // And the legs still add up to the sale, to the cent: nothing is dropped or double booked.
+        let booked: i64 = ops.iter().map(|op| op.params["amount"].as_i64().unwrap()).sum();
+        assert_eq!(booked, 12100);
+    }
+
+    #[test]
+    fn every_movement_of_a_mixed_sale_gets_its_own_id() {
+        let out = record_sale_pure(inp(mixed_sale_event(), 4));
+        let ids: Vec<&Value> = movements(&out).iter().map(|op| &op.params["movement_id"]).collect();
+        assert_eq!(ids, vec![&json!("id-0"), &json!("id-1")]);
+    }
+
+    #[test]
+    fn running_out_of_ids_is_refused_out_loud() {
+        // A movement inserted with a NULL primary key is either a crash or, worse, a row nobody
+        // can reverse. The host hands 256 ids, so this is unreachable in practice — which is
+        // exactly why it has to fail loudly instead of degrading into a half-booked sale.
+        let out = record_sale_pure(inp(mixed_sale_event(), 1));
+        assert!(out.operations.is_empty(), "nothing is booked when the ids run short");
+        let err = out.error.expect("a domain error, not a silent half-sale");
+        assert_eq!(err.code, "cash_register.not_enough_ids");
+    }
+
+    #[test]
+    fn the_gift_total_of_a_mixed_sale_is_booked_once() {
+        // `session_summary.sql` does `SUM(m.gift_total)`: repeating it on every leg would multiply
+        // the invitations by the number of ways the sale was paid.
+        let mut payload = mixed_sale_event();
+        payload["gift_total"] = json!(800);
+        let out = record_sale_pure(inp(payload, 4));
+        let gifts: Vec<i64> = movements(&out)
+            .iter()
+            .map(|op| op.params["gift_total"].as_i64().unwrap_or(0))
+            .collect();
+        assert_eq!(gifts.iter().sum::<i64>(), 800);
+        assert_eq!(gifts, vec![800, 0], "the invitations ride on the first leg only");
+    }
+
+    #[test]
+    fn a_one_tender_sale_still_books_exactly_one_movement() {
+        // `sales` v2.16.1 always sends `payments[]`, a single-tender sale included. That sale must
+        // land exactly as it did before this change.
+        let payload = json!({
+            "sale_id": "s-card", "total": 5000,
+            "payment_method_name": "Tarjeta", "payment_method_type": "card",
+            "payments": [
+                { "payment_method_id": "pm-card", "payment_method_name": "Tarjeta",
+                  "payment_method_type": "card", "amount": 5000, "amount_tendered": 5000,
+                  "change_due": 0, "sort_order": 0, "reference": "" }
+            ]
+        });
+        let out = record_sale_pure(inp(payload, 2));
+        let ops = movements(&out);
+        assert_eq!(ops.len(), 1);
+        assert_eq!(ops[0].params["amount"], json!(5000));
+        assert_eq!(ops[0].params["payment_method_type"], json!("card"));
+        assert_eq!(into_drawer(&out), 0, "a card sale never reaches the drawer");
+    }
+
+    #[test]
+    fn an_event_without_payments_keeps_todays_behaviour_exactly() {
+        // 🔴 BACK-COMPAT, and it is not hypothetical: a hub running `sales` < 2.16.0 emits no
+        // `payments[]` at all, and so does every sale recorded before it upgraded. That event is a
+        // one-tender sale and has to keep booking ONE movement from the scalars.
+        let payload = json!({
+            "sale_id": "s-old", "total": 4550,
+            "payment_method_name": "Efectivo", "payment_method_type": "cash",
+        });
+        let out = record_sale_pure(inp(payload, 2));
+        let ops = movements(&out);
+        assert_eq!(ops.len(), 1);
+        assert_eq!(ops[0].params["amount"], json!(4550));
+        assert_eq!(ops[0].params["payment_method"], json!("Efectivo"));
+        assert_eq!(ops[0].params["payment_method_type"], json!("cash"));
+        assert_eq!(ops[0].params["movement_id"], json!("id-0"));
+        assert_eq!(into_drawer(&out), 4550);
+    }
+
+    #[test]
+    fn an_empty_payments_list_falls_back_to_the_scalars() {
+        // Defence in depth: `sales` never emits an empty list, but an emitter that did must not
+        // make the sale vanish from the drawer.
+        let payload = json!({
+            "sale_id": "s-empty", "total": 4550, "payment_method_type": "cash",
+            "payment_method_name": "Efectivo", "payments": []
+        });
+        let out = record_sale_pure(inp(payload, 2));
+        assert_eq!(movements(&out).len(), 1);
+        assert_eq!(into_drawer(&out), 4550);
+    }
+
+    #[test]
+    fn a_leg_without_a_type_is_drawer_money_like_the_scalars_are() {
+        // Same degradation as the scalar path (hub#778): unknown type → `cash`. Guessing anything
+        // else would quietly take money OUT of the expected count.
+        let payload = json!({
+            "sale_id": "s-untyped", "total": 3000,
+            "payments": [ { "amount": 3000 } ]
+        });
+        let out = record_sale_pure(inp(payload, 2));
+        let ops = movements(&out);
+        assert_eq!(ops[0].params["payment_method_type"], json!("cash"));
+        assert_eq!(ops[0].params["payment_method"], json!("cash"));
+        assert_eq!(into_drawer(&out), 3000);
+    }
+
+    #[test]
+    fn an_all_gift_sale_still_books_its_invitations() {
+        // Total 0 with invitations: `sales` sends one leg of 0. The movement still has to exist —
+        // the count reports the comps even though no money moved.
+        let payload = json!({
+            "sale_id": "s-gift", "total": 0, "gift_total": 1200,
+            "payments": [ { "payment_method_type": "cash", "amount": 0 } ]
+        });
+        let out = record_sale_pure(inp(payload, 2));
+        let ops = movements(&out);
+        assert_eq!(ops.len(), 1);
+        assert_eq!(ops[0].params["amount"], json!(0));
+        assert_eq!(ops[0].params["gift_total"], json!(1200));
+    }
+
+    #[test]
+    fn three_tenders_book_three_movements() {
+        // ADR-0386 puts no ceiling on the legs, and neither does the drawer.
+        let payload = json!({
+            "sale_id": "s3", "total": 12100,
+            "payments": [
+                { "payment_method_type": "card", "payment_method_name": "Tarjeta", "amount": 5000 },
+                { "payment_method_type": "cash", "payment_method_name": "Efectivo", "amount": 5000,
+                  "amount_tendered": 5000, "change_due": 0 },
+                { "payment_method_type": "transfer", "payment_method_name": "Bizum", "amount": 2100 }
+            ]
+        });
+        let out = record_sale_pure(inp(payload, 4));
+        assert_eq!(movements(&out).len(), 3);
+        assert_eq!(into_drawer(&out), 5000);
+    }
+
     // ── cash_register#38: the drawer settings are enforced on the SERVER ─────────────────────
     // `require_opening_balance` / `require_closing_balance` / `allow_negative_balance` used to be
     // looked at by the UI only. Each rule gets its own domain code (one `expect_rows` gate per SQL
