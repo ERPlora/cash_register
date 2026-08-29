@@ -12,9 +12,14 @@ own slice); what `cash_register` owes the chain — and what this battery pins �
   2. A card sale is a no-op for the DRAWER, voided or not — but not for the ledger: `record_sale`
      logs a `sale` movement for every payment leg regardless of tender (verified against the real
      runtime; the original hub e2e's hand-seeded precondition skipped this leg for card and so
-     never saw it). What actually keeps a card sale off the physical float is `_reverse_sale.sql`
-     and `queries/session_summary.sql` both filtering to `payment_method_type = 'cash'`: voiding a
-     card sale posts no `refund`, and the arqueo never counted it either way.
+     never saw it). What actually keeps a card sale off the physical float is the
+     `payment_method_type = 'cash'` filter in `_reverse_sale.sql` AND in all three readings of the
+     drawer — `queries/current_session.sql` (the live KPI the old e2e read as `expected_cash()`),
+     `queries/session_summary.sql` (`expected_cash`, what `movement.add` checks
+     `allow_negative_balance` against) and `commands/close_session.sql` (`expected_balance`):
+     voiding a card sale posts no `refund`, and none of the three ever counted it. Each case below
+     asserts the movement EXISTS and that all three figures EXCLUDE it — asserting only the closing
+     figure left the live KPI unguarded (found with a mutant during the hub#1264 review).
 
 Two things this battery deliberately does NOT attempt, and why:
 
@@ -47,6 +52,7 @@ from hub_harness import (
     cash_method_id,
     cents,
     key,
+    live_expected_cash,
     open_session,
     wait_for_movements,
 )
@@ -72,10 +78,9 @@ def charge(hub: Hub, payment_method_id: str, tag: str, total: int) -> str:
     return out["new_ids"][0]
 
 
-def arqueo(hub: Hub, session_id: str) -> int:
-    """Closes the session and returns `expected_balance` — the same reconciliation
-    `session.close`/`session.summary` compute, and the metric the original bug named ("el arqueo
-    queda inflado por cada anulación")."""
+def closing_expected_balance(hub: Hub, session_id: str) -> int:
+    """Closes the session and returns the `expected_balance` the close froze — the reconciliation
+    (the "arqueo") the original bug named: "el arqueo queda inflado por cada anulación"."""
     hub.run(
         "cash_register.session.close",
         {"session_id": session_id, "closing_balance": 0, "closing_notes": ""},
@@ -97,6 +102,11 @@ def test_1_cash_sale_void_reverts_cash(hub: Hub) -> None:
 
     sale_movs = wait_for_movements(hub, sid, sale_id, "sale")
     hub.check("the sale posted its cash movement first", len(sale_movs), 1)
+    hub.check(
+        "live (current_session.expected_total, summary.expected_cash) after the cash sale",
+        live_expected_cash(hub, sid),
+        (opening + total, opening + total),
+    )
 
     hub.run("sales.void", {"sale_id": sale_id, "reason": "hub#1264 battery"})
 
@@ -119,8 +129,14 @@ def test_1_cash_sale_void_reverts_cash(hub: Hub) -> None:
         str(types),
     )
 
-    # sale(+3000) + refund(-3000) = 0 → the arqueo goes back to the opening net.
-    hub.check("arqueo returns to the opening net", arqueo(hub, sid), opening)
+    # sale(+3000) + refund(-3000) = 0 → every reading of the drawer is back at the opening net:
+    # the two live ones while the session is still open, then the one the close freezes.
+    hub.check(
+        "live (current_session.expected_total, summary.expected_cash) after the void",
+        live_expected_cash(hub, sid),
+        (opening, opening),
+    )
+    hub.check("arqueo returns to the opening net", closing_expected_balance(hub, sid), opening)
 
 
 def test_2_card_sale_void_is_a_cash_no_op(hub: Hub) -> None:
@@ -132,13 +148,18 @@ def test_2_card_sale_void_is_a_cash_no_op(hub: Hub) -> None:
     total = 3000
     sale_id = charge(hub, card_method_id(hub), "void-card", total)
 
-    # `record_sale` logs a `sale` movement for EVERY payment leg, cash or not (cash_register#…,
+    # `record_sale` logs a `sale` movement for EVERY payment leg, cash or not (cash_register#59,
     # `handler/src/lib.rs::record_sale_a_card_sale_carries_its_type`) — it is bookkeeping ("total
     # sales", regardless of tender), not a drawer entry. What makes a card sale a no-op for the
-    # PHYSICAL drawer is `expected_cash`/arqueo filtering to `payment_method_type = 'cash'`
-    # (`queries/session_summary.sql`), checked below both before and after the void.
+    # PHYSICAL drawer is every reading of the drawer filtering to `payment_method_type = 'cash'`:
+    # the live KPI, the summary and the close — checked below both before and after the void.
     sale_movs = wait_for_movements(hub, sid, sale_id, "sale")
     hub.check("the card leg is still logged as a `sale` movement", len(sale_movs), 1)
+    hub.check(
+        "live (current_session.expected_total, summary.expected_cash) ignore the card leg",
+        live_expected_cash(hub, sid),
+        (opening, opening),
+    )
 
     hub.run("sales.void", {"sale_id": sale_id, "reason": "hub#1264 battery"})
 
@@ -155,10 +176,15 @@ def test_2_card_sale_void_is_a_cash_no_op(hub: Hub) -> None:
         "`_reverse_sale` skips it: no refund for a non-cash sale leg", len(refunds), 0
     )
     # opening(5000) + zero cash-typed movements (the card leg does not count) = 5000, unaffected by
-    # either the sale or its void.
+    # either the sale or its void — live while open, and frozen by the close.
+    hub.check(
+        "live (current_session.expected_total, summary.expected_cash) after the card void",
+        live_expected_cash(hub, sid),
+        (opening, opening),
+    )
     hub.check(
         "the drawer never counted the card sale, void included",
-        arqueo(hub, sid),
+        closing_expected_balance(hub, sid),
         opening,
     )
 

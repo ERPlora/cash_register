@@ -6,7 +6,7 @@ That e2e proved the module's own lifecycle: a session opens with a float, moveme
 close reconciles what was COUNTED against what was EXPECTED, the WASM handler sums a denomination
 count, and a sale charged through `sales` lands as a cash movement in the open session — twice
 over, once through the plain movement write and once through the event it announces. This battery
-pins the same five behaviours (cash_register#… — no separate issue, ported as-is):
+pins the same five behaviours (no separate issue: ported as-is from the hub e2e):
 
   1. Opening float + movements (`sale`, `out`) + close: `expected_balance` is the running total,
      `difference` is what was counted against it.
@@ -183,17 +183,24 @@ def test_5_sale_completed_records_cash_movement(hub_sales: Hub) -> str:
     return sale_id
 
 
-def test_6_record_sale_emits_movement_added_after_relay(hub_sales: Hub) -> None:
+def test_6_record_sale_emits_movement_added_after_relay(hub_sales: Hub, sale_id: str) -> None:
     print(
         "\n6 · record_sale (the relay path) also emits `cash_register.movement_added`"
     )
     # §5 already drove one sale through the relay in THIS run; the event it left behind is what we
-    # read here — no need to charge a second one, `event_shape` samples the newest of its kind.
-    shape = hub_sales.event_shape("cash_register.movement_added")
-    hub_sales.check_true(
-        "cash_register.movement_added has been emitted by the relay path too",
-        shape is not None and shape.get("samples", 0) >= 1,
-        str(shape),
+    # read here — no need to charge a second one, `event_shape` samples the NEWEST of its kind.
+    #
+    # Newest is the whole point: §1/§2/§4 already emitted `movement_added` through `movement.add`,
+    # so "at least one sample exists" would stay green with `record_sale` emitting nothing at all
+    # (proved with a mutant during the hub#1264 review). What tells the two producers apart is the
+    # payload: the relay emits over the `sale.completed` payload, so its event carries `sale_id`
+    # (the one §5 charged); a `movement.add` emission carries `session_id`/`sale_reference` and no
+    # `sale_id`. Pinning the newest event to §5's sale is what makes this the relay path.
+    field = hub_sales.event_field("cash_register.movement_added", "sale_id")
+    hub_sales.check(
+        "the newest cash_register.movement_added is the relay's, carrying §5's sale_id",
+        (field or {}).get("sample"),
+        sale_id,
     )
 
 
@@ -208,8 +215,8 @@ def main() -> int:
     test_4_movement_add_emits_movement_added(hub)
 
     hub_sales = Hub("session.hub (relay)", needs=("taxes", "sales", "cash_register"))
-    test_5_sale_completed_records_cash_movement(hub_sales)
-    test_6_record_sale_emits_movement_added_after_relay(hub_sales)
+    sale_id = test_5_sale_completed_records_cash_movement(hub_sales)
+    test_6_record_sale_emits_movement_added_after_relay(hub_sales, sale_id)
     hub.failures += hub_sales.failures
 
     return hub.finish(

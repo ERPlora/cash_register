@@ -284,12 +284,36 @@ def close_session(hub: Hub, session_id: str) -> None:
     """Closes a session so the next test can open a new one — the business rule is exactly ONE
     open session at a time (`cash_register.session_already_open`), and this hub is shared for the
     length of a battery run. The counted amount is irrelevant to callers that just need the
-    session out of the way; use `arqueo()`-style helpers instead when the reconciliation itself is
+    session out of the way; use `closing_expected_balance()`-style helpers when the reconciliation itself is
     the assertion."""
     hub.run(
         "cash_register.session.close",
         {"session_id": session_id, "closing_balance": 0, "closing_notes": ""},
     )
+
+
+def live_expected_cash(hub: Hub, session_id: str) -> tuple[int, int]:
+    """The two figures the drawer shows WHILE the session is open — `(current_session.expected_total,
+    session.summary.expected_cash)` — as opposed to the `expected_balance` that `session.close`
+    freezes. They are three copies of the same rule (`opening + Σ cash movements signed by kind`)
+    in three files (`queries/current_session.sql`, `queries/session_summary.sql`,
+    `commands/close_session.sql`), and only the closing one is exercised by a close: a battery that
+    reads just `expected_balance` stays green when the live KPI starts counting card legs as cash
+    (proved with a mutant during the hub#1264 review). `summary.expected_cash` is also what the
+    `movement.add` handler reads to enforce `allow_negative_balance` (cash_register#38).
+
+    `current_session` only ever shows the OPEN session (the newest), which must be `session_id` —
+    the battery owns the single open session, so anything else is a test-design error, not a
+    tolerance."""
+    current = hub.query("cash_register.current_session")
+    if len(current) != 1 or current[0].get("id") != session_id:
+        raise AssertionError(
+            f"current_session should be the open session {session_id}, got {current}"
+        )
+    summary = hub.query("cash_register.session.summary", {"session_id": session_id})
+    if len(summary) != 1:
+        raise AssertionError(f"session.summary of {session_id} answered {summary}")
+    return cents(current[0].get("expected_total")), cents(summary[0].get("expected_cash"))
 
 
 def wait_for_movements(
