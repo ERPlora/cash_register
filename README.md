@@ -50,8 +50,10 @@ docs/                         # documentación de usuario + corpus del asistente
 
 ## Estado y trabajo abierto
 
-El estado vive en las **Issues de este repo**, no aquí. Conocido y documentado en `docs/limits.md`:
-`current_session.expected_total` invierte el signo de `refund`/`out` (el KPI en vivo descuadra; el
-cierre NO).
+El estado vive en las **Issues de este repo**, no aquí. Los límites conocidos están en
+`docs/limits.md`. (El que decía que `current_session.expected_total` invertía el signo de
+`refund`/`out` **ya no aplica**: lo arregló cash_register#48, y desde cash_register#65 la rejilla
+calcula el esperado con esa misma fórmula — las tres lecturas se comprueban entre sí en
+`tests/open_session_expected.postgres.test.py`.)
 
 Doc de arquitectura: `architecture/modules/cash_register.md` (cargarlo antes de tocar el módulo).

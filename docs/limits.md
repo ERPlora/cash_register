@@ -20,11 +20,13 @@ movements written **before** the fix still say `cash`, and there is deliberately
 ⚠️ **What to do:** if a session was open across the update, close it and read the difference knowing
 its card sales are still counted as cash. From the next session on, the figure is right.
 
-**The live "expected cash" widget counts refunds and cash-outs with the wrong sign.** The current
-session KPI flips the sign of negative movements, so a session with refunds or cash-outs shows a
-higher expected figure than it should. **The closing reconciliation is correct** — it is only the
-live widget that misreports. When the numbers matter, close the session and read expected, counted
-and difference from there.
+**The live expected cash is trustworthy (it was not always).** It used to be a known limitation: the
+current-session KPI flipped the sign of refunds and cash-outs, so a shift with either showed more
+than the drawer held, and the advice was to close the session and read the numbers from there. That
+was fixed in cash_register#48 — the sign now comes from the movement's KIND on the server, not from
+how the amount happens to be stored — and since cash_register#65 the sessions table computes the
+same figure the same way. The grid, the *Caja (sesión actual)* widget and the close all run one
+formula, and a battery fails if they ever disagree (`tests/open_session_expected.postgres.test.py`).
 
 ## Caps and sizes
 
@@ -91,8 +93,13 @@ two, they are for different sales — check the sale reference on each.
 **"I cannot record a movement."** There must be an **open** session for you. A closed session accepts
 nothing.
 
-**"The expected cash on the dashboard does not match the closing screen."** Trust the closing screen.
-See the known limitation at the top of this page.
+**"The expected cash on the dashboard does not match the closing screen."** They cannot differ any
+more: the table, the widget and the close compute it the same way (cash_register#48/#65). If you do
+see a gap, it is a real bug — report it with both numbers and the session number.
+
+**"The expected column of an open session is empty."** **Arqueo ciego** is on: the expected is hidden
+until the count is declared, on purpose. A supervisor with `cash_register.view_expected_totals` sees
+it in the *Caja (sesión actual)* widget.
 
 **"I closed the session by mistake."** There is no reopen. Open a new session with the counted cash
 as its float and carry on; the two sessions together tell the true story.

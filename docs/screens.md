@@ -14,6 +14,16 @@ closed.
   balance, expected balance or difference.
 - **Filter** by session number, status, register, or a range on any of the amounts and times.
 
+**Expected** is live while the session is open: opening float plus every cash movement so far, the
+same figure the KPI widget and the close use. You do not have to close the drawer to know what it
+should hold — that is when the number is worth something (Square shows it on the open drawer, Toast
+in Shift Review, Lightspeed in Cash management). **Counted** and **difference** stay "—" until the
+count is declared: they are what somebody actually counted, and nothing invents them beforehand.
+With **Arqueo ciego** on, the expected of the open session is blank for everybody in this table —
+that is what makes the count blind; supervisors with `cash_register.view_expected_totals` read it
+from the *Caja (sesión actual)* widget. Once closed, the column shows the figure the close froze,
+never a recomputation: it is the number the stored difference was computed against.
+
 Every action below is a row action on an **open** session; a closed session is read-only.
 
 ### Open the till at the start of a shift
@@ -47,10 +57,19 @@ The total that gets stored is recomputed from the denominations by the server, n
 screen. A count is either an **opening** count or a **closing** count. Requires
 `cash_register.add_count`.
 
+A **closing** count leads straight to the close, with its total already in **Efectivo contado** —
+counting the drawer is the step before closing it, not a note filed on its own. It does not close
+anything by itself: the close is still `cash_register.session.close`, it still needs
+`cash_register.close_session`, and you still confirm it. An **opening** count does not: that one is
+the start-of-shift check of the float.
+
 ### Close the till at the end of a shift
 
 1. Choose **Cerrar** (close).
-2. Enter the cash you counted. The hub can be configured to demand it.
+2. Enter the cash you counted — **already filled in** if this session has a closing count, so nobody
+   counts the same drawer twice (that second pass is where differences are invented). Without such a
+   count the field starts empty; it never inherits an opening count, nor an amount typed for another
+   session. The hub can be configured to demand it.
 3. Confirm.
 
 The screen then shows the three numbers that matter: **expected**, **counted** and **difference**.
