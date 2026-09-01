@@ -7,34 +7,40 @@
   "properties": {
     "enable_cash_register": {
       "type": "boolean",
-      "title": "Activar caja",
-      "description": "Habilita la gestión de caja (apertura/cierre de sesión)."
+      "title": "Enable the cash drawer",
+      "description": "Turns on cash drawer management (opening and closing a session).",
+      "default": true
     },
     "require_opening_balance": {
       "type": "boolean",
-      "title": "Exigir saldo de apertura"
+      "title": "Require an opening float",
+      "default": false
     },
     "require_closing_balance": {
       "type": "boolean",
-      "title": "Exigir saldo de cierre"
+      "title": "Require a closing count",
+      "default": true
     },
     "allow_negative_balance": {
       "type": "boolean",
-      "title": "Permitir saldo negativo"
+      "title": "Allow a negative balance",
+      "default": false
     },
     "require_blind_count": {
       "type": "boolean",
-      "title": "Arqueo ciego",
-      "description": "Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento. Los supervisores (permiso «ver totales esperados») siguen viéndolo."
+      "title": "Blind count",
+      "description": "Whoever counts the drawer does not see the expected cash until they declare the count. Supervisors (with the «see expected totals» permission) still see it.",
+      "default": false
     },
     "auto_close_enabled": {
       "type": "boolean",
-      "title": "Cierre automático diario",
-      "description": "Si nadie ha cerrado la caja, el hub la cierra solo a la hora indicada (hora local del negocio) con el efectivo esperado calculado y sin recuento; el cierre queda atribuido al sistema y marcado en las notas."
+      "title": "Daily automatic close",
+      "description": "If nobody has closed the drawer, the hub closes it on its own at the time below (the business's local time) with the calculated expected cash and no count; the close is attributed to the system and flagged in the notes.",
+      "default": false
     },
     "auto_close_time": {
       "type": "string",
-      "title": "Hora del cierre automático",
+      "title": "Automatic close time",
       "enum": [
         "00:00",
         "01:00",
@@ -61,13 +67,15 @@
         "22:00",
         "23:00"
       ],
-      "description": "Hora local a la que se cierran las sesiones que sigan abiertas (Toast cierra a las 04:00 por defecto)."
+      "description": "Local time at which any session still open is closed (Toast closes at 04:00 by default).",
+      "default": "04:00"
     },
     "protected_pos_url": {
       "type": "string",
+      "title": "Protected POS route",
       "maxLength": 255,
-      "title": "URL del POS protegido",
-      "description": "Ruta del POS que exige tener la caja abierta."
+      "description": "Route of the POS that requires the drawer to be open.",
+      "default": "/m/sales/pos/"
     }
   },
   "required": [

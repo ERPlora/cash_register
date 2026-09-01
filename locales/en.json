@@ -8,6 +8,40 @@
       "label": "Settings"
     }
   },
+  "settings": {
+    "title": "Cash drawer",
+    "fields": {
+      "enable_cash_register": {
+        "label": "Enable the cash drawer",
+        "description": "Turns on cash drawer management (opening and closing a session)."
+      },
+      "require_opening_balance": {
+        "label": "Require an opening float"
+      },
+      "require_closing_balance": {
+        "label": "Require a closing count"
+      },
+      "allow_negative_balance": {
+        "label": "Allow a negative balance"
+      },
+      "require_blind_count": {
+        "label": "Blind count",
+        "description": "Whoever counts the drawer does not see the expected cash until they declare the count. Supervisors (with the «see expected totals» permission) still see it."
+      },
+      "auto_close_enabled": {
+        "label": "Daily automatic close",
+        "description": "If nobody has closed the drawer, the hub closes it on its own at the time below (the business's local time) with the calculated expected cash and no count; the close is attributed to the system and flagged in the notes."
+      },
+      "auto_close_time": {
+        "label": "Automatic close time",
+        "description": "Local time at which any session still open is closed (Toast closes at 04:00 by default)."
+      },
+      "protected_pos_url": {
+        "label": "Protected POS route",
+        "description": "Route of the POS that requires the drawer to be open."
+      }
+    }
+  },
   "setup": {
     "title": "Your cash drawer",
     "description": "Decide how the till opens and closes: the opening float, the closing count and the POS screen that stays locked until the drawer is open."
