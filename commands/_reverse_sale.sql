@@ -1,4 +1,4 @@
--- Reversión de caja al ANULAR una venta (listener de `sale.voided`, ADR-0073).
+-- Reversión de caja al ANULAR una venta (listener de `sale.voided`, ADR-0075).
 -- Si la venta anulada dejó dinero VIVO en el cajón, postea un movimiento COMPENSATORIO `refund`
 -- por ese importe negado, en la MISMA sesión que tuvo el movimiento original. NO muta el
 -- movimiento original (rastro de auditoría intacto): añade la reversión.
