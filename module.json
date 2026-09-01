@@ -83,7 +83,7 @@
     }
   ],
   "settings": {
-    "title": "Caja",
+    "title": "Cash drawer",
     "icon": "cash-outline",
     "schema": "schemas/settings_update.json",
     "get": "cash_register.settings.get",

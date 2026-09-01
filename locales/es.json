@@ -9,6 +9,40 @@
       "label": "Ajustes"
     }
   },
+  "settings": {
+    "title": "Caja",
+    "fields": {
+      "enable_cash_register": {
+        "label": "Activar caja",
+        "description": "Habilita la gestión de caja (apertura/cierre de sesión)."
+      },
+      "require_opening_balance": {
+        "label": "Exigir saldo de apertura"
+      },
+      "require_closing_balance": {
+        "label": "Exigir saldo de cierre"
+      },
+      "allow_negative_balance": {
+        "label": "Permitir saldo negativo"
+      },
+      "require_blind_count": {
+        "label": "Arqueo ciego",
+        "description": "Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento. Los supervisores (permiso «ver totales esperados») siguen viéndolo."
+      },
+      "auto_close_enabled": {
+        "label": "Cierre automático diario",
+        "description": "Si nadie ha cerrado la caja, el hub la cierra solo a la hora indicada (hora local del negocio) con el efectivo esperado calculado y sin recuento; el cierre queda atribuido al sistema y marcado en las notas."
+      },
+      "auto_close_time": {
+        "label": "Hora del cierre automático",
+        "description": "Hora local a la que se cierran las sesiones que sigan abiertas (Toast cierra a las 04:00 por defecto)."
+      },
+      "protected_pos_url": {
+        "label": "URL del POS protegido",
+        "description": "Ruta del POS que exige tener la caja abierta."
+      }
+    }
+  },
   "setup": {
     "title": "Tu caja",
     "description": "Decide cómo se abre y se cierra la caja: el fondo inicial, el arqueo de cierre y la pantalla del TPV que queda bloqueada hasta abrirla."
