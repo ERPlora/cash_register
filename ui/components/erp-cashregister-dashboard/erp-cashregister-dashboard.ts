@@ -5,7 +5,7 @@ import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
-import { createListController, majorToMinor } from '@erplora/module-sdk';
+import { createListController, majorToMinor, minorToMajor } from '@erplora/module-sdk';
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
@@ -29,6 +29,16 @@ function toMinorUnits(v: string | number): number {
   // silent corruption in an INTEGER column. Same fallback the SDK client uses: 2.
   const decimals = erplora().currencyDecimals;
   return majorToMinor(String(v ?? '').replace(',', '.'), typeof decimals === 'number' ? decimals : 2);
+}
+
+/** MINOR units → the string the money `ion-input` takes back (cash_register#65). The inverse of
+ *  `toMinorUnits`, and it has to round-trip through it exactly: 25130 → «251.30» → 25130. A plain
+ *  dot on purpose — `toMinorUnits` accepts both separators, and building a locale-formatted string
+ *  here (thousands separator, currency symbol) would come back as `NaN` and close the till on 0. */
+function fromMinorUnits(minor: number): string {
+  const decimals = erplora().currencyDecimals;
+  const scale = typeof decimals === 'number' ? decimals : 2;
+  return minorToMajor(minor, scale).toFixed(scale);
 }
 
 interface ErploraClientLike extends ListClient {
@@ -58,6 +68,9 @@ interface Session {
 }
 
 interface Register { id: string; name: string; is_active: number }
+
+/** A till count of a session (`cash_register.counts.list`). `total` is MINOR units (ADR-0007/0400). */
+interface Count { id: string; count_type: string; total: number; counted_at: string }
 
 /** Denominaciones EUR para el arqueo (billetes y monedas). */
 const BILLS = ['500', '200', '100', '50', '20', '10', '5'];
@@ -261,6 +274,46 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.panel = panel;
     this.formError = '';
     this.formMsg = '';
+    // The close starts from the drawer that was already counted (cash_register#65). It also starts
+    // CLEAN: whatever was typed for another session (or abandoned with Cancel) must never carry
+    // over into this one — a leftover amount is a fake difference somebody has to answer for.
+    if (panel === 'close') {
+      this.closeBalance = '';
+      void this.prefillCountedCash(session.id);
+    }
+  }
+
+  /** «Efectivo contado» ← the session's last CLOSING count (cash_register#65).
+   *
+   *  Counting the same drawer twice is the cheapest way to book a difference nobody made: the
+   *  second pass only has to disagree by one coin. Square, Toast and Lightspeed all carry the
+   *  closing count into the close for exactly that reason.
+   *
+   *  Only a `closing` count seeds it. An `opening` one is the start-of-shift float check; pushing
+   *  a figure from eight hours ago into the close — silently, prefilled, looking authoritative —
+   *  is worse than an empty field. No count → the field stays empty and the person counts. */
+  private async prefillCountedCash(sessionId: string): Promise<void> {
+    try {
+      const page = await erplora().queryPage<Count>('cash_register.counts.list', {
+        limit: 50,
+        offset: 0,
+        sort: 'counted_at',
+        dir: 'desc',
+        // `:session_id` is a CONTEXT param of the base SQL, not a filter: it travels verbatim.
+        params: { session_id: sessionId },
+      });
+      const rows = Array.isArray(page?.rows) ? page.rows : [];
+      const last = rows.find((c) => c?.count_type === 'closing');
+      // The panel may have moved on (another row, Cancel) while this was in flight — never write
+      // one session's count into another session's close.
+      if (last && this.panel === 'close' && this.target?.id === sessionId) {
+        this.closeBalance = fromMinorUnits(Number(last.total));
+      }
+    } catch (e) {
+      // Not fatal: the close still works by typing the amount. But a mute catch is how a screen
+      // silently stops helping, so it says so instead of leaving an unexplained empty field.
+      this.formError = domainMessage(e, 'ui.errLoadDetail');
+    }
   }
 
   private onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
@@ -406,12 +459,14 @@ export class ErpCashRegisterDashboard extends LitElement {
   private async addCount(ev: Event) {
     ev.preventDefault();
     if (!this.target) return;
+    const session = this.target;
+    const wasClosingCount = this.countType === 'closing';
     this.saving = true;
     this.formError = '';
     this.formMsg = '';
     try {
       await erplora().command('cash_register.count.add', {
-        session_id: this.target.id,
+        session_id: session.id,
         count_type: this.countType,
         denominations: this.denominationsPayload(),
         notes: this.countNotes.trim(),
@@ -420,6 +475,14 @@ export class ErpCashRegisterDashboard extends LitElement {
       this.denomCounts = {};
       this.countNotes = '';
       this.resetPanel();
+      // A count typed as «Cierre» has to lead somewhere (cash_register#65): it used to be filed and
+      // forgotten — the session stayed open, the grid kept showing dashes and the close asked for
+      // the same drawer all over again. Square, Toast and Lightspeed make the closing count the
+      // step BEFORE the close and carry its total into it; so does this. It does not close by
+      // itself: closing is `session.close`, its own command with its own permission, and the
+      // operator still has to confirm it — one count, one decision, no permission collapsed.
+      // (Before the message: `openPanel` clears it, and the confirmation is the point.)
+      if (wasClosingCount) this.openPanel('close', session);
       this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatMoney(totalCents) });
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errAddCount');
