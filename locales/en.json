@@ -151,6 +151,13 @@
     "noMovements": "No movements in this session.",
     "noCounts": "No counts in this session.",
     "errLoadDetail": "Could not load the session detail",
-    "back": "Back"
+    "back": "Back",
+    "shiftReviewTitle": "Shift review",
+    "shiftReviewChecking": "Checking what is still pending…",
+    "shiftReviewOrders": "Kitchen orders not served yet: {count}",
+    "shiftReviewPrints": "Print jobs still waiting: {count} ({stations})",
+    "shiftReviewUnavailable": "Pending work could not be checked, so this review may be incomplete.",
+    "shiftReviewConfirm": "The shift will be closed anyway. Press again to confirm.",
+    "closeAnyway": "Close anyway"
   }
 }

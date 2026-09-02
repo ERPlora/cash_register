@@ -10,6 +10,10 @@ import { createListController, majorToMinor, minorToMajor } from '@erplora/modul
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
 import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions } from '../../lib/enums';
+// La revisión del turno (cash_register#68): qué queda a medias cuando se cierra el cajón. Vive en
+// su propio fichero porque es lógica pura —contar comandas vivas y trabajos encolados— y la
+// pantalla solo la pinta.
+import { hasPendingWork, readShiftReview, type ShiftReview } from '../../lib/shift-review';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
 // Catálogo i18n del módulo (ADR-0055): esbuild inlinea estos JSON en el `dist` del WC. Los textos
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
@@ -47,6 +51,10 @@ interface ErploraClientLike extends ListClient {
    *  `<ion-select>` de categorías… El viejo `page_size` NO existía y truncaba a 50. */
   queryAll<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T[]>;
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
+  /** Puerta OPCIONAL (ADR-0127): `undefined` cuando el módulo dueño NO está instalado en este hub.
+   *  Un contrato roto, un permiso denegado o un handler caído siguen explotando — la opcionalidad
+   *  es del MÓDULO, no del contrato. */
+  queryOptional<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T | undefined>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
   /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
@@ -118,6 +126,14 @@ export class ErpCashRegisterDashboard extends LitElement {
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
+    /* Revisión del turno (cash_register#68): va DENTRO del aviso, así que no lleva color propio —
+       el tono lo pone ok-inline-feedback y la lista solo tiene que leerse. */
+    .review-box { display:block; margin:0 0 .75rem; }
+    ul.review { margin:.25rem 0 0; padding-inline-start:1.1rem; }
+    ul.review li { margin:.15rem 0; }
+    .review-list { display:block; opacity:.85; font-size:.9em; }
+    .review-confirm { margin:.5rem 0 0; font-weight:600; }
+    .review-checking { margin:0 0 .5rem; opacity:.75; }
   `;
 
   @state() tick = 0;
@@ -145,6 +161,17 @@ export class ErpCashRegisterDashboard extends LitElement {
   @state() closeBalance = '';
 
   @state() closeNotes = '';
+
+  /** Lo que queda a medias en el turno que se va a cerrar (cash_register#68). `null` = todavía no
+   *  se ha preguntado, o el panel no es el del cierre. */
+  @state() shiftReview: ShiftReview | null = null;
+
+  @state() shiftReviewLoading = false;
+
+  /** El operador YA vio el aviso y volvió a pulsar «Cerrar». El aviso informa, nunca impide: es la
+   *  forma del *Shift Review* de Toast y del informe previo a la Z de Square. Se consume por
+   *  sesión — la confirmación de un turno no puede cerrar el siguiente a la primera. */
+  @state() closeAcknowledged = false;
 
   // — Movimiento —
   @state() movType: 'in' | 'out' = 'in';
@@ -262,6 +289,14 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.panel = null;
     this.target = null;
     this.formError = '';
+    this.clearShiftReview();
+  }
+
+  /** La revisión pertenece al panel de cierre de UNA sesión: al salir de él se va con él. */
+  private clearShiftReview() {
+    this.shiftReview = null;
+    this.shiftReviewLoading = false;
+    this.closeAcknowledged = false;
   }
 
   private openPanel(panel: 'close' | 'movement' | 'count' | 'detail', session: Session) {
@@ -279,8 +314,28 @@ export class ErpCashRegisterDashboard extends LitElement {
     // over into this one — a leftover amount is a fake difference somebody has to answer for.
     if (panel === 'close') {
       this.closeBalance = '';
+      this.clearShiftReview();
+      // Síncrono a propósito: el panel se pinta en el mismo tick que se abre, y un hueco en blanco
+      // donde va a aparecer un aviso es peor que decir que se está comprobando.
+      this.shiftReviewLoading = true;
       void this.prefillCountedCash(session.id);
+      void this.loadShiftReview(session.id);
     }
+  }
+
+  /** Lo que queda a medias en el turno, por las puertas que NO atan la caja a nadie
+   *  (cash_register#68).
+   *
+   *  `readShiftReview` no lanza: el cierre tiene que funcionar aunque la revisión no se pueda
+   *  hacer. Lo que sí hace es distinguir «cocina no está instalada» (normal, silencio) de «la
+   *  lectura falló» (`incomplete`), que la pantalla dice en voz alta. */
+  private async loadShiftReview(sessionId: string): Promise<void> {
+    const review = await readShiftReview(erplora());
+    // El panel puede haberse movido (otra fila, Cancelar) mientras esto volaba: nunca se pinta la
+    // revisión de un turno sobre el cierre de otro.
+    if (this.panel !== 'close' || this.target?.id !== sessionId) return;
+    this.shiftReview = review;
+    this.shiftReviewLoading = false;
   }
 
   /** «Efectivo contado» ← the session's last CLOSING count (cash_register#65).
@@ -361,6 +416,16 @@ export class ErpCashRegisterDashboard extends LitElement {
     ev.preventDefault();
     if (!this.target || this.closeBalance === '') return;
     const sessionId = this.target.id;
+    // Revisión del turno (cash_register#68): si queda trabajo vivo, el PRIMER clic no cierra —
+    // pregunta. El segundo cierra igual: Toast, Square y Lightspeed listan lo que queda abierto y
+    // piden confirmación, ninguno lo impide. Negarse dejaría el cajón sin cuadrar y el dinero sin
+    // contar, que es peor que una comanda sin servir.
+    if (this.shiftReview && hasPendingWork(this.shiftReview) && !this.closeAcknowledged) {
+      this.closeAcknowledged = true;
+      this.formError = '';
+      this.formMsg = '';
+      return;
+    }
     this.saving = true;
     this.formError = '';
     this.formMsg = '';
@@ -507,15 +572,57 @@ export class ErpCashRegisterDashboard extends LitElement {
     </section>`;
   }
 
+  /** El aviso del turno (cash_register#68): loading, nada, «no se pudo comprobar», o el detalle.
+   *
+   *  Sin nada pendiente NO pinta nada — el criterio es que un turno limpio no gane ni un paso ni
+   *  una línea de ruido. */
+  private renderShiftReview() {
+    const t = (k: string, p?: Record<string, unknown>): string => erplora().t(CATALOG, k, p);
+    if (this.shiftReviewLoading) {
+      return html`<p class="review-checking">${t('ui.shiftReviewChecking')}</p>`;
+    }
+    const review = this.shiftReview;
+    if (!review) return nothing;
+    if (!hasPendingWork(review)) {
+      // Una revisión que no se pudo hacer NO es «no queda nada»: se dice, y aun así no se añade un
+      // paso — sin evidencia de trabajo vivo, cobrar un clic extra castiga al operador por una
+      // lectura rota que no es suya.
+      return review.incomplete
+        ? html`<ok-inline-feedback class="review-box" tone="neutral" icon="help-circle-outline">${t('ui.shiftReviewUnavailable')}</ok-inline-feedback>`
+        : nothing;
+    }
+    return html`<ok-inline-feedback class="review-box" tone="warning" icon="alert-circle-outline" heading=${t('ui.shiftReviewTitle')}>
+      <ul class="review">
+        ${review.liveOrders > 0
+          ? html`<li>
+              ${t('ui.shiftReviewOrders', { count: review.liveOrders })}
+              <span class="review-list">${review.orderLabels.join(' · ')}</span>
+            </li>`
+          : nothing}
+        ${review.pendingPrintJobs > 0
+          ? html`<li>${t('ui.shiftReviewPrints', { count: review.pendingPrintJobs, stations: review.printRoles.join(' · ') })}</li>`
+          : nothing}
+        ${review.incomplete ? html`<li>${t('ui.shiftReviewUnavailable')}</li>` : nothing}
+      </ul>
+      ${this.closeAcknowledged ? html`<p class="review-confirm">${t('ui.shiftReviewConfirm')}</p>` : nothing}
+    </ok-inline-feedback>`;
+  }
+
   private renderClosePanel() {
     if (!this.target) return nothing;
     const t = (k: string): string => erplora().t(CATALOG, k);
+    // Con trabajo vivo ya confirmado, el botón DICE lo que hace: «Cerrar de todos modos». Es la
+    // confirmación explícita, y a la vez la promesa de que el turno se cierra igual.
+    const closeLabel = this.saving
+      ? t('ui.closing')
+      : this.closeAcknowledged ? t('ui.closeAnyway') : t('ui.closeSession');
     return html`<section class="panel">
       <h3>${t('ui.closeSessionTitle')} · ${this.target.session_number}</h3>
+      ${this.renderShiftReview()}
       <form class="form" @submit=${(e: Event) => this.closeSession(e)}>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${this.saving ? t('ui.closing') : t('ui.closeSession')}</ion-button>
+        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${closeLabel}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;

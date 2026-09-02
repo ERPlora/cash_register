@@ -152,7 +152,14 @@
     "noMovements": "Sin movimientos en esta sesión.",
     "noCounts": "Sin arqueos en esta sesión.",
     "errLoadDetail": "No se pudo cargar el detalle de la sesión",
-    "back": "Volver"
+    "back": "Volver",
+    "shiftReviewTitle": "Revisión del turno",
+    "shiftReviewChecking": "Comprobando lo que queda pendiente…",
+    "shiftReviewOrders": "Comandas sin servir: {count}",
+    "shiftReviewPrints": "Impresiones pendientes: {count} ({stations})",
+    "shiftReviewUnavailable": "No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.",
+    "shiftReviewConfirm": "El turno se cerrará igualmente. Pulsa otra vez para confirmar.",
+    "closeAnyway": "Cerrar de todos modos"
   },
   "widgets": {
     "cash_register.current_session": {
