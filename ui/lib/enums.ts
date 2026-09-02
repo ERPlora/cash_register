@@ -53,6 +53,42 @@ export const COUNT_TYPE_KEY: Record<string, string> = {
 };
 
 /**
+ * The FACTORY vocabulary of `cash_register_movement.payment_method`, keyed in lower case.
+ *
+ * Unlike the three maps above this column is NOT a closed domain: it carries two different things
+ * on purpose, and both reach the movements table.
+ *  - A manual movement stores the canonical keyword the `movement.add` handler normalises to
+ *    (`cash`|`card`|`transfer`|`other`, hub#778 — the enum of `schemas/add_movement.json`).
+ *  - A sale stores the payment method NAME the event came with (`_movement_for_open_session.sql`),
+ *    which the `sales` factory seed sows in canonical English — `Cash`/`Card`, ADR-0055 — and which
+ *    the owner is free to rename to «BBVA TPV».
+ *
+ * Both factory forms differ only in case, so one lower-cased map covers the pair.
+ */
+const PAYMENT_METHOD_KEY: Record<string, string> = {
+  cash: 'ui.methodCash',
+  card: 'ui.methodCard',
+  transfer: 'ui.methodTransfer',
+  other: 'ui.methodOther',
+};
+
+/**
+ * The payment method of a movement as the PERSON reads it (cash_register#66).
+ *
+ * A factory value is translated; anything else is printed verbatim, because it is the text the
+ * owner typed and no catalogue outranks it. Deliberately NOT resolved through the sibling column
+ * `payment_method_type`: a method renamed «BBVA TPV» carries `type = 'card'` and would be painted
+ * «Tarjeta», losing the very name that tells the manager which terminal took the money. The TYPE
+ * decides money — it is what the five reconciliation reads sum by — and the NAME decides text.
+ */
+export function paymentMethodLabel(value: unknown): string {
+  const raw = value == null ? '' : String(value).trim();
+  if (!raw) return '';
+  const key = PAYMENT_METHOD_KEY[raw.toLowerCase()];
+  return key ? erplora().t(CATALOG, key) : raw;
+}
+
+/**
  * The label of `value` in the active language.
  *
  * A value the catalogue does not know is printed AS IS: a hub running a module version newer than
