@@ -16,7 +16,7 @@ const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 // ficha imprimía `Estado open` a dos centímetros de un rótulo que ya decía «Sesión abierta», y la
 // columna CUÁNDO soltaba `2026-08-21T17:52:13.198500671+00:00` — el timestamp del motor con nueve
 // decimales de segundo. Mismo patrón que `staff/ui/lib/enums.ts` (staff#37).
-import { COUNT_TYPE_KEY, MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, enumLabel, formatDateTime } from '../../lib/enums';
+import { COUNT_TYPE_KEY, MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, enumLabel, formatDateTime, paymentMethodLabel } from '../../lib/enums';
 
 /** The session row as the dashboard table has it (`cash_register.sessions.list`). */
 export interface SessionRow {
@@ -165,7 +165,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       { key: 'created_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.created_at) },
       { key: 'movement_type', header: t('ui.labelType'), sortable: true, format: (r) => enumLabel(MOVEMENT_TYPE_KEY, r.movement_type) },
       { key: 'amount', header: t('ui.labelAmount'), align: 'right', sortable: true, format: (r) => this.fmt(r.amount as number) },
-      { key: 'payment_method', header: t('ui.colMethod'), sortable: true },
+      { key: 'payment_method', header: t('ui.colMethod'), sortable: true, format: (r) => paymentMethodLabel(r.payment_method) },
       { key: 'description', header: t('ui.labelConcept'), sortable: true },
     ];
   }

@@ -6,8 +6,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 const SESSION = { id: 's1', session_number: 'S-260818-1', status: 'closed', opening_balance: 10000, expected_balance: 12500, closing_balance: 12000, difference: -500 };
 const SUMMARY = { id: 's1', session_number: 'S-260818-1', status: 'closed', opening_balance: 10000, total_sales: 2500, total_refunds: 0, total_cash_in: 500, total_cash_out: 500, total_gifts: 0, expected_cash: 12500, movement_count: 3 };
+// The two writers of `cash_register_movement.payment_method` do NOT store the same thing, and the
+// fixture carries one of each (cash_register#66): a SALE keeps the method NAME the event came with
+// (`_movement_for_open_session.sql`), which the `sales` factory seed sows in canonical English
+// (`Cash`/`Card`, ADR-0055); a MANUAL movement keeps the canonical keyword the handler normalises
+// to (`cash`|`card`|`transfer`|`other`, hub#778). The fixture used to hold `'cash'` in both rows,
+// so nothing here ever saw the seed name that the manager actually reads on screen.
 const MOVEMENTS = [
-  { id: 'm1', movement_type: 'sale', amount: 2500, payment_method: 'cash', sale_reference: 'T-1', description: 'Sale T-1', employee_id: 'u1', created_at: '2026-08-18T10:00:00Z' },
+  { id: 'm1', movement_type: 'sale', amount: 2500, payment_method: 'Cash', sale_reference: 'T-1', description: 'Sale T-1', employee_id: 'u1', created_at: '2026-08-18T10:00:00Z' },
   { id: 'm2', movement_type: 'out', amount: -500, payment_method: 'cash', sale_reference: '', description: 'supplier bread', employee_id: 'u1', created_at: '2026-08-18T11:00:00Z' },
 ];
 const COUNTS = [{ id: 'c1', count_type: 'closing', total: 12000, denominations: '{}', notes: '', counted_at: '2026-08-18T20:00:00Z' }];
@@ -133,5 +139,51 @@ describe('la ficha no enseña datos en crudo (cash_register#50)', () => {
 
     const counted = columnsOf(el, 'countColumns').find((c) => c.key === 'counted_at')!;
     expect(String(counted.format!({ counted_at: '2026-08-18T20:00:00Z' }))).not.toContain('T');
+  });
+});
+
+// cash_register#66 — the one column of the movements table that #50 left without `format`. A
+// Spanish hub read «Cash» in the METHOD cell while the cell next to it already said «Venta»: the
+// `sales` factory seed sows its methods with the canonical English name (ADR-0055) and a manual
+// movement stores the canonical keyword (hub#778), so BOTH factory vocabularies land in this
+// column and both have to be read in the hub's language.
+//
+// The line that decides the fix: the TYPE decides money, the NAME decides text. Resolving the
+// label through `payment_method_type` would paint «Tarjeta» over a method the owner renamed to
+// «BBVA TPV» — so what the owner typed is printed verbatim, always.
+describe('la forma de pago se lee en el idioma del hub (cash_register#66)', () => {
+  const methodColumn = (el: HTMLElement) =>
+    (el as unknown as Record<string, { key: string; format?: (r: Record<string, unknown>) => unknown }[]>)
+      .movementColumns.find((c) => c.key === 'payment_method')!;
+
+  it('traduce el nombre de fábrica que siembra `sales` («Cash» no se lee en un hub español)', async () => {
+    const el = await montar();
+    const col = methodColumn(el);
+    expect(col.format, 'la columna FORMA DE PAGO no formatea nada: imprime la fila en crudo').toBeTruthy();
+    expect(col.format!({ payment_method: 'Cash' })).toBe('ui.methodCash');
+    expect(col.format!({ payment_method: 'Card' })).toBe('ui.methodCard');
+  });
+
+  it('traduce también el vocabulario canónico con el que se guarda un movimiento manual', async () => {
+    const col = methodColumn(await montar());
+    expect(col.format!({ payment_method: 'cash' })).toBe('ui.methodCash');
+    expect(col.format!({ payment_method: 'card' })).toBe('ui.methodCard');
+    expect(col.format!({ payment_method: 'transfer' })).toBe('ui.methodTransfer');
+    expect(col.format!({ payment_method: 'other' })).toBe('ui.methodOther');
+  });
+
+  it('el nombre que teclea el dueño manda: sale TAL CUAL, sin traducir', async () => {
+    const col = methodColumn(await montar());
+    expect(col.format!({ payment_method: 'BBVA TPV' })).toBe('BBVA TPV');
+    expect(col.format!({ payment_method: 'Ticket restaurante' })).toBe('Ticket restaurante');
+    // A method the catalogue does not know is a value it must still SHOW: a till screen that
+    // blanks the method of a movement is worse than one that shows an untranslated word.
+    expect(col.format!({ payment_method: 'Bizum' })).toBe('Bizum');
+  });
+
+  it('una fila sin forma de pago deja la celda vacía, nunca `null` ni `undefined`', async () => {
+    const col = methodColumn(await montar());
+    expect(col.format!({ payment_method: null })).toBe('');
+    expect(col.format!({})).toBe('');
   });
 });

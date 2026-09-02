@@ -3851,6 +3851,10 @@ var es_default = {
     detailCounted: "Contado",
     colWhen: "Cu\xE1ndo",
     colMethod: "M\xE9todo",
+    methodCash: "Efectivo",
+    methodCard: "Tarjeta",
+    methodTransfer: "Transferencia",
+    methodOther: "Otro",
     noMovements: "Sin movimientos en esta sesi\xF3n.",
     noCounts: "Sin arqueos en esta sesi\xF3n.",
     errLoadDetail: "No se pudo cargar el detalle de la sesi\xF3n",
@@ -4014,6 +4018,10 @@ var en_default = {
     detailCounted: "Counted",
     colWhen: "When",
     colMethod: "Method",
+    methodCash: "Cash",
+    methodCard: "Card",
+    methodTransfer: "Transfer",
+    methodOther: "Other",
     noMovements: "No movements in this session.",
     noCounts: "No counts in this session.",
     errLoadDetail: "Could not load the session detail",
@@ -4043,6 +4051,18 @@ var COUNT_TYPE_KEY = {
   opening: "ui.countOpening",
   closing: "ui.countClosing"
 };
+var PAYMENT_METHOD_KEY = {
+  cash: "ui.methodCash",
+  card: "ui.methodCard",
+  transfer: "ui.methodTransfer",
+  other: "ui.methodOther"
+};
+function paymentMethodLabel(value) {
+  const raw = value == null ? "" : String(value).trim();
+  if (!raw) return "";
+  const key = PAYMENT_METHOD_KEY[raw.toLowerCase()];
+  return key ? erplora().t(CATALOG, key) : raw;
+}
 function enumLabel(keys, value) {
   const raw = value == null ? "" : String(value);
   const key = keys[raw];
@@ -4169,7 +4189,7 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { key: "created_at", header: t5("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.created_at) },
       { key: "movement_type", header: t5("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
       { key: "amount", header: t5("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
-      { key: "payment_method", header: t5("ui.colMethod"), sortable: true },
+      { key: "payment_method", header: t5("ui.colMethod"), sortable: true, format: (r6) => paymentMethodLabel(r6.payment_method) },
       { key: "description", header: t5("ui.labelConcept"), sortable: true }
     ];
   }
