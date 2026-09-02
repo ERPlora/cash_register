@@ -1805,20 +1805,20 @@ var WINDOWS_1252_C1 = [
   376
 ];
 function decodeWindows1252(bytes) {
-  let text = "";
+  let text2 = "";
   for (const byte of bytes) {
-    text += String.fromCharCode(byte >= 128 && byte <= 159 ? WINDOWS_1252_C1[byte - 128] : byte);
+    text2 += String.fromCharCode(byte >= 128 && byte <= 159 ? WINDOWS_1252_C1[byte - 128] : byte);
   }
-  return text;
+  return text2;
 }
 function decodeCsvBuffer(buf) {
-  let text;
+  let text2;
   try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+    text2 = new TextDecoder("utf-8", { fatal: true }).decode(buf);
   } catch {
-    text = decodeWindows1252(new Uint8Array(buf));
+    text2 = decodeWindows1252(new Uint8Array(buf));
   }
-  return text.charCodeAt(0) === 65279 ? text.slice(1) : text;
+  return text2.charCodeAt(0) === 65279 ? text2.slice(1) : text2;
 }
 var __defProp3 = Object.defineProperty;
 var __decorateClass3 = (decorators, target, key, kind) => {
@@ -1924,6 +1924,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.page = 0;
     this.searchable = false;
     this.sortDir = "asc";
+    this.filterValues = {};
     this.title = "";
     this.views = false;
     this.exportable = false;
@@ -1941,6 +1942,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.clientSortDir = "asc";
     this.clientFilters = {};
     this.filterDraft = {};
+    this.serverFilters = {};
     this.panel = "none";
     this.viewMode = "table";
     this.viewChosenByUser = false;
@@ -2438,16 +2440,16 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.emit("csvExport", { rows: this.rows.length });
     this.emit("export", { rows: this.rows.length });
   }
-  parseCsv(text) {
+  parseCsv(text2) {
     const out = [];
     let row = [];
     let field = "";
     let q = false;
-    for (let i7 = 0; i7 < text.length; i7++) {
-      const c5 = text[i7];
+    for (let i7 = 0; i7 < text2.length; i7++) {
+      const c5 = text2[i7];
       if (q) {
         if (c5 === '"') {
-          if (text[i7 + 1] === '"') {
+          if (text2[i7 + 1] === '"') {
             field += '"';
             i7++;
           } else q = false;
@@ -2457,7 +2459,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         row.push(field);
         field = "";
       } else if (c5 === "\n" || c5 === "\r") {
-        if (c5 === "\r" && text[i7 + 1] === "\n") i7++;
+        if (c5 === "\r" && text2[i7 + 1] === "\n") i7++;
         row.push(field);
         field = "";
         if (row.length > 1 || row[0] !== "") out.push(row);
@@ -2476,8 +2478,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     const input = ev.target;
     const file = input.files?.[0];
     if (!file) return;
-    const text = decodeCsvBuffer(await file.arrayBuffer());
-    const { headers, rows: rows2 } = this.parseCsv(text);
+    const text2 = decodeCsvBuffer(await file.arrayBuffer());
+    const { headers, rows: rows2 } = this.parseCsv(text2);
     this.emit("csvImport", { headers, rows: rows2 });
     this.emit("import", { headers, rows: rows2 });
     input.value = "";
@@ -2553,11 +2555,54 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   get hasFilterRow() {
     return this.filterColumns.length > 0;
   }
-  /** Nº de filtros activos (modo cliente) → badge del botón Filtros. */
+  /** Nº de filtros activos → badge del botón Filtros. En servidor cuenta `filterValues` (#106): sin
+   *  esto el embudo no daba NINGUNA señal de que la lista venía acotada. */
   get activeFilterCount() {
+    if (this.serverSide) {
+      return Object.keys(this.serverFilters).filter((k2) => this.serverFilterState(k2) !== void 0).length;
+    }
     return Object.values(this.clientFilters).filter(
       (f3) => f3.values && f3.values.size > 0 || f3.from || f3.to
     ).length;
+  }
+  // ── Estado de filtro VISIBLE (#106) ──────────────────────────────────────────────────────────
+  /** Traduce un valor de `filterValues` (la forma que emite `filterChange`) a la forma interna que
+   *  usan los `render*Filter`. `undefined` = ese filtro no está puesto. */
+  serverFilterState(key) {
+    const raw = this.serverFilters[key];
+    if (raw === void 0 || raw === null || raw === "") return void 0;
+    if (Array.isArray(raw)) {
+      const values = raw.filter((v3) => v3 !== null && v3 !== void 0 && v3 !== "").map((v3) => String(v3));
+      return values.length ? { values: new Set(values) } : void 0;
+    }
+    if (typeof raw === "object") {
+      const range = raw;
+      const from = range.from === null || range.from === void 0 || range.from === "" ? void 0 : String(range.from);
+      const to = range.to === null || range.to === void 0 || range.to === "" ? void 0 : String(range.to);
+      return from !== void 0 || to !== void 0 ? { from, to } : void 0;
+    }
+    return { values: /* @__PURE__ */ new Set([String(raw)]) };
+  }
+  /** Estado de filtro efectivo de una columna: servidor → `filterValues`/espejo; cliente → memoria. */
+  filterStateOf(key) {
+    return this.serverSide ? this.serverFilterState(key) : this.clientFilters[key];
+  }
+  /** Fija (o borra) el valor visible de un filtro en el espejo de servidor. */
+  setServerFilter(key, value) {
+    const next = { ...this.serverFilters };
+    const empty = value === void 0 || value === null || value === "" || Array.isArray(value) && value.length === 0;
+    if (empty) delete next[key];
+    else next[key] = value;
+    this.serverFilters = next;
+  }
+  /** Fija UN extremo de un rango en el espejo. Los dos extremos viajan en eventos SEPARADOS
+   *  (`{from}` y luego `{to}`), así que aquí se MEZCLA: reemplazar borraría el otro extremo. */
+  setServerRangeEdge(key, edge, value) {
+    const prev = this.serverFilters[key];
+    const base = prev && typeof prev === "object" && !Array.isArray(prev) ? { ...prev } : {};
+    base[edge] = value;
+    const alive = (v3) => v3 !== void 0 && v3 !== null && v3 !== "";
+    this.setServerFilter(key, alive(base.from) || alive(base.to) ? base : void 0);
   }
   /** Valor crudo de una columna para ordenar/filtrar (usa format si lo hay, si no row[key]). */
   rawValue(col, row) {
@@ -2647,15 +2692,18 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   onFilterInput(col, ev) {
     const value = ev.target.value ?? "";
+    this.setServerFilter(col.key, value);
     this.emit("filterChange", { col: col.key, value });
   }
   onRangeInput(col, edge, ev) {
     const raw = ev.target.value ?? "";
     const v3 = raw === "" ? "" : Number(raw);
+    this.setServerRangeEdge(col.key, edge, v3);
     this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
   }
   onDateRangeInput(col, edge, ev) {
     const v3 = ev.target.value ?? "";
+    this.setServerRangeEdge(col.key, edge, v3);
     this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
   }
   // ── Filtros EN LÍNEA (toolbar) ────────────────────────────────────────────────────────────
@@ -2675,7 +2723,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   // `filterChange`; en cliente escribe `clientFilters` (multiselect ⇒ filtra por inclusión).
   onFilterSelect(col, value, multi) {
     if (this.serverSide) {
-      this.emit("filterChange", { col: col.key, value: value ?? (multi ? [] : "") });
+      const next = value ?? (multi ? [] : "");
+      this.setServerFilter(col.key, next);
+      this.emit("filterChange", { col: col.key, value: next });
       return;
     }
     if (multi) {
@@ -2689,6 +2739,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   onInlineRange(col, edge, ev) {
     const v3 = ev.target.value ?? "";
     if (this.serverSide) {
+      this.setServerRangeEdge(col.key, edge, v3);
       this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
       return;
     }
@@ -2719,6 +2770,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
    */
   willUpdate(changed) {
     this.applyInitialView();
+    if (changed.has("filterValues")) this.serverFilters = { ...this.filterValues ?? {} };
     if (!this.serverSide && changed.has("rows") && this.mobileShown !== 0) this.mobileShown = 0;
   }
   applyInitialView() {
@@ -2741,9 +2793,11 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   renderFilterControl(col) {
     if (!col.filterable) return A;
     const type = col.filterType ?? "text";
+    const f3 = this.filterStateOf(col.key);
     if (type === "select" || type === "multiselect") {
       const multi = type === "multiselect";
       const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
+      const current = this.selectValue(f3, multi);
       return b2`
         <ion-select
           label=${col.header}
@@ -2753,6 +2807,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
           placeholder=${this.t.select}
+          .value=${current}
           @ionChange=${(e6) => this.onFilterSelect(col, e6.detail.value, multi)}
         >
           ${multi ? A : b2`<ion-select-option value="">${this.t.select}</ion-select-option>`}
@@ -2768,8 +2823,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           <span class="flabel">${col.header}</span>
           <div class="frange">
             <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
+              .value=${f3?.from ?? ""}
               @ionInput=${(e6) => onEdge(col, "from", e6)}></ion-input>
             <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
+              .value=${f3?.to ?? ""}
               @ionInput=${(e6) => onEdge(col, "to", e6)}></ion-input>
           </div>
         </div>
@@ -2783,9 +2840,17 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         label=${col.header}
         label-placement="stacked"
         placeholder=${this.t.filterPlaceholder}
+        .value=${this.selectValue(f3, false)}
         @ionInput=${(e6) => this.onFilterInput(col, e6)}
       ></ion-input>
     `;
+  }
+  /** Valor para un control de un solo valor (`ion-select`/`ion-input`) o multi (`ion-select
+   *  multiple`) a partir del estado de filtro interno. '' / [] = sin filtro. */
+  selectValue(f3, multi) {
+    const values = [...f3?.values ?? /* @__PURE__ */ new Set()];
+    if (multi) return values;
+    return values.length ? values[0] : "";
   }
   // Controles de filtro COMPACTOS para la toolbar (modo `inlineFilters`). Solo select y rango de
   // fechas (los del screenshot); el resto de tipos siguen disponibles vía el drawer si no se activa
@@ -2800,11 +2865,11 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   renderInlineFilter(col) {
     const type = col.filterType ?? "text";
-    const f3 = this.clientFilters[col.key];
+    const f3 = this.filterStateOf(col.key);
     if (type === "select" || type === "multiselect") {
       const multi = type === "multiselect";
       const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
-      const current = multi ? [...f3?.values ?? /* @__PURE__ */ new Set()] : f3?.values && f3.values.size ? [...f3.values][0] : "";
+      const current = this.selectValue(f3, multi);
       return b2`
         <ion-select
           class="tk-filter"
@@ -2929,24 +2994,24 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     let visible;
     let pages;
     let current;
-    let count;
+    let count2;
     if (this.serverSide) {
       visible = this.rows;
-      count = this.total;
+      count2 = this.total;
       pages = Math.max(1, Math.ceil(this.total / ps));
       current = Math.min(this.page, pages - 1);
     } else {
       const filtered = this.clientFiltered;
-      count = filtered.length;
+      count2 = filtered.length;
       pages = Math.max(1, Math.ceil(filtered.length / ps));
       current = Math.min(this.clientPage, pages - 1);
-      visible = this.isMobile ? filtered.slice(0, Math.min(this.mobileShown || ps, count)) : filtered.slice(current * ps, current * ps + ps);
+      visible = this.isMobile ? filtered.slice(0, Math.min(this.mobileShown || ps, count2)) : filtered.slice(current * ps, current * ps + ps);
     }
-    const served = this.serverSide ? (current + 1) * ps : Math.min(this.mobileShown || ps, count);
-    const canLoadMore = this.isMobile && served < count;
+    const served = this.serverSide ? (current + 1) * ps : Math.min(this.mobileShown || ps, count2);
+    const canLoadMore = this.isMobile && served < count2;
     const loadMore = () => {
       if (this.serverSide) this.emit("pageChange", current + 1);
-      else this.mobileShown = Math.min((this.mobileShown || ps) + ps, count);
+      else this.mobileShown = Math.min((this.mobileShown || ps) + ps, count2);
     };
     const goTo = (p4) => {
       if (this.serverSide) this.emit("pageChange", p4);
@@ -2968,7 +3033,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         ${showTopbar ? b2`
               <div class="bar">
                 <div class="bar-main">
-                  ${this.title ? b2`<div class="title-wrap"><h2 class="title">${this.title}</h2><span class="title-count">${count}</span></div>` : A}
+                  ${this.title ? b2`<div class="title-wrap"><h2 class="title">${this.title}</h2><span class="title-count">${count2}</span></div>` : A}
                   ${this.hasSearch ? b2`<div class="search">${searchbar}</div>` : A}
                   ${this.inlineFilters ? this.renderInlineFilters() : A}
                   <span class="tk-spacer"></span>
@@ -3002,7 +3067,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                             ${this.toolButton("grid-outline", this.viewMode === "cards", () => this.setViewMode("cards"), this.t.viewCards)}
                           </span>
                         ` : A}
-                    ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
+                    ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.activeFilterCount) : A}
                     ${this.effImport ? b2`
                           ${this.toolButton("cloud-upload-outline", false, () => this.renderRoot.querySelector(".tk-file")?.click(), this.t.importCsv)}
                           <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e6) => this.onImportFile(e6)} />
@@ -3047,8 +3112,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
               <div class="pager">
                 <div class="left">
                   <span>
-                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(this.isMobile && !this.serverSide ? 1 : current * ps + 1)).replace("{to}", String(Math.min(served, count)))} ` : A}
-                    <span class="strong">${count}</span> ${count === 1 ? this.t.recordSingular : this.t.recordPlural}
+                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(this.isMobile && !this.serverSide ? 1 : current * ps + 1)).replace("{to}", String(Math.min(served, count2)))} ` : A}
+                    <span class="strong">${count2}</span> ${count2 === 1 ? this.t.recordSingular : this.t.recordPlural}
                   </span>
                   ${!showTopbar && this.effPageSizes.length ? b2`
                         <select class="psize" @change=${(e6) => setPageSize(Number(e6.target.value))}>
@@ -3314,6 +3379,9 @@ __decorateClass3([
   n4({ attribute: "sort-dir" })
 ], _OkDataTable.prototype, "sortDir");
 __decorateClass3([
+  n4({ attribute: false })
+], _OkDataTable.prototype, "filterValues");
+__decorateClass3([
   n4()
 ], _OkDataTable.prototype, "title");
 __decorateClass3([
@@ -3385,6 +3453,9 @@ __decorateClass3([
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "filterDraft");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "serverFilters");
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "panel");
@@ -3858,7 +3929,14 @@ var es_default = {
     noMovements: "Sin movimientos en esta sesi\xF3n.",
     noCounts: "Sin arqueos en esta sesi\xF3n.",
     errLoadDetail: "No se pudo cargar el detalle de la sesi\xF3n",
-    back: "Volver"
+    back: "Volver",
+    shiftReviewTitle: "Revisi\xF3n del turno",
+    shiftReviewChecking: "Comprobando lo que queda pendiente\u2026",
+    shiftReviewOrders: "Comandas sin servir: {count}",
+    shiftReviewPrints: "Impresiones pendientes: {count} ({stations})",
+    shiftReviewUnavailable: "No se ha podido comprobar lo que queda pendiente, as\xED que esta revisi\xF3n puede estar incompleta.",
+    shiftReviewConfirm: "El turno se cerrar\xE1 igualmente. Pulsa otra vez para confirmar.",
+    closeAnyway: "Cerrar de todos modos"
   },
   widgets: {
     "cash_register.current_session": {
@@ -4025,7 +4103,14 @@ var en_default = {
     noMovements: "No movements in this session.",
     noCounts: "No counts in this session.",
     errLoadDetail: "Could not load the session detail",
-    back: "Back"
+    back: "Back",
+    shiftReviewTitle: "Shift review",
+    shiftReviewChecking: "Checking what is still pending\u2026",
+    shiftReviewOrders: "Kitchen orders not served yet: {count}",
+    shiftReviewPrints: "Print jobs still waiting: {count} ({stations})",
+    shiftReviewUnavailable: "Pending work could not be checked, so this review may be incomplete.",
+    shiftReviewConfirm: "The shift will be closed anyway. Press again to confirm.",
+    closeAnyway: "Close anyway"
   }
 };
 
@@ -4235,6 +4320,64 @@ __decorateClass([
 ], ErpCashRegisterSessionDetail.prototype, "error", 2);
 define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
 
+// ui/lib/shift-review.ts
+var MAX_LISTED_ORDERS = 6;
+function toRows(answer) {
+  if (Array.isArray(answer)) return answer;
+  const rows2 = answer?.rows;
+  return Array.isArray(rows2) ? rows2 : [];
+}
+function text(v3) {
+  return typeof v3 === "string" ? v3.trim() : typeof v3 === "number" ? String(v3) : "";
+}
+function count(v3) {
+  const n6 = typeof v3 === "number" ? v3 : Number(v3);
+  return Number.isFinite(n6) && n6 > 0 ? Math.trunc(n6) : 0;
+}
+function summariseLiveOrders(answer) {
+  const seen = /* @__PURE__ */ new Map();
+  for (const row of toRows(answer)) {
+    const id = text(row?.order_id);
+    if (!id || seen.has(id)) continue;
+    seen.set(id, text(row?.label) || text(row?.order_number) || id);
+  }
+  return { liveOrders: seen.size, orderLabels: [...seen.values()].slice(0, MAX_LISTED_ORDERS) };
+}
+function summarisePrintQueue(answer) {
+  let pendingPrintJobs = 0;
+  const printRoles = [];
+  for (const row of toRows(answer)) {
+    const waiting = count(row?.waiting);
+    if (waiting <= 0) continue;
+    pendingPrintJobs += waiting;
+    const role = text(row?.role);
+    if (role && !printRoles.includes(role)) printRoles.push(role);
+  }
+  return { pendingPrintJobs, printRoles };
+}
+function hasPendingWork(review) {
+  return review.liveOrders > 0 || review.pendingPrintJobs > 0;
+}
+async function readShiftReview(client) {
+  const attempt = async (read) => {
+    if (typeof read !== "function") return { answer: void 0, failed: true };
+    try {
+      return { answer: await read(), failed: false };
+    } catch {
+      return { answer: void 0, failed: true };
+    }
+  };
+  const [kitchen, print] = await Promise.all([
+    attempt(client.queryOptional && (() => client.queryOptional("kitchen.orders.display"))),
+    attempt(client.query && (() => client.query("hub.print.coverage")))
+  ]);
+  return {
+    ...summariseLiveOrders(kitchen.answer),
+    ...summarisePrintQueue(print.answer),
+    incomplete: kitchen.failed || print.failed
+  };
+}
+
 // ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG3 = { es: es_default, en: en_default };
 function toMinorUnits(v3) {
@@ -4283,6 +4426,9 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.openNotes = "";
     this.closeBalance = "";
     this.closeNotes = "";
+    this.shiftReview = null;
+    this.shiftReviewLoading = false;
+    this.closeAcknowledged = false;
     this.movType = "in";
     this.movAmount = "";
     this.movDescription = "";
@@ -4311,6 +4457,14 @@ var ErpCashRegisterDashboard = class extends i3 {
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
+    /* Revisión del turno (cash_register#68): va DENTRO del aviso, así que no lleva color propio —
+       el tono lo pone ok-inline-feedback y la lista solo tiene que leerse. */
+    .review-box { display:block; margin:0 0 .75rem; }
+    ul.review { margin:.25rem 0 0; padding-inline-start:1.1rem; }
+    ul.review li { margin:.15rem 0; }
+    .review-list { display:block; opacity:.85; font-size:.9em; }
+    .review-confirm { margin:.5rem 0 0; font-weight:600; }
+    .review-checking { margin:0 0 .5rem; opacity:.75; }
   `;
   }
   // Getter (no campo): se re-evalúa en cada render, así los textos cambian con el idioma activo
@@ -4402,6 +4556,13 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.panel = null;
     this.target = null;
     this.formError = "";
+    this.clearShiftReview();
+  }
+  /** La revisión pertenece al panel de cierre de UNA sesión: al salir de él se va con él. */
+  clearShiftReview() {
+    this.shiftReview = null;
+    this.shiftReviewLoading = false;
+    this.closeAcknowledged = false;
   }
   openPanel(panel, session) {
     if (panel !== "detail" && session.status !== "open") {
@@ -4415,8 +4576,23 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.formMsg = "";
     if (panel === "close") {
       this.closeBalance = "";
+      this.clearShiftReview();
+      this.shiftReviewLoading = true;
       void this.prefillCountedCash(session.id);
+      void this.loadShiftReview(session.id);
     }
+  }
+  /** Lo que queda a medias en el turno, por las puertas que NO atan la caja a nadie
+   *  (cash_register#68).
+   *
+   *  `readShiftReview` no lanza: el cierre tiene que funcionar aunque la revisión no se pueda
+   *  hacer. Lo que sí hace es distinguir «cocina no está instalada» (normal, silencio) de «la
+   *  lectura falló» (`incomplete`), que la pantalla dice en voz alta. */
+  async loadShiftReview(sessionId) {
+    const review = await readShiftReview(erplora3());
+    if (this.panel !== "close" || this.target?.id !== sessionId) return;
+    this.shiftReview = review;
+    this.shiftReviewLoading = false;
   }
   /** «Efectivo contado» ← the session's last CLOSING count (cash_register#65).
    *
@@ -4483,6 +4659,12 @@ var ErpCashRegisterDashboard = class extends i3 {
     ev.preventDefault();
     if (!this.target || this.closeBalance === "") return;
     const sessionId = this.target.id;
+    if (this.shiftReview && hasPendingWork(this.shiftReview) && !this.closeAcknowledged) {
+      this.closeAcknowledged = true;
+      this.formError = "";
+      this.formMsg = "";
+      return;
+    }
     this.saving = true;
     this.formError = "";
     this.formMsg = "";
@@ -4614,15 +4796,43 @@ var ErpCashRegisterDashboard = class extends i3 {
       </form>
     </section>`;
   }
+  /** El aviso del turno (cash_register#68): loading, nada, «no se pudo comprobar», o el detalle.
+   *
+   *  Sin nada pendiente NO pinta nada — el criterio es que un turno limpio no gane ni un paso ni
+   *  una línea de ruido. */
+  renderShiftReview() {
+    const t5 = (k2, p4) => erplora3().t(CATALOG3, k2, p4);
+    if (this.shiftReviewLoading) {
+      return b2`<p class="review-checking">${t5("ui.shiftReviewChecking")}</p>`;
+    }
+    const review = this.shiftReview;
+    if (!review) return A;
+    if (!hasPendingWork(review)) {
+      return review.incomplete ? b2`<ok-inline-feedback class="review-box" tone="neutral" icon="help-circle-outline">${t5("ui.shiftReviewUnavailable")}</ok-inline-feedback>` : A;
+    }
+    return b2`<ok-inline-feedback class="review-box" tone="warning" icon="alert-circle-outline" heading=${t5("ui.shiftReviewTitle")}>
+      <ul class="review">
+        ${review.liveOrders > 0 ? b2`<li>
+              ${t5("ui.shiftReviewOrders", { count: review.liveOrders })}
+              <span class="review-list">${review.orderLabels.join(" \xB7 ")}</span>
+            </li>` : A}
+        ${review.pendingPrintJobs > 0 ? b2`<li>${t5("ui.shiftReviewPrints", { count: review.pendingPrintJobs, stations: review.printRoles.join(" \xB7 ") })}</li>` : A}
+        ${review.incomplete ? b2`<li>${t5("ui.shiftReviewUnavailable")}</li>` : A}
+      </ul>
+      ${this.closeAcknowledged ? b2`<p class="review-confirm">${t5("ui.shiftReviewConfirm")}</p>` : A}
+    </ok-inline-feedback>`;
+  }
   renderClosePanel() {
     if (!this.target) return A;
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const closeLabel = this.saving ? t5("ui.closing") : this.closeAcknowledged ? t5("ui.closeAnyway") : t5("ui.closeSession");
     return b2`<section class="panel">
       <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
+      ${this.renderShiftReview()}
       <form class="form" @submit=${(e6) => this.closeSession(e6)}>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
         <ion-input fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
-        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${this.saving ? t5("ui.closing") : t5("ui.closeSession")}</ion-button>
+        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ""}>${closeLabel}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
@@ -4743,6 +4953,15 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "closeNotes", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "shiftReview", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "shiftReviewLoading", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "closeAcknowledged", 2);
 __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "movType", 2);

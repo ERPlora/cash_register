@@ -8,9 +8,12 @@
       "cash_register.movements.list",
       "cash_register.registers.list",
       "cash_register.session.summary",
-      "cash_register.sessions.list"
+      "cash_register.sessions.list",
+      "hub.print.coverage"
     ],
-    "optional_queries": [],
+    "optional_queries": [
+      "kitchen.orders.display"
+    ],
     "commands": [
       "cash_register.count.add",
       "cash_register.movement.add",
