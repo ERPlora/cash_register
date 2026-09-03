@@ -77,13 +77,13 @@
 WITH live AS (
   SELECT GREATEST(
     COALESCE((
-      SELECT SUM(ABS(sold.amount))
-      FROM cash_register_movement sold
-      WHERE sold.hub_id = :hub_id
-        AND sold.sale_reference = :sale_id
-        AND sold.movement_type = 'sale'
-        AND COALESCE(sold.payment_method_type,'cash') = 'cash'
-        AND sold.is_deleted = 0
+      SELECT SUM(ABS(orig.amount))
+      FROM cash_register_movement orig
+      WHERE orig.hub_id = :hub_id
+        AND orig.sale_reference = :sale_id
+        AND orig.movement_type = 'sale'
+        AND COALESCE(orig.payment_method_type,'cash') = 'cash'
+        AND orig.is_deleted = 0
     ), 0)
     - COALESCE((
       SELECT SUM(ABS(rf.amount))
