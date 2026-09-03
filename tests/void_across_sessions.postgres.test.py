@@ -345,12 +345,18 @@ def distinct_ids(sale_id: str, hub: str = HUB) -> int:
 # ── the cases ──────────────────────────────────────────────────────────────────────────────────
 
 
-def split_sale(sale_id: str, refund: tuple[int, str] | None = None, hub: str = HUB):
+def split_sale(
+    sale_id: str,
+    refund: tuple[int, str] | None = None,
+    hub: str = HUB,
+    afternoon_opened_at: str = "2026-08-24T15:00:00+00:00",
+):
     """Book `sale_id` across TWO sessions of `hub` and return both session ids.
 
     Morning shift takes the first leg and is CLOSED; the afternoon shift takes the second. This is
     the only way a hub can get there today (`004_one_open_session_per_hub.sql`) and it uses nothing
-    but the module's own commands.
+    but the module's own commands. `afternoon_opened_at` lets the tenancy case make the NEIGHBOUR's
+    open shift the newest one (see §6).
     """
     running = open_session_id(hub)
     if running is not None:
@@ -360,7 +366,7 @@ def split_sale(sale_id: str, refund: tuple[int, str] | None = None, hub: str = H
     if refund is not None:
         book_refund(sale_id, refund[0], refund[1], "2026-08-24T09:30:00+00:00", hub)
     close_session(morning, "2026-08-24T14:00:00+00:00", hub)
-    afternoon = open_session("2026-08-24T15:00:00+00:00", hub)
+    afternoon = open_session(afternoon_opened_at, hub)
     book_sale(AFTERNOON_LEG, sale_id, "2026-08-24T16:00:00+00:00", hub)
     return morning, afternoon
 
@@ -497,10 +503,17 @@ def run_cases() -> None:
 
     # ── 6. TENANCY, with a LIVE neighbour on the same sale reference ────────────────────────────
     # The neighbour's own split sale must be untouched by ours, and ours by theirs.
+    # 🔴 The neighbour's open shift is deliberately the NEWEST (#77). The reversal resolves its
+    # target with `ORDER BY opened_at DESC LIMIT 1`, so with the `hub_id` filter dropped it would
+    # land in whichever open session is newest ACROSS hubs: with both afternoons opened at the same
+    # instant the pick was a coin toss and the mutant survived. Opening the neighbour's later is
+    # what makes this a tenancy test instead of a coincidence.
     print("\n6 · the hub next door keeps its own split sale")
     sale = "sale-split-shared-ref"
-    n_morning, n_afternoon = split_sale(sale, hub=NEIGHBOUR)
     _mine_m, mine_a = split_sale(sale)
+    n_morning, n_afternoon = split_sale(
+        sale, hub=NEIGHBOUR, afternoon_opened_at="2026-08-24T15:30:00+00:00"
+    )
     void(sale)
     check(
         "our void books in OUR open shift",

@@ -424,12 +424,17 @@ def run_cases() -> None:
     check("and there is still exactly one void movement", void_movements_by_session(sale), [(afternoon, SALE_TOTAL)])
 
     # ── 6. TENANCY ──────────────────────────────────────────────────────────────────────────────
+    # 🔴 The neighbour's open shift is deliberately the NEWEST. The reversal resolves its target
+    # with `ORDER BY opened_at DESC LIMIT 1`, so with the `hub_id` filter dropped it would land in
+    # whichever open session is newest ACROSS hubs: with both shifts opened at the same instant the
+    # pick is a coin toss and the mutant survived. Opening the neighbour's last is what makes this
+    # a tenancy test instead of a coincidence.
     print("\n6 · the hub next door keeps its own sale under the same reference")
     shared = "sale-shared-ref"
-    n_morning = shift_that_sold_and_cashed_up(shared, NEIGHBOUR)
-    n_afternoon = open_session("2026-08-27T09:00:00+00:00", NEIGHBOUR)
     mine_morning = shift_that_sold_and_cashed_up(shared)
     mine_afternoon = open_session("2026-08-27T09:00:00+00:00")
+    n_morning = shift_that_sold_and_cashed_up(shared, NEIGHBOUR)
+    n_afternoon = open_session("2026-08-27T09:30:00+00:00", NEIGHBOUR)
     void(shared, "2026-08-27T10:00:00+00:00")
     check("our void books in OUR open shift", void_movements_by_session(shared), [(mine_afternoon, SALE_TOTAL)])
     check("and nothing in the neighbour's", void_movements_by_session(shared, NEIGHBOUR), [])
