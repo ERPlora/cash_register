@@ -314,6 +314,13 @@
       "ai": {
         "description": "Returns the currently open cash register session with its expected cash total (opening balance + net cash movements), for supervisors — not subject to the blind-count setting. Empty if no session is open."
       }
+    },
+    "cash_register.live_cash_for_sale": {
+      "permission": "cash_register.view_movement",
+      "sql": "queries/live_cash_for_sale.sql",
+      "ai": {
+        "description": "Returns how much cash is still alive against a sale right now (original cash sold minus cash already refunded for it, floored at zero). Always one row."
+      }
     }
   },
   "widgets": {
@@ -505,7 +512,7 @@
         "cash_register.movement_added"
       ],
       "ai": {
-        "description": "Records a cash movement against an open register session. `movement_type` says WHAT the movement is (`in` cash into the drawer, `out` cash taken out, `sale`, `refund`) and `amount` says HOW MUCH, in minor units and ALWAYS POSITIVE (30.00 EUR = 3000): the server applies the sign, storing outflows negative. Fails with cash_register.session_unavailable if the session is not this business's, cash_register.movement_type_unknown for any other type, cash_register.amount_required for a zero amount, cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it, and cash_register.payment_method_unknown for a `payment_method` outside cash|card|transfer|other (the localized names of the sales catalogue are NOT valid here: only cash counts for the drawer and for the negative-balance guard)."
+        "description": "Records a cash movement against an open register session. `movement_type` says WHAT the movement is (`in` cash into the drawer, `out` cash taken out, `sale`, `refund`) and `amount` says HOW MUCH, in minor units and ALWAYS POSITIVE (30.00 EUR = 3000): the server applies the sign, storing outflows negative. Fails with cash_register.session_unavailable if the session is not this business's, cash_register.session_not_open if that session has already been closed, cash_register.movement_type_unknown for any other type, cash_register.amount_required for a zero amount, cash_register.negative_balance_not_allowed when a cash-out would leave the drawer below zero and the settings forbid it, and cash_register.payment_method_unknown for a `payment_method` outside cash|card|transfer|other (the localized names of the sales catalogue are NOT valid here: only cash counts for the drawer and for the negative-balance guard)."
       }
     },
     "cash_register._movement_insert": {
@@ -584,6 +591,13 @@
         {
           "query": "cash_register.current_session",
           "required": true
+        },
+        {
+          "query": "cash_register.live_cash_for_sale",
+          "params": {
+            "sale_id": "payload.sale_id"
+          },
+          "required": true
         }
       ],
       "emit": [
@@ -615,6 +629,7 @@
     "cash_register.refund_not_enough_ids": {},
     "cash_register.refund_ref_required": {},
     "cash_register.session_already_open": {},
+    "cash_register.session_not_open": {},
     "cash_register.session_unavailable": {},
     "cash_register.void_no_open_session": {},
     "cash_register.void_not_enough_ids": {},

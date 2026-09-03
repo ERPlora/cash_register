@@ -84,10 +84,11 @@ count exists. Read the movement list of the session: manual outs, refunds from v
 the opening float are the usual suspects. Remember gifts are **not** cash and are reported apart.
 
 **"I voided a sale and the cash did not come back."** If it was paid by card or transfer, nothing
-should come back — the drawer never had it. If it was cash, look for a `refund` movement marked with
-that sale **in the drawer that is open now**, not in the shift that sold it: the money goes out of
-today's till. If there was no session open when the sale was voided the reversal was refused and
-retried later — check that a register is open.
+should come back — the drawer never had it, and voiding or refunding it needs no register open at
+all. If it was cash, look for a `refund` movement marked with that sale **in the drawer that is
+open now**, not in the shift that sold it: the money goes out of today's till. If there was CASH to
+give back and no session was open when the sale was voided or refunded, the reversal was refused
+and retried later — check that a register is open.
 
 **"There are two refunds for the same void."** There cannot be; the insertion is guarded. If you see
 two, they are for different sales — check the sale reference on each.
