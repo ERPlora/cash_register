@@ -48,36 +48,73 @@
 -- esa venta, así que en una reentrega el importe vivo ya vale 0.
 --
 -- Runtime inyecta :new_id, :hub_id, :current_user_id, :now; :sale_id viene del evento.
+-- 🔴 UN ID POR SESIÓN, Y EL NETEO SE APLICA UNA SOLA VEZ (cash_register#61). The runtime injects
+-- exactly ONE `:new_id` per SQL command, and this statement groups by session, so the day a sale's
+-- cash legs sat in two sessions the INSERT produced two rows with the SAME primary key and the
+-- whole void died with `duplicate key value violates unique constraint
+-- "cash_register_movement_pkey"` — no reversal at all, and the drawer left counting a sale that no
+-- longer existed. Extra ids are minted by the DATABASE, the same way `whatsapp_inbox`'s
+-- `inbound_conversation_upsert.sql` mints its second row: `:new_id` goes to the FIRST group, which
+-- is the row that always exists, so a single-session sale (today's only reachable shape under
+-- `004_one_open_session_per_hub.sql`) still writes exactly the id the command answers with.
+--
+-- And underneath it a second, quieter one: the "already refunded" subquery is a SCALAR over the
+-- whole sale, so every group subtracted the SAME total — a 30,00 € refund came off BOTH sessions
+-- and 30,00 € of live cash stayed in the till for good. The live amount is one number for the SALE
+-- (cash_register#63), so across sessions it is spread as a WATERFALL in booking order: the refunds
+-- eat the OLDEST legs first (`running_sold - refunded`, clamped to each leg by `LEAST`), and the
+-- floor stays where it already was — `WHERE live.amount > 0` — so a session whose leg the refunds
+-- already swallowed posts nothing instead of being handed money it never had, and the TOTAL
+-- reversed is exactly what is live. With ONE session it is arithmetically identical to #63 —
+-- `LEAST(sold, sold - refunded)` IS `sold - refunded` — which is why that battery passes untouched.
+--
 INSERT INTO cash_register_movement
   (id, hub_id, session_id, movement_type, amount, payment_method, payment_method_type, sale_reference, description, employee_id,
    is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT
-  :new_id, :hub_id, live.session_id, 'refund', -live.amount, 'cash', 'cash', :sale_id,
+  CASE WHEN row_number() OVER (ORDER BY live.first_at, live.session_id) = 1
+       THEN :new_id
+       ELSE gen_random_uuid()::text
+  END,
+  :hub_id, live.session_id, 'refund', -live.amount, 'cash', 'cash', :sale_id,
   '[VOID] Sale ' || :sale_id, :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM (
-  -- Lo que esta venta dejó VIVO en el cajón: lo que entró en efectivo menos lo que ya volvió en
-  -- efectivo. Se agrupa por la sesión de los movimientos de VENTA (las devoluciones se anotan en la
-  -- sesión abierta del momento, que no tiene por qué ser esa) para no cambiar dónde aterriza la
-  -- reversión, que sigue siendo la sesión del movimiento original.
+  -- What this sale left ALIVE in each drawer. Grouped by the session of the SALE movements (a
+  -- refund is booked in whichever session was open at the time, which need not be that one) so the
+  -- reversal keeps landing where the original movement landed.
   SELECT
-    orig.session_id AS session_id,
-    SUM(ABS(orig.amount)) - COALESCE((
-      SELECT SUM(ABS(rf.amount))
-      FROM cash_register_movement rf
-      WHERE rf.hub_id = :hub_id
-        AND rf.sale_reference = :sale_id
-        AND rf.movement_type = 'refund'
-        AND COALESCE(rf.payment_method_type,'cash') = 'cash'
-        AND rf.is_deleted = 0
-    ), 0) AS amount
-  FROM cash_register_movement orig
-  WHERE orig.hub_id = :hub_id
-    AND orig.sale_reference = :sale_id
-    AND orig.movement_type = 'sale'
-    AND COALESCE(orig.payment_method_type,'cash') = 'cash'
-    AND orig.is_deleted = 0
-  GROUP BY orig.session_id
+    per_session.session_id AS session_id,
+    per_session.first_at   AS first_at,
+    LEAST(per_session.sold, per_session.running_sold - per_session.refunded) AS amount
+  FROM (
+    SELECT
+      orig.session_id AS session_id,
+      MIN(COALESCE(orig.created_at, '')) AS first_at,
+      SUM(ABS(orig.amount)) AS sold,
+      -- Cash this sale had put in the drawer up to and including this session, oldest first: the
+      -- waterfall's running total. Aggregate inside a window is evaluated after GROUP BY.
+      SUM(SUM(ABS(orig.amount))) OVER (
+        ORDER BY MIN(COALESCE(orig.created_at, '')), orig.session_id
+        ROWS UNBOUNDED PRECEDING
+      ) AS running_sold,
+      COALESCE((
+        SELECT SUM(ABS(rf.amount))
+        FROM cash_register_movement rf
+        WHERE rf.hub_id = :hub_id
+          AND rf.sale_reference = :sale_id
+          AND rf.movement_type = 'refund'
+          AND COALESCE(rf.payment_method_type,'cash') = 'cash'
+          AND rf.is_deleted = 0
+      ), 0) AS refunded
+    FROM cash_register_movement orig
+    WHERE orig.hub_id = :hub_id
+      AND orig.sale_reference = :sale_id
+      AND orig.movement_type = 'sale'
+      AND COALESCE(orig.payment_method_type,'cash') = 'cash'
+      AND orig.is_deleted = 0
+    GROUP BY orig.session_id
+  ) per_session
 ) live
 WHERE live.amount > 0
   AND NOT EXISTS (
