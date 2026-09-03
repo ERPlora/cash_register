@@ -153,6 +153,8 @@ def sys_params(payload: dict, hub: str = HUB) -> dict:
     p.setdefault("current_user_id", USER)
     p.setdefault("now", "2026-08-24T10:00:00+00:00")
     p.setdefault("new_id", str(uuid.uuid4()))
+    # #77: the void reversal is written by the handler's door, which names the row itself.
+    p.setdefault("movement_id", str(uuid.uuid4()))
     return p
 
 
@@ -441,10 +443,10 @@ def check_against_postgres() -> None:
         # `_reverse_sale` keys on `movement_type='sale'`, so the refund movements must be invisible
         # to it: reversing the cash sale takes back 30,00 € and not a cent more.
         cash_sale_session = expected_cash(sid)
-        run_sql_command("cash_register._reverse_sale", {"sale_id": "sale-paid-in-cash"})
+        run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": "sale-paid-in-cash"})
         check("voiding the cash sale reverses its 30,00 €, untouched by the refunds",
               expected_cash(sid), cash_sale_session - 3000)
-        run_sql_command("cash_register._reverse_sale", {"sale_id": "sale-paid-in-cash"})
+        run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": "sale-paid-in-cash"})
         check("and the void is still idempotent", expected_cash(sid), cash_sale_session - 3000)
 
         # ── 8. BACK-COMPAT: a hub whose `sales` never emits sale.refunded ───────────────────────

@@ -578,14 +578,47 @@
     },
     "cash_register._reverse_sale": {
       "permission": "cash_register.add_movement",
+      "internal": true,
       "transaction": true,
-      "sql": [
-        "commands/_reverse_sale.sql"
+      "reads": [
+        {
+          "query": "cash_register.current_session",
+          "required": true
+        }
       ],
       "emit": [
         "cash_register.movement_added"
+      ],
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "reverse_sale"
+      }
+    },
+    "cash_register._reverse_movement_for_open_session": {
+      "permission": "cash_register.add_movement",
+      "internal": true,
+      "sql": [
+        "commands/_reverse_movement_for_open_session.sql"
       ]
     }
+  },
+  "errors": {
+    "cash_register.amount_required": {},
+    "cash_register.closing_balance_required": {},
+    "cash_register.movement_type_unknown": {},
+    "cash_register.negative_balance_not_allowed": {},
+    "cash_register.not_enough_ids": {},
+    "cash_register.opening_balance_required": {},
+    "cash_register.payment_method_unknown": {},
+    "cash_register.refund_no_open_session": {},
+    "cash_register.refund_not_enough_ids": {},
+    "cash_register.refund_ref_required": {},
+    "cash_register.session_already_open": {},
+    "cash_register.session_unavailable": {},
+    "cash_register.void_no_open_session": {},
+    "cash_register.void_not_enough_ids": {},
+    "cash_register.void_sale_id_required": {}
   },
   "events": {
     "listen": {

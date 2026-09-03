@@ -23,9 +23,26 @@ SELECT
   -- same rule as `close_session.sql`/`current_session.expected` (hub#778: keyed on
   -- payment_method_TYPE). The `movement.add` handler reads it to enforce `allow_negative_balance`
   -- (cash_register#38), so a wrong number here also disarms that guard.
-  s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
-                                        THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
-                                        ELSE 0 END),0) AS expected_cash,
+  --
+  -- A CLOSED shift answers with the STORED figure, never with a recount (cash_register#77). That
+  -- column is the AUDITED number: `close_session.sql` computed it at the count and derived the
+  -- stored `difference` from it, so recomputing it later would leave the row stating a difference
+  -- that no longer follows from its own expected — the exact split `sessions_list.sql` already
+  -- closed for the grid in #65, arrived at here from the other side. It is what made a void landing
+  -- in a closed session move a shift that had already been signed; #77 also stopped the void from
+  -- landing there, but this is the half that holds for ANY later row (a backdated movement, a
+  -- soft-delete, a module not written yet). COALESCE, not a bare column, because a row closed
+  -- before that column existed has none, and answering NULL would disarm the negative-balance guard
+  -- instead of tightening it.
+  CASE WHEN s.status <> 'open'
+       THEN COALESCE(s.expected_balance,
+                     s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
+                                                           THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
+                                                           ELSE 0 END),0))
+       ELSE s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
+                                                  THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
+                                                  ELSE 0 END),0)
+  END AS expected_cash,
   COUNT(m.id) AS movement_count
 FROM cash_register_session s
 LEFT JOIN cash_register_movement m ON m.session_id = s.id AND m.is_deleted = 0 AND m.hub_id = :hub_id

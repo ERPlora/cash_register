@@ -169,5 +169,22 @@
     "cash_register.recent_sessions": {
       "title": "Descuadres recientes"
     }
+  },
+  "errors": {
+    "cash_register.amount_required": "Un movimiento de caja necesita un importe: indica cuánto dinero entra o sale del cajón.",
+    "cash_register.closing_balance_required": "Este negocio exige contar el cajón al cerrar: introduce el efectivo contado.",
+    "cash_register.movement_type_unknown": "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devolución.",
+    "cash_register.negative_balance_not_allowed": "Esta salida dejaría el cajón por debajo de cero y este negocio no permite saldo negativo.",
+    "cash_register.not_enough_ids": "No se pudo dar un identificador a la fila que la caja iba a escribir.",
+    "cash_register.opening_balance_required": "Este negocio exige un fondo de apertura: indica el efectivo con el que empieza el cajón.",
+    "cash_register.payment_method_unknown": "Esa no es una forma de pago que la caja conozca: usa efectivo, tarjeta, transferencia u otra.",
+    "cash_register.refund_no_open_session": "La devolución se hizo sin ninguna caja abierta: el cajón no tiene dónde anotarla. Abre la caja y se reintentará.",
+    "cash_register.refund_not_enough_ids": "No se pudo anotar la devolución: faltó el identificador de una de sus patas.",
+    "cash_register.refund_ref_required": "Una devolución sin referencia de documento no se puede anotar: la caja no podría distinguir un reintento de una segunda devolución.",
+    "cash_register.session_already_open": "Ya hay una caja abierta en este negocio. Ciérrala antes de abrir otra.",
+    "cash_register.session_unavailable": "Esa caja no está disponible: no existe en este negocio o se ha borrado.",
+    "cash_register.void_no_open_session": "La venta se anuló sin ninguna caja abierta: el cajón no tiene dónde anotar la reversión. Abre la caja y se reintentará.",
+    "cash_register.void_not_enough_ids": "No se pudo anotar la reversión: faltó el identificador del movimiento compensatorio.",
+    "cash_register.void_sale_id_required": "La venta anulada no trae referencia: no hay nada que revertir en el cajón."
   }
 }

@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Voiding a sale whose cash legs live in TWO sessions (cash_register#61).
+"""Voiding a sale whose cash legs live in TWO sessions (cash_register#61, retargeted by #77).
 
-`commands/_reverse_sale.sql` posts the compensating `refund` in the SAME session that took the
-original `sale` movement, so it groups by `orig.session_id`. But it wrote **one** `:new_id` for
-every group the runtime gave it — the runtime injects exactly ONE id per SQL command — so the
-moment a sale's cash legs sat in two sessions the INSERT produced two rows with the same primary
-key and died:
+THE INCIDENT (#61). `commands/_reverse_sale.sql` posted the compensating `refund` in the SAME
+session that took the original `sale` movement, so it grouped by `orig.session_id`. But it wrote
+**one** `:new_id` for every group the runtime gave it — the runtime injects exactly ONE id per SQL
+command — so the moment a sale's cash legs sat in two sessions the INSERT produced two rows with
+the same primary key and died:
 
     duplicate key value violates unique constraint "cash_register_movement_pkey"
 
 The void then failed WHOLE: no reversal at all, and the drawer kept counting a sale that no longer
-existed. And underneath it a second, quieter one: the "already refunded" subquery is a scalar over
-the WHOLE sale, so every group subtracted the SAME refund total — a 30,00 € refund came off both
+existed. Underneath it a second, quieter one: the "already refunded" subquery was a scalar over the
+WHOLE sale, so every group subtracted the SAME refund total — a 30,00 € refund came off both
 sessions and 30,00 € of live cash stayed in the till for good.
+
+WHY THIS BATTERY STILL EXISTS AFTER #77. #77 moved the reversal to the OPEN session — one target,
+so one row, so one id — which makes that primary-key collision structurally impossible instead of
+merely fixed. That is exactly the kind of change that quietly deletes a regression test, so the
+scenario stays and the assertions move: a sale split across two shifts must still VOID (not die),
+must still reverse exactly what is LIVE, and must still net the refunds ONCE. What changed is
+WHERE the money comes out — the drawer that is open now, never a shift already counted (#77).
 
 HOW A SALE ENDS UP IN TWO SESSIONS. `004_one_open_session_per_hub.sql` allows a single OPEN session
 per hub, so today the two legs of one `record_sale` delivery always land together. They come apart
@@ -22,10 +29,9 @@ That is also the shape the day several tills per hub are allowed, which is what 
 filed for.
 
 THE RULE FOR THE REFUNDS. The live amount of the sale is what came in minus what already went back
-in cash — one number for the sale, not one per session (cash_register#63). Spread over sessions it
-is a WATERFALL in booking order: the refunds eat the oldest sale legs first, no session ever goes
-below zero, and the TOTAL reversed is exactly the live amount. With one session it is arithmetically
-identical to what #63 shipped, which is why that battery keeps passing untouched.
+in cash — one number for the sale, not one per session (cash_register#63). Since #77 it is also
+reversed in one place, so the waterfall that spread it over the original sessions is gone with the
+reason for it.
 
 Usage: tests/void_across_sessions.postgres.test.py   (exit 0 = green)
   Uses the `erplora-test-pg-5433` container by default (override:
@@ -255,13 +261,14 @@ def void(
     sale_id: str,
     when: str = "2026-08-24T20:00:00+00:00",
     hub: str = HUB,
-    new_id: str | None = None,
+    movement_id: str | None = None,
 ) -> str:
-    """The `sale.voided` listener, through its own door. Returns the `:new_id` the runtime injected."""
-    ident = new_id or str(uuid.uuid4())
+    """The write half of the `sale.voided` listener (#77: the `reverse_sale` handler checks there is
+    an open drawer and then emits this). Returns the id the handler handed over."""
+    ident = movement_id or str(uuid.uuid4())
     run_sql_command(
-        "cash_register._reverse_sale",
-        {"sale_id": sale_id, "now": when, "new_id": ident},
+        "cash_register._reverse_movement_for_open_session",
+        {"sale_id": sale_id, "now": when, "movement_id": ident},
         hub,
     )
     return ident
@@ -338,12 +345,18 @@ def distinct_ids(sale_id: str, hub: str = HUB) -> int:
 # ── the cases ──────────────────────────────────────────────────────────────────────────────────
 
 
-def split_sale(sale_id: str, refund: tuple[int, str] | None = None, hub: str = HUB):
+def split_sale(
+    sale_id: str,
+    refund: tuple[int, str] | None = None,
+    hub: str = HUB,
+    afternoon_opened_at: str = "2026-08-24T15:00:00+00:00",
+):
     """Book `sale_id` across TWO sessions of `hub` and return both session ids.
 
     Morning shift takes the first leg and is CLOSED; the afternoon shift takes the second. This is
     the only way a hub can get there today (`004_one_open_session_per_hub.sql`) and it uses nothing
-    but the module's own commands.
+    but the module's own commands. `afternoon_opened_at` lets the tenancy case make the NEIGHBOUR's
+    open shift the newest one (see §6).
     """
     running = open_session_id(hub)
     if running is not None:
@@ -353,7 +366,7 @@ def split_sale(sale_id: str, refund: tuple[int, str] | None = None, hub: str = H
     if refund is not None:
         book_refund(sale_id, refund[0], refund[1], "2026-08-24T09:30:00+00:00", hub)
     close_session(morning, "2026-08-24T14:00:00+00:00", hub)
-    afternoon = open_session("2026-08-24T15:00:00+00:00", hub)
+    afternoon = open_session(afternoon_opened_at, hub)
     book_sale(AFTERNOON_LEG, sale_id, "2026-08-24T16:00:00+00:00", hub)
     return morning, afternoon
 
@@ -374,31 +387,36 @@ def run_cases() -> None:
         OPENING_FLOAT + AFTERNOON_LEG,
     )
 
-    # 🔴 THE issue: before the fix this raised
+    # 🔴 THE issue: before #61 this raised
     # `duplicate key value violates unique constraint "cash_register_movement_pkey"`
-    # and the whole void was lost.
+    # and the whole void was lost. Since #77 there is only ever one row, so the collision cannot be
+    # written at all — but the void still has to HAPPEN, which is what this asserts.
     injected = void(sale)
     check(
-        "the runtime's own `:new_id` names the first of the rows written",
-        void_ids(sale)[:1],
+        "the void goes through and writes exactly one movement",
+        void_ids(sale),
         [injected],
     )
     check(
-        "each session gets its OWN compensating movement, for its OWN leg",
+        "in the OPEN shift, for the whole live amount of the sale (#77)",
         void_movements_by_session(sale),
-        [(morning, MORNING_LEG), (afternoon, AFTERNOON_LEG)],
+        [(afternoon, SALE_TOTAL)],
     )
-    check("and the two movements carry two distinct ids", distinct_ids(sale), 2)
-    check("the morning drawer is back on its float", expected_cash(morning), OPENING_FLOAT)
+    check("so there is one id, and it is the one handed over", distinct_ids(sale), 1)
     check(
-        "the afternoon drawer is back on its float",
+        "the CLOSED morning shift is not touched: its count stands",
+        expected_cash(morning),
+        OPENING_FLOAT + MORNING_LEG,
+    )
+    check(
+        "and the drawer that is open pays the whole 100,00 € back",
         expected_cash(afternoon),
-        OPENING_FLOAT,
+        OPENING_FLOAT + AFTERNOON_LEG - SALE_TOTAL,
     )
 
-    # ── 2. THE CONTROL: one session still reverses in ONE movement ──────────────────────────────
-    # Without it, "split the reversal" and "post one row per session always" would look the same in
-    # §1's numbers. Today's only reachable shape must not change at all.
+    # ── 2. THE CONTROL: a sale that never left its shift ─────────────────────────────────────────
+    # Today's only reachable shape (`004_one_open_session_per_hub.sql`) must not change at all: the
+    # open session IS the original one, so this is the same single movement it always was.
     print("\n2 · the control: a single-session sale still posts exactly one movement")
     before = expected_cash(afternoon)
     book_sale(2500, "sale-one-session", "2026-08-24T17:00:00+00:00")
@@ -407,34 +425,39 @@ def run_cases() -> None:
     check("voiding it reverses all 25,00 €", expected_cash(afternoon), before)
     check("in a single movement", void_movements("sale-one-session"), [2500])
     check(
-        "carrying exactly the id the runtime injected, as it always did",
+        "carrying exactly the id the handler passed, as it always did",
         void_ids("sale-one-session"),
         [injected],
     )
 
     # ── 3. THE REFUND IS SUBTRACTED ONCE, NOT ONCE PER SESSION ──────────────────────────────────
-    # The scalar "already refunded" subquery is the same number for every group, so before the fix
-    # a 30,00 € refund came off BOTH sessions: 30,00 € + 10,00 € reversed instead of 70,00 €, and
-    # 30,00 € of live cash stayed in the till in silence. The waterfall spends the refund on the
-    # oldest leg first: the morning reverses 60 − 30 = 30, the afternoon its whole 40.
+    # The scalar "already refunded" subquery was the same number for every group, so before #61 a
+    # 30,00 € refund came off BOTH sessions: 30,00 € + 10,00 € reversed instead of 70,00 €, and
+    # 30,00 € of live cash stayed in the till in silence. The live amount is one number for the
+    # SALE, and since #77 it comes out of one drawer: 100,00 − 30,00 = 70,00 €.
     print("\n3 · a partial refund shrinks the reversal ONCE across both sessions")
     sale = "sale-split-refunded"
     morning3, afternoon3 = split_sale(sale, refund=(3000, "refund-doc-61-a"))
     void(sale)
     check(
-        "the refund eats the oldest leg first and only once",
+        "one reversal, in the open shift, for what was still live",
         void_movements_by_session(sale),
-        [(morning3, MORNING_LEG - 3000), (afternoon3, AFTERNOON_LEG)],
+        [(afternoon3, SALE_TOTAL - 3000)],
     )
     check(
         "so the void reverses exactly what was still live: 70,00 €",
         sum(void_movements(sale)),
         SALE_TOTAL - 3000,
     )
+    check(
+        "and the shift that was already closed keeps its own number",
+        expected_cash(morning3),
+        OPENING_FLOAT + MORNING_LEG - 3000,
+    )
 
     # ── 4. FULLY refunded across sessions: nothing left to reverse ──────────────────────────────
-    # No group may post a row, and none may post a POSITIVE one: a session whose leg is smaller
-    # than the refund must floor at zero, never hand the drawer money it never had.
+    # Nothing may be posted, and nothing POSITIVE above all: the floor must hold, never hand the
+    # drawer money it never had.
     print("\n4 · a sale already refunded in FULL leaves nothing for the void")
     sale = "sale-split-fully-refunded"
     morning4, afternoon4 = split_sale(sale, refund=(SALE_TOTAL, "refund-doc-61-b"))
@@ -444,52 +467,58 @@ def run_cases() -> None:
     check("the morning drawer does not move", expected_cash(morning4), square_m)
     check("the afternoon drawer does not move", expected_cash(afternoon4), square_a)
 
-    # ── 4b. THE FIRST GROUP FLOORS TO ZERO AND A LATER ONE SURVIVES ────────────────────────────
-    # The refund eats the morning leg EXACTLY. That group must post nothing, the afternoon must post
-    # its whole leg — and `:new_id` has to land on THAT row: the runtime answers the command with
-    # that id, so an id naming a row nobody wrote is a caller left holding a handle to nothing.
-    # Numbering the groups BEFORE the floor would have burnt `:new_id` on the row that never exists.
-    print("\n4b · the refund eats the first leg exactly; the second still reverses")
+    # ── 4b. THE REFUND EATS ONE LEG EXACTLY AND THE REST STILL REVERSES ─────────────────────────
+    # A refund the size of a whole leg is the arithmetic edge of the netting: what is left is the
+    # other leg, and it still has to come out — with the id the handler handed over, because that
+    # is the id the caller is answered with, and an id naming a row nobody wrote is a caller left
+    # holding a handle to nothing.
+    print("\n4b · a refund the size of one leg still leaves the other to reverse")
     sale = "sale-split-first-leg-gone"
     morning4b, afternoon4b = split_sale(sale, refund=(MORNING_LEG, "refund-doc-61-c"))
     injected = void(sale)
     check(
-        "only the afternoon reverses, for its whole leg",
+        "the reversal is what survives the netting, in the open shift",
         void_movements_by_session(sale),
-        [(afternoon4b, AFTERNOON_LEG)],
+        [(afternoon4b, SALE_TOTAL - MORNING_LEG)],
     )
-    check("and it carries the runtime's `:new_id`", void_ids(sale), [injected])
-    check(
-        "the total reversed is what was live: 40,00 €",
-        sum(void_movements(sale)),
-        SALE_TOTAL - MORNING_LEG,
-    )
+    check("and it carries the id the handler passed", void_ids(sale), [injected])
 
     # ── 5. IDEMPOTENCE across sessions ──────────────────────────────────────────────────────────
     # Defence in depth over the runtime's `_event_delivery` marker: a re-delivered `sale.voided`
-    # must not post a second pair of movements.
+    # must not post a second movement.
     print("\n5 · re-delivering the void does not reverse twice")
     sale = "sale-split-clean"
     before_m, before_a = expected_cash(morning), expected_cash(afternoon)
     void(sale)
-    check("the drawers do not move again", (expected_cash(morning), expected_cash(afternoon)), (before_m, before_a))
     check(
-        "and there are still exactly two void movements",
+        "the drawers do not move again",
+        (expected_cash(morning), expected_cash(afternoon)),
+        (before_m, before_a),
+    )
+    check(
+        "and there is still exactly one void movement",
         void_movements_by_session(sale),
-        [(morning, MORNING_LEG), (afternoon, AFTERNOON_LEG)],
+        [(afternoon, SALE_TOTAL)],
     )
 
     # ── 6. TENANCY, with a LIVE neighbour on the same sale reference ────────────────────────────
     # The neighbour's own split sale must be untouched by ours, and ours by theirs.
+    # 🔴 The neighbour's open shift is deliberately the NEWEST (#77). The reversal resolves its
+    # target with `ORDER BY opened_at DESC LIMIT 1`, so with the `hub_id` filter dropped it would
+    # land in whichever open session is newest ACROSS hubs: with both afternoons opened at the same
+    # instant the pick was a coin toss and the mutant survived. Opening the neighbour's later is
+    # what makes this a tenancy test instead of a coincidence.
     print("\n6 · the hub next door keeps its own split sale")
     sale = "sale-split-shared-ref"
-    n_morning, n_afternoon = split_sale(sale, hub=NEIGHBOUR)
-    mine_m, mine_a = split_sale(sale)
+    _mine_m, mine_a = split_sale(sale)
+    n_morning, n_afternoon = split_sale(
+        sale, hub=NEIGHBOUR, afternoon_opened_at="2026-08-24T15:30:00+00:00"
+    )
     void(sale)
     check(
-        "our void reverses OUR two legs",
+        "our void books in OUR open shift",
         void_movements_by_session(sale),
-        [(mine_m, MORNING_LEG), (mine_a, AFTERNOON_LEG)],
+        [(mine_a, SALE_TOTAL)],
     )
     check(
         "and posts nothing in the neighbour's drawers",
@@ -526,7 +555,7 @@ def main() -> int:
         print(f"\n{len(failures)} failure(s)")
         return 1
     print(
-        "\nOK — a sale split across two sessions reverses one movement per session, netted once"
+        "\nOK — a sale split across two sessions voids in ONE movement, in the open shift, netted once"
     )
     return 0
 

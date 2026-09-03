@@ -58,7 +58,9 @@ describe('only cash reaches the expected balance', () => {
 });
 
 describe('voiding a sale is symmetric with recording it', () => {
-  const reverse = () => sqlOf('commands/_reverse_sale.sql');
+  // The write half of the `sale.voided` listener since cash_register#77 — `_reverse_sale` is now
+  // the WASM door that checks a drawer is open; this is the SQL that actually books the reversal.
+  const reverse = () => sqlOf('commands/_reverse_movement_for_open_session.sql');
 
   it('only cash movements are reversed', () => {
     // The reversal writes its row as `'cash'`. If it summed card movements too, voiding a card sale
@@ -90,7 +92,8 @@ describe('el movimiento GUARDA con qué se pagó, no solo lo lee', () => {
     // El camino automático: una venta cobrada crea su movimiento en la sesión abierta.
     'commands/_movement_for_open_session.sql',
     // El espejo: anular esa venta. Ya lo llevaba, y ese contraste fue lo que delató al de arriba.
-    'commands/_reverse_sale.sql',
+    // (cash_register#77: `_reverse_sale` es ahora el handler WASM; esta es la SQL que escribe.)
+    'commands/_reverse_movement_for_open_session.sql',
     // La puerta MANUAL: un movimiento de caja registrado a mano (la pantalla, el asistente, la
     // API). Faltaba de esta lista, y por eso #33 se cerró con el bug todavía vivo en ella
     // (cash_register#54): el arreglo se hizo fichero a fichero en vez de sobre «todo el que

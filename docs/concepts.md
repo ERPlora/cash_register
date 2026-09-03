@@ -50,16 +50,22 @@ movement.
 
 When a sale is voided, the module looks for the **cash** movement that sale produced.
 
-- If it finds one, it inserts a compensating `refund` in the **same session**, marked with the voided
-  sale, for the negated amount. The original movement is left exactly as it was.
+- If it finds one, it inserts a compensating `refund` in the session that is **open right now**,
+  marked with the voided sale, for the negated amount. The original movement is left exactly as it
+  was.
 - If the sale was paid by card, transfer or anything else, nothing happens — that money never touched
   the drawer.
 
 This is **idempotent**: a repeated `sale.voided` delivery cannot post the refund twice.
 
-Note the refund lands in the session where the sale was recorded, which may not be the session that
-is open right now. That is intentional — the shift that took the money is the shift that gives it
-back.
+The refund lands in **today's open drawer, never in a shift that has already been counted** — even
+when the sale itself belongs to yesterday. That is where the money physically comes from, it is
+where a plain refund has always gone, and it is what every till does: a closed shift is closed. If
+no drawer is open at all the void is **refused out loud** instead of being lost: open the register
+and the event is retried.
+
+A shift that has been closed keeps the expected balance it was signed with, for good. Nothing
+recorded later changes it.
 
 ## Gifts are shown apart, at cost
 

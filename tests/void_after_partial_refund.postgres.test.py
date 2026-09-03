@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Voiding a sale that was ALREADY refunded in part reverses only what is LEFT (cash_register#63).
 
-`commands/_reverse_sale.sql` (the `sale.voided` listener) reversed the WHOLE sale: `-SUM(amount)`
+`commands/_reverse_movement_for_open_session.sql` (the write half of the `sale.voided` listener,
+`commands/_reverse_sale.sql` until #77) reversed the WHOLE sale: `-SUM(amount)`
 over the sale's cash movements. It knew nothing about the refunds that had already gone out of that
 same sale, so a sale refunded in part and voided afterwards took the refunded slice out of the
 drawer TWICE.
@@ -134,6 +135,8 @@ def sys_params(payload: dict, hub: str = HUB) -> dict:
     p.setdefault("current_user_id", USER)
     p.setdefault("now", "2026-08-24T10:00:00+00:00")
     p.setdefault("new_id", str(uuid.uuid4()))
+    # #77: the void reversal is written by the handler's door, which names the row itself.
+    p.setdefault("movement_id", str(uuid.uuid4()))
     return p
 
 
@@ -246,7 +249,7 @@ def book_refund(sale_id: str, amount: int, kind: str, ref: str, hub: str = HUB) 
 
 def void(sale_id: str, hub: str = HUB) -> None:
     """The `sale.voided` listener, through its own door."""
-    run_sql_command("cash_register._reverse_sale", {"sale_id": sale_id}, hub)
+    run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": sale_id}, hub)
 
 
 def expected_cash(session_id: str, hub: str = HUB) -> int:
