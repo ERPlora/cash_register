@@ -3946,6 +3946,23 @@ var es_default = {
     "cash_register.recent_sessions": {
       title: "Descuadres recientes"
     }
+  },
+  errors: {
+    "cash_register.amount_required": "Un movimiento de caja necesita un importe: indica cu\xE1nto dinero entra o sale del caj\xF3n.",
+    "cash_register.closing_balance_required": "Este negocio exige contar el caj\xF3n al cerrar: introduce el efectivo contado.",
+    "cash_register.movement_type_unknown": "Eso no es un tipo de movimiento de caja: usa entrada, salida, venta o devoluci\xF3n.",
+    "cash_register.negative_balance_not_allowed": "Esta salida dejar\xEDa el caj\xF3n por debajo de cero y este negocio no permite saldo negativo.",
+    "cash_register.not_enough_ids": "No se pudo dar un identificador a la fila que la caja iba a escribir.",
+    "cash_register.opening_balance_required": "Este negocio exige un fondo de apertura: indica el efectivo con el que empieza el caj\xF3n.",
+    "cash_register.payment_method_unknown": "Esa no es una forma de pago que la caja conozca: usa efectivo, tarjeta, transferencia u otra.",
+    "cash_register.refund_no_open_session": "La devoluci\xF3n se hizo sin ninguna caja abierta: el caj\xF3n no tiene d\xF3nde anotarla. Abre la caja y se reintentar\xE1.",
+    "cash_register.refund_not_enough_ids": "No se pudo anotar la devoluci\xF3n: falt\xF3 el identificador de una de sus patas.",
+    "cash_register.refund_ref_required": "Una devoluci\xF3n sin referencia de documento no se puede anotar: la caja no podr\xEDa distinguir un reintento de una segunda devoluci\xF3n.",
+    "cash_register.session_already_open": "Ya hay una caja abierta en este negocio. Ci\xE9rrala antes de abrir otra.",
+    "cash_register.session_unavailable": "Esa caja no est\xE1 disponible: no existe en este negocio o se ha borrado.",
+    "cash_register.void_no_open_session": "La venta se anul\xF3 sin ninguna caja abierta: el caj\xF3n no tiene d\xF3nde anotar la reversi\xF3n. Abre la caja y se reintentar\xE1.",
+    "cash_register.void_not_enough_ids": "No se pudo anotar la reversi\xF3n: falt\xF3 el identificador del movimiento compensatorio.",
+    "cash_register.void_sale_id_required": "La venta anulada no trae referencia: no hay nada que revertir en el caj\xF3n."
   }
 };
 
@@ -4111,6 +4128,23 @@ var en_default = {
     shiftReviewUnavailable: "Pending work could not be checked, so this review may be incomplete.",
     shiftReviewConfirm: "The shift will be closed anyway. Press again to confirm.",
     closeAnyway: "Close anyway"
+  },
+  errors: {
+    "cash_register.amount_required": "A cash movement needs an amount: enter how much money goes in or out of the drawer.",
+    "cash_register.closing_balance_required": "This business requires the drawer to be counted at closing: enter the counted cash.",
+    "cash_register.movement_type_unknown": "That is not a kind of cash movement: use in, out, sale or refund.",
+    "cash_register.negative_balance_not_allowed": "This cash-out would leave the drawer below zero, and this business does not allow a negative balance.",
+    "cash_register.not_enough_ids": "The drawer could not be given an id for the row it was about to write.",
+    "cash_register.opening_balance_required": "This business requires an opening float: enter the cash the drawer starts with.",
+    "cash_register.payment_method_unknown": "That is not a way of paying the drawer knows: use cash, card, transfer or other.",
+    "cash_register.refund_no_open_session": "The refund was issued with no cash session open: the drawer has nowhere to book it. Open the register and it will be retried.",
+    "cash_register.refund_not_enough_ids": "The refund could not be booked: there was no id for one of its legs.",
+    "cash_register.refund_ref_required": "A refund with no document reference cannot be booked: the drawer could not tell a retry from a second refund.",
+    "cash_register.session_already_open": "A cash session is already open for this business. Close it before opening a new one.",
+    "cash_register.session_unavailable": "That cash session is not available: it does not exist in this business or it has been deleted.",
+    "cash_register.void_no_open_session": "The sale was voided with no cash session open: the drawer has nowhere to book the reversal. Open the register and it will be retried.",
+    "cash_register.void_not_enough_ids": "The reversal could not be booked: there was no id for the compensating movement.",
+    "cash_register.void_sale_id_required": "The voided sale carries no reference: there is nothing to reverse in the drawer."
   }
 };
 

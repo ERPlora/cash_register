@@ -3,7 +3,8 @@
 
 ADR-0386 says a sale can be charged with N means of payment and `sale.completed` carries
 `payments[]`. It also says the drawer needs no schema change, and that is true for what the drawer
-READS: `queries/session_summary.sql` sums only the `cash` movements, `commands/_reverse_sale.sql`
+READS: `queries/session_summary.sql` sums only the `cash` movements,
+`commands/_reverse_movement_for_open_session.sql`
 reverses their `SUM`. It was NOT true for what the drawer WRITES: `record_sale` booked ONE movement
 for the whole total, typed after the PRINCIPAL leg.
 
@@ -137,6 +138,8 @@ def sys_params(payload: dict, hub: str = HUB) -> dict:
     p.setdefault("current_user_id", USER)
     p.setdefault("now", "2026-08-24T10:00:00+00:00")
     p.setdefault("new_id", str(uuid.uuid4()))
+    # #77: the void reversal is written by the handler's door, which names the row itself.
+    p.setdefault("movement_id", str(uuid.uuid4()))
     return p
 
 
@@ -338,7 +341,7 @@ def check_against_postgres() -> None:
         )
 
         # ── 3. voiding a mixed sale reverses the CASH legs, and only those ──────────────────────
-        run_sql_command("cash_register._reverse_sale", {"sale_id": SALE})
+        run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": SALE})
         reversal = json.loads(
             psql(
                 [
@@ -365,7 +368,7 @@ def check_against_postgres() -> None:
         )
 
         # Re-delivering the void changes nothing (defence in depth over `_event_delivery`).
-        run_sql_command("cash_register._reverse_sale", {"sale_id": SALE})
+        run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": SALE})
         check("the reversal is idempotent over N legs", expected_cash(sid), OPENING_FLOAT)
 
         # ── 4. a card-only sale still never reaches the drawer ──────────────────────────────────
@@ -374,7 +377,7 @@ def check_against_postgres() -> None:
             sale_id="sale-card-only",
         )
         check("a card-only sale leaves the drawer alone", expected_cash(sid), OPENING_FLOAT)
-        run_sql_command("cash_register._reverse_sale", {"sale_id": "sale-card-only"})
+        run_sql_command("cash_register._reverse_movement_for_open_session", {"sale_id": "sale-card-only"})
         check(
             "and voiding it is a no-op, not a phantom refund",
             expected_cash(sid),

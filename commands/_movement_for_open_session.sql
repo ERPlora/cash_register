@@ -1,9 +1,9 @@
 -- Crea el movimiento de una venta en la sesión de caja ABIERTA.
 --
--- `payment_method` es el nombre que ve la persona («Efectivo», «Tarjeta») y está localizado.
--- `payment_method_type` es el tipo CANÓNICO (`cash`|`card`|`transfer`|`other`, hub#778) y es el
--- único contra el que se puede comparar: el arqueo de `close_session.sql` suma por él, y la
--- anulación de `_reverse_sale.sql` filtra por él.
+-- `payment_method` is the name the person sees («Efectivo», «Tarjeta») and it is localised.
+-- `payment_method_type` is the CANONICAL type (`cash`|`card`|`transfer`|`other`, hub#778) and the
+-- only thing that can be compared against: the count in `close_session.sql` sums by it, and the
+-- void in `_reverse_movement_for_open_session.sql` filters by it.
 --
 -- ⚠️ Faltaba en esta lista de columnas (cash_register#33). El handler calculaba el tipo y lo pasaba
 -- como parámetro, este INSERT no lo nombraba, y la columna se quedaba con el `DEFAULT 'cash'` que le

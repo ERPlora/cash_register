@@ -85,7 +85,9 @@ the opening float are the usual suspects. Remember gifts are **not** cash and ar
 
 **"I voided a sale and the cash did not come back."** If it was paid by card or transfer, nothing
 should come back — the drawer never had it. If it was cash, look for a `refund` movement marked with
-that sale, in the session where the sale was originally recorded, which may not be today's.
+that sale **in the drawer that is open now**, not in the shift that sold it: the money goes out of
+today's till. If there was no session open when the sale was voided the reversal was refused and
+retried later — check that a register is open.
 
 **"There are two refunds for the same void."** There cannot be; the insertion is guarded. If you see
 two, they are for different sales — check the sale reference on each.

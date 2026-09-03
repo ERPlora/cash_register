@@ -13,7 +13,8 @@ own slice); what `cash_register` owes the chain — and what this battery pins �
      logs a `sale` movement for every payment leg regardless of tender (verified against the real
      runtime; the original hub e2e's hand-seeded precondition skipped this leg for card and so
      never saw it). What actually keeps a card sale off the physical float is the
-     `payment_method_type = 'cash'` filter in `_reverse_sale.sql` AND in all three readings of the
+     `payment_method_type = 'cash'` filter in `_reverse_movement_for_open_session.sql` AND in all
+     three readings of the
      drawer — `queries/current_session.sql` (the live KPI the old e2e read as `expected_cash()`),
      `queries/session_summary.sql` (`expected_cash`, what `movement.add` checks
      `allow_negative_balance` against) and `commands/close_session.sql` (`expected_balance`):
@@ -23,13 +24,13 @@ own slice); what `cash_register` owes the chain — and what this battery pins �
 
 Two things this battery deliberately does NOT attempt, and why:
 
-  * **Redelivery idempotency.** `commands/_reverse_sale.sql` guards itself with a
+  * **Redelivery idempotency.** `commands/_reverse_movement_for_open_session.sql` guards itself with a
     `NOT EXISTS (… refund … description = '[VOID] Sale :sale_id')`, defense in depth over the
     runtime's own `_event_delivery` marker — but nothing in the public API replays an outbox event
     on demand (only the Rust-internal `rt.drain_outbox()` the old e2e used can invoke a listener a
     second time). This is a genuine black-box gap, not a shortcut: see the coverage note on
     ERPlora/hub#1264 (inventory's `_restock_on_void` has the symmetric gap).
-  * **The service-line scenario.** `_reverse_sale.sql` keys purely off `cash_register_movement` rows
+  * **The service-line scenario.** `_reverse_movement_for_open_session.sql` keys purely off `cash_register_movement` rows
     by `sale_reference` — it never reads `sales_sale_item`, so a service-only sale reverses
     identically to a product sale from cash_register's point of view. The distinguishing part of
     that original test (stock stays untouched) is inventory's assertion, not cash_register's.

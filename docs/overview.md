@@ -39,7 +39,7 @@ without anyone typing it in.
 | Event | Runs | Effect |
 |---|---|---|
 | `sale.completed` (from `sales`) | `cash_register.record_sale` | Records **one `sale` movement per leg of the payment** in the open session — each with its own amount and its canonical type |
-| `sale.voided` (from `sales`) | `cash_register._reverse_sale` | If that sale left **cash** alive in a drawer, posts a compensating refund for it — **one per session** that took a leg of the sale, in that same session. What is alive is the cash that came in minus what already went back in cash (#63), and it is subtracted **once** across the sessions, oldest leg first (#61) |
+| `sale.voided` (from `sales`) | `cash_register._reverse_sale` | If that sale left **cash** alive in a drawer, posts **one** compensating refund for it in the session that is **open now** (#77) — never in a shift already counted. What is alive is the cash that came in minus what already went back in cash (#63). With no session open the void is refused (`cash_register.void_no_open_session`) so the event is retried, not lost |
 
 Both are no-ops in the cases that should be no-ops: a sale with a total of zero or less records
 nothing, and voiding a card or transfer sale touches no cash.
