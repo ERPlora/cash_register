@@ -455,11 +455,16 @@ pub fn reverse_sale_pure(input: Value) -> Output {
     // `_reverse_movement_for_open_session.sql` to write (its own `live.amount > 0` floor would
     // silently produce zero rows); refusing it anyway turned every card void issued before the
     // till opened for the day into a false alarm parked in the outbox dead-letter.
+    //
+    // "Nothing alive" is a fact only when the host actually ANSWERED the read: an absent row (a
+    // manifest that no longer declares it, a host that stopped resolving it) is NOT zero. Treating
+    // it as zero would make a cash void vanish with no error and no row — the mute failure #61/#77
+    // exist to prevent — so with no answer the handler falls back to the loud path below and the
+    // SQL's own floor decides what gets written.
     let live_amount = read_rows(&input, "cash_register.live_cash_for_sale")
         .first()
-        .map(|row| money::from_json(row.get("amount").unwrap_or(&Value::Null), 0))
-        .unwrap_or(0);
-    if live_amount <= 0 {
+        .map(|row| money::from_json(row.get("amount").unwrap_or(&Value::Null), 0));
+    if matches!(live_amount, Some(amount) if amount <= 0) {
         return Output::default();
     }
 
@@ -1800,6 +1805,44 @@ mod void_tests {
         let out = reverse_sale_pure(void_inp_live(json!({ "sale_id": "sale-card-only" }), json!([{ "id": "sess-open" }]), 0));
         assert!(out.error.is_none());
         assert!(out.operations.is_empty());
+    }
+
+    #[test]
+    fn a_void_whose_live_cash_read_is_missing_still_refuses_with_no_session_open() {
+        // Review of cash_register#81: "nothing alive in cash" is a fact only when the host actually
+        // ANSWERED the read. An absent `live_cash_for_sale` (a manifest edit that drops the read, a
+        // host that stops resolving it) must not be mistaken for "0 to reverse": a cash void would
+        // vanish with no error and no row — the exact mute failure #61/#77 exist to prevent. With
+        // the read missing the handler behaves as before #80: no session → refuse out loud.
+        let out = reverse_sale_pure(json!({
+            "payload": { "sale_id": "sale-cash" },
+            "context": {
+                "new_ids": [json!("id-0")],
+                "now": "2026-08-24T20:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        }));
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.void_no_open_session")
+        );
+    }
+
+    #[test]
+    fn a_void_whose_live_cash_read_is_missing_still_books_the_reversal_with_a_session_open() {
+        // Same degraded state, drawer open: the reversal SQL is still emitted and its own
+        // `live.amount > 0` floor decides what gets written — never the handler on a read it did
+        // not get.
+        let out = reverse_sale_pure(json!({
+            "payload": { "sale_id": "sale-cash" },
+            "context": {
+                "new_ids": [json!("id-0")],
+                "now": "2026-08-24T20:00:00+00:00",
+                "reads": { "cash_register.current_session": [{ "id": "sess-open" }] },
+            }
+        }));
+        assert!(out.error.is_none(), "{:?}", out.error);
+        assert_eq!(out.operations.len(), 1, "the reversal is handed to the SQL, whose floor decides");
     }
 
     #[test]
