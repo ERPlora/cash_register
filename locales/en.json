@@ -172,6 +172,7 @@
     "cash_register.refund_not_enough_ids": "The refund could not be booked: there was no id for one of its legs.",
     "cash_register.refund_ref_required": "A refund with no document reference cannot be booked: the drawer could not tell a retry from a second refund.",
     "cash_register.session_already_open": "A cash session is already open for this business. Close it before opening a new one.",
+    "cash_register.session_not_open": "That cash session is closed: a closed session does not accept new movements.",
     "cash_register.session_unavailable": "That cash session is not available: it does not exist in this business or it has been deleted.",
     "cash_register.void_no_open_session": "The sale was voided with no cash session open: the drawer has nowhere to book the reversal. Open the register and it will be retried.",
     "cash_register.void_not_enough_ids": "The reversal could not be booked: there was no id for the compensating movement.",

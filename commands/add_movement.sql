@@ -24,6 +24,13 @@
 -- movimiento de TARJETA de 50 € dejaba `expected_cash` en 150 €, dinero que la caja no tiene.
 -- El tipo lo deriva el handler del método (una sola vez, en `payment_method_type()`), así que la
 -- guarda `allow_negative_balance` y esta fila no pueden volver a discrepar.
+--
+-- ⚠️ `s.status = 'open'` faltaba aquí (cash_register#78) — la ÚNICA de las tres puertas que anotan
+-- contra "la sesión abierta" sin comprobarlo también en el SQL (`_refund_movement_for_open_session`
+-- y `_reverse_movement_for_open_session` sí lo hacen). El handler ya rechaza en voz alta contra una
+-- sesión cerrada (`cash_register.session_not_open`, leyendo `session.summary.status`); esta línea es
+-- la misma defensa en profundidad que el JOIN de hub_id de arriba: cierra la puerta también para
+-- cualquier llamada que resuelva `_movement_insert` sin pasar por ese guardia.
 INSERT INTO cash_register_movement
   (id, hub_id, session_id, movement_type, amount, payment_method, payment_method_type,
    sale_reference, description, employee_id,
@@ -34,4 +41,4 @@ SELECT
   COALESCE(:sale_reference, ''), COALESCE(:description, ''), :current_user_id,
   0, :current_user_id, :current_user_id, :now, :now
 FROM cash_register_session s
-WHERE s.id = :session_id AND s.hub_id = :hub_id AND s.is_deleted = 0;
+WHERE s.id = :session_id AND s.hub_id = :hub_id AND s.is_deleted = 0 AND s.status = 'open';

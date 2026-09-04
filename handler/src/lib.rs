@@ -270,23 +270,32 @@ pub fn record_refund_pure(input: Value) -> Output {
         );
     }
 
-    // 🔴 La sesión abierta sale de `context.reads`, NUNCA del payload (ADR-0069). Y se lee de
-    // verdad, no solo se declara en el manifest: si no hay caja abierta, el INSERT…SELECT de
-    // `_refund_movement_for_open_session` no produciría fila y el dinero saldría del cajón sin
-    // dejar rastro — el fallo mudo que esta issue existe para cerrar. El evento se rechaza para que
-    // caiga al dead-letter del outbox, donde SÍ se ve.
-    if read_rows(&input, "cash_register.current_session").is_empty() {
-        return refuse(
-            "cash_register.refund_no_open_session",
-            "the refund was issued with no cash session open: the drawer has nowhere to book it",
-        );
-    }
-
     let legs = refund_legs(&payload);
     if legs.is_empty() {
         // Una devolución sin patas no es un error: es un documento que no movió dinero por ninguna
         // puerta que el cajón conozca. No se inventa un movimiento por el `total`, que tiparía a
         // ciegas lo que el emisor no dijo.
+        return Output { operations: vec![], events: vec![], ..Default::default() };
+    }
+
+    // 🔴 La sesión abierta sale de `context.reads`, NUNCA del payload (ADR-0069). Y se lee de
+    // verdad, no solo se declara en el manifest: si no hay caja abierta, el INSERT…SELECT de
+    // `_refund_movement_for_open_session` no produciría fila y el dinero saldría del cajón sin
+    // dejar rastro — el fallo mudo que esta issue existe para cerrar. El evento se rechaza para que
+    // caiga al dead-letter del outbox, donde SÍ se ve.
+    //
+    // cash_register#80: SOLO exige caja abierta si hay de verdad una pata en EFECTIVO. Una
+    // devolución solo con tarjeta/transferencia no toca el cajón — con la caja abierta se anota
+    // igual (queda "en el histórico"), pero sin caja abierta no hay dinero que anotar ni sesión a
+    // la que colgar la fila: rechazarla igualmente convertía cada devolución de tarjeta fuera de
+    // turno en una falsa alarma en el dead-letter.
+    if read_rows(&input, "cash_register.current_session").is_empty() {
+        if legs.iter().any(|leg| leg.kind == "cash") {
+            return refuse(
+                "cash_register.refund_no_open_session",
+                "the refund was issued with no cash session open: the drawer has nowhere to book it",
+            );
+        }
         return Output { operations: vec![], events: vec![], ..Default::default() };
     }
 
@@ -439,6 +448,24 @@ pub fn reverse_sale_pure(input: Value) -> Output {
             "cash_register.void_sale_id_required",
             "the voided sale carries no reference: there is nothing to reverse in the drawer",
         );
+    }
+
+    // cash_register#80: what actually needs an open drawer is LIVE CASH, not the void itself. A
+    // sale paid entirely by card — or already refunded in full, in cash — leaves nothing for
+    // `_reverse_movement_for_open_session.sql` to write (its own `live.amount > 0` floor would
+    // silently produce zero rows); refusing it anyway turned every card void issued before the
+    // till opened for the day into a false alarm parked in the outbox dead-letter.
+    //
+    // "Nothing alive" is a fact only when the host actually ANSWERED the read: an absent row (a
+    // manifest that no longer declares it, a host that stopped resolving it) is NOT zero. Treating
+    // it as zero would make a cash void vanish with no error and no row — the mute failure #61/#77
+    // exist to prevent — so with no answer the handler falls back to the loud path below and the
+    // SQL's own floor decides what gets written.
+    let live_amount = read_rows(&input, "cash_register.live_cash_for_sale")
+        .first()
+        .map(|row| money::from_json(row.get("amount").unwrap_or(&Value::Null), 0));
+    if matches!(live_amount, Some(amount) if amount <= 0) {
+        return Output::default();
     }
 
     // 🔴 The open session comes from `context.reads`, NEVER from the payload (ADR-0069), and it
@@ -600,6 +627,19 @@ pub fn add_movement_pure(input: Value) -> Output {
             "That cash session is not available: it does not exist in this business or it has been deleted.",
         );
     };
+    // cash_register#78: `session.summary` resolves for a CLOSED session too (it has answered with
+    // the audited figure since #77), so its mere presence does not mean the session takes writes.
+    // Without this the manual door was the only one of the three ("as `open_session` and
+    // `_record_refund` already do") with no guard of its own: a movement landed in a shift already
+    // counted and signed, undoing its own `allow_negative_balance` guard in the process (that guard
+    // reads `expected_cash` from THIS SAME row, which for a closed session is the frozen figure,
+    // not what the new row would make it).
+    if session.get("status").and_then(|v| v.as_str()) != Some("open") {
+        return refuse(
+            "cash_register.session_not_open",
+            "That cash session is closed: a closed session does not accept new movements.",
+        );
+    }
     // cash_register#48. `schemas/add_movement.json` is the manifest's half of this contract (it
     // rejects an unknown type and a non-positive amount before the handler runs); these two
     // refusals are the code's half, so the rule holds even for a caller the schema never saw.
@@ -1060,6 +1100,20 @@ mod tests {
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_unavailable"));
     }
+
+    #[test]
+    fn add_movement_refuses_a_closed_session() {
+        // cash_register#78: `session.summary` resolves for a CLOSED session too (it answers with
+        // the audited figure since #77) — the WASM door has no guard of its own to stop a manual
+        // movement from landing in a shift that was already counted and signed.
+        let out = add_movement_pure(inp_reads(
+            json!({ "session_id": "s1", "movement_type": "in", "amount": 100 }),
+            json!({ "cash_register.settings.get": settings(0, 0, 1),
+                    "cash_register.session.summary": [{ "id": "s1", "status": "closed", "opening_balance": 10000, "expected_cash": 10000 }] }),
+        ));
+        assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_not_open"));
+        assert!(out.operations.is_empty(), "nothing is booked into a closed session");
+    }
 }
 
 #[cfg(test)]
@@ -1502,6 +1556,58 @@ mod payment_method_tests {
     }
 
     #[test]
+    fn a_card_only_refund_with_no_open_session_is_a_silent_no_op() {
+        // cash_register#80: a sale refunded entirely onto a card never touches the drawer, so
+        // there is nothing for a closed till to refuse. Rejecting it anyway dead-lettered every
+        // card refund/void issued before the register opened for the day.
+        let payload = json!({
+            "sale_id": "sale-paid-in-cash", "refund_ref": "refund-doc-0080", "total": 3000,
+            "payments": [
+                { "payment_id": "pay-cash", "payment_method_id": "pm-card",
+                  "payment_method_name": "Tarjeta", "payment_method_type": "card", "amount": 3000 }
+            ]
+        });
+        let no_session = json!({
+            "payload": payload,
+            "context": {
+                "new_ids": ["id-0", "id-1"], "now": "2026-08-24T12:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        });
+        let out = record_refund_pure(no_session);
+        assert!(out.error.is_none(), "{:?}", out.error);
+        assert!(out.operations.is_empty(), "no cash leg, nowhere it needed to be booked");
+    }
+
+    #[test]
+    fn a_mixed_refund_with_no_open_session_is_still_refused_for_its_cash_leg() {
+        // The control: as soon as ONE leg is cash, the till has real money to account for and the
+        // guard must still fire — #80 only spares the legs that never touch the drawer.
+        let payload = json!({
+            "sale_id": "sale-mixed", "refund_ref": "refund-doc-0081", "total": 4000,
+            "payments": [
+                { "payment_id": "pay-a", "payment_method_name": "Efectivo",
+                  "payment_method_type": "cash", "amount": 1500 },
+                { "payment_id": "pay-b", "payment_method_name": "Tarjeta",
+                  "payment_method_type": "card", "amount": 2500 }
+            ]
+        });
+        let no_session = json!({
+            "payload": payload,
+            "context": {
+                "new_ids": ["id-0", "id-1"], "now": "2026-08-24T12:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        });
+        let out = record_refund_pure(no_session);
+        assert!(out.operations.is_empty());
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.refund_no_open_session")
+        );
+    }
+
+    #[test]
     fn the_open_session_is_read_from_the_host_not_from_the_payload() {
         // kitchen#54: declaring the read in the manifest does NOT prove the handler uses it. A
         // payload that claims a session while the host says there is none must still be refused.
@@ -1609,15 +1715,24 @@ mod void_tests {
     // drawer open at all, so the event falls to the outbox dead-letter instead of writing nothing.
     // It is the same guard `record_refund` got in #62, for the same reason.
 
-    /// A `sale.voided` with an open drawer behind it. The session comes from `context.reads`
-    /// (ADR-0069), never from the payload.
+    /// A `sale.voided` with an open drawer behind it, and a live cash amount to reverse (cash_register#80
+    /// added this read: without it the handler cannot tell a card-only void — nothing to reverse —
+    /// from a cash one with no drawer open for it). Defaults to a positive amount so every test
+    /// written before #80 keeps exercising the session guard exactly as it did.
     fn void_inp(payload: Value, session: Value) -> Value {
+        void_inp_live(payload, session, 10000)
+    }
+
+    fn void_inp_live(payload: Value, session: Value, live_amount: i64) -> Value {
         json!({
             "payload": payload,
             "context": {
                 "new_ids": [json!("id-0"), json!("id-1")],
                 "now": "2026-08-24T20:00:00+00:00",
-                "reads": { "cash_register.current_session": session },
+                "reads": {
+                    "cash_register.current_session": session,
+                    "cash_register.live_cash_for_sale": [{ "amount": live_amount }],
+                },
             }
         })
     }
@@ -1661,13 +1776,73 @@ mod void_tests {
             "context": {
                 "new_ids": [json!("id-0")],
                 "now": "2026-08-24T20:00:00+00:00",
-                "reads": { "cash_register.current_session": [] },
+                "reads": {
+                    "cash_register.current_session": [],
+                    "cash_register.live_cash_for_sale": [{ "amount": 10000 }],
+                },
             }
         });
         assert_eq!(
             reverse_sale_pure(forged).error.as_ref().map(|e| e.code.as_str()),
             Some("cash_register.void_no_open_session")
         );
+    }
+
+    #[test]
+    fn a_void_with_nothing_alive_in_cash_is_a_no_op_with_no_session_open() {
+        // cash_register#80: a sale paid entirely by card (or already refunded in full in cash)
+        // leaves nothing for the drawer to reverse. Refusing it anyway sent it to the outbox
+        // dead-letter with an "open the till" message for a till the void never needed.
+        let out = reverse_sale_pure(void_inp_live(json!({ "sale_id": "sale-card-only" }), json!([]), 0));
+        assert!(out.error.is_none(), "{:?}", out.error);
+        assert!(out.operations.is_empty(), "nothing to reverse, nothing written");
+    }
+
+    #[test]
+    fn a_void_with_nothing_alive_in_cash_is_still_a_no_op_with_a_session_open() {
+        // The open-drawer path is unaffected either way: with nothing live, the SQL itself would
+        // have written nothing (`live.amount > 0` in `_reverse_movement_for_open_session.sql`).
+        let out = reverse_sale_pure(void_inp_live(json!({ "sale_id": "sale-card-only" }), json!([{ "id": "sess-open" }]), 0));
+        assert!(out.error.is_none());
+        assert!(out.operations.is_empty());
+    }
+
+    #[test]
+    fn a_void_whose_live_cash_read_is_missing_still_refuses_with_no_session_open() {
+        // Review of cash_register#81: "nothing alive in cash" is a fact only when the host actually
+        // ANSWERED the read. An absent `live_cash_for_sale` (a manifest edit that drops the read, a
+        // host that stops resolving it) must not be mistaken for "0 to reverse": a cash void would
+        // vanish with no error and no row — the exact mute failure #61/#77 exist to prevent. With
+        // the read missing the handler behaves as before #80: no session → refuse out loud.
+        let out = reverse_sale_pure(json!({
+            "payload": { "sale_id": "sale-cash" },
+            "context": {
+                "new_ids": [json!("id-0")],
+                "now": "2026-08-24T20:00:00+00:00",
+                "reads": { "cash_register.current_session": [] },
+            }
+        }));
+        assert_eq!(
+            out.error.as_ref().map(|e| e.code.as_str()),
+            Some("cash_register.void_no_open_session")
+        );
+    }
+
+    #[test]
+    fn a_void_whose_live_cash_read_is_missing_still_books_the_reversal_with_a_session_open() {
+        // Same degraded state, drawer open: the reversal SQL is still emitted and its own
+        // `live.amount > 0` floor decides what gets written — never the handler on a read it did
+        // not get.
+        let out = reverse_sale_pure(json!({
+            "payload": { "sale_id": "sale-cash" },
+            "context": {
+                "new_ids": [json!("id-0")],
+                "now": "2026-08-24T20:00:00+00:00",
+                "reads": { "cash_register.current_session": [{ "id": "sess-open" }] },
+            }
+        }));
+        assert!(out.error.is_none(), "{:?}", out.error);
+        assert_eq!(out.operations.len(), 1, "the reversal is handed to the SQL, whose floor decides");
     }
 
     #[test]
@@ -1689,7 +1864,10 @@ mod void_tests {
             "context": {
                 "new_ids": [],
                 "now": "2026-08-24T20:00:00+00:00",
-                "reads": { "cash_register.current_session": [{ "id": "sess-open" }] },
+                "reads": {
+                    "cash_register.current_session": [{ "id": "sess-open" }],
+                    "cash_register.live_cash_for_sale": [{ "amount": 10000 }],
+                },
             }
         });
         assert_eq!(

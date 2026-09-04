@@ -182,6 +182,7 @@
     "cash_register.refund_not_enough_ids": "No se pudo anotar la devolución: faltó el identificador de una de sus patas.",
     "cash_register.refund_ref_required": "Una devolución sin referencia de documento no se puede anotar: la caja no podría distinguir un reintento de una segunda devolución.",
     "cash_register.session_already_open": "Ya hay una caja abierta en este negocio. Ciérrala antes de abrir otra.",
+    "cash_register.session_not_open": "Esa caja está cerrada: una caja cerrada no acepta movimientos nuevos.",
     "cash_register.session_unavailable": "Esa caja no está disponible: no existe en este negocio o se ha borrado.",
     "cash_register.void_no_open_session": "La venta se anuló sin ninguna caja abierta: el cajón no tiene dónde anotar la reversión. Abre la caja y se reintentará.",
     "cash_register.void_not_enough_ids": "No se pudo anotar la reversión: faltó el identificador del movimiento compensatorio.",
