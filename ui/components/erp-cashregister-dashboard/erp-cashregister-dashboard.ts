@@ -3,8 +3,9 @@ import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
+import '@erplora/outfitkit/ok-detail-list';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
-import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
+import type { DataTableColumn, DataTableAction, OkDetailItem } from '@erplora/outfitkit';
 import { createListController, majorToMinor, minorToMajor } from '@erplora/module-sdk';
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
@@ -33,6 +34,24 @@ function toMinorUnits(v: string | number): number {
   // silent corruption in an INTEGER column. Same fallback the SDK client uses: 2.
   const decimals = erplora().currencyDecimals;
   return majorToMinor(String(v ?? '').replace(',', '.'), typeof decimals === 'number' ? decimals : 2);
+}
+
+/** What the person typed in «Efectivo contado» → MINOR units, or `null` if it is not an amount
+ *  (cash_register#83).
+ *
+ *  `majorToMinor` answers **0** for anything it cannot parse — the right safety net for a reader,
+ *  the wrong one for this border: «abc» in the counted-cash field used to close the shift declaring
+ *  0,00 €, i.e. a fabricated shortage of the entire drawer, with no error anywhere. So the border
+ *  validates the STRING and refuses; the SDK keeps converting.
+ *
+ *  Same normalisation as `toMinorUnits` (es-ES types «129,90»), so what is validated is exactly
+ *  what is sent. Negative is not a count: nobody can count minus five euros. */
+function parseCountedCash(raw: string): number | null {
+  const text = String(raw ?? '').trim();
+  if (text === '') return null;
+  const n = Number(text.replace(',', '.'));
+  if (!Number.isFinite(n) || n < 0) return null;
+  return toMinorUnits(text);
 }
 
 /** MINOR units → the string the money `ion-input` takes back (cash_register#65). The inverse of
@@ -173,6 +192,11 @@ export class ErpCashRegisterDashboard extends LitElement {
    *  sesión — la confirmación de un turno no puede cerrar el siguiente a la primera. */
   @state() closeAcknowledged = false;
 
+  /** Efectivo que el SERVIDOR dice que debería haber en el cajón del turno que se está cerrando
+   *  (céntimos), o `null` cuando no hay número que enseñar: arqueo ciego, otro turno, lectura
+   *  fallida o panel cerrado. Nunca se calcula aquí — ver `loadExpectedForClose`. */
+  @state() expectedForClose: number | null = null;
+
   // — Movimiento —
   @state() movType: 'in' | 'out' = 'in';
 
@@ -297,6 +321,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.shiftReview = null;
     this.shiftReviewLoading = false;
     this.closeAcknowledged = false;
+    this.expectedForClose = null;
   }
 
   private openPanel(panel: 'close' | 'movement' | 'count' | 'detail', session: Session) {
@@ -319,6 +344,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       // donde va a aparecer un aviso es peor que decir que se está comprobando.
       this.shiftReviewLoading = true;
       void this.prefillCountedCash(session.id);
+      void this.loadExpectedForClose(session.id);
       void this.loadShiftReview(session.id);
     }
   }
@@ -336,6 +362,43 @@ export class ErpCashRegisterDashboard extends LitElement {
     if (this.panel !== 'close' || this.target?.id !== sessionId) return;
     this.shiftReview = review;
     this.shiftReviewLoading = false;
+  }
+
+  /** «Esperado en el cajón» ← the SERVER, at the moment of counting (cash_register#83).
+   *
+   *  Counting a drawer without knowing what it should hold is a real technique — a *blind count* —
+   *  but it is a decision the BUSINESS makes, not a side effect of the screen forgetting to say it.
+   *  Square gates it with the «view expected amount in cash drawer» permission, Toast with 3.17
+   *  (Blind) vs 3.18 (Full), Lightspeed and Sage with a setting; Shopify hides it always and Odoo
+   *  shows it always (and its own forum is full of people asking how to hide it). This module chose
+   *  the majority model back in cash_register#24: `require_blind_count` per hub +
+   *  `cash_register.view_expected_totals` per role.
+   *
+   *  So the panel decides NOTHING. It reads `cash_register.current_session` — the same door that
+   *  already applies the blind setting, under `view_session`, which any till user holds — and paints
+   *  what comes back. Blind hub → `expected_total` is NULL and there is nothing to paint. A client
+   *  that computed the figure itself would hand the cashier exactly what the setting took away.
+   *
+   *  Re-read on OPEN, never inherited from the grid row: that row was loaded when the screen was
+   *  opened —before the shift's sales— and the whole point of the number is to be true NOW. It only
+   *  ever describes the OPEN session (`current_session.sql` filters `status = 'open'`), and the id
+   *  is matched anyway: one shift's expected shown over another's close is a fake difference
+   *  somebody has to answer for. */
+  private async loadExpectedForClose(sessionId: string): Promise<void> {
+    try {
+      const rows = await erplora().query<Session[]>('cash_register.current_session');
+      const row = Array.isArray(rows) ? rows.find((r) => String(r?.id) === String(sessionId)) : undefined;
+      const expected = (row as unknown as { expected_total?: unknown } | undefined)?.expected_total;
+      // The panel may have moved on (another row, Cancel) while this was in flight.
+      if (this.panel !== 'close' || this.target?.id !== sessionId) return;
+      this.expectedForClose = typeof expected === 'number' && Number.isFinite(expected) ? expected : null;
+    } catch (e) {
+      // The close works without this: it is an aid, not the reconciliation (the server recomputes
+      // and stores expected/difference). But a screen that quietly stops helping is a mute failure,
+      // so it says so — and it does NOT fall back to a number of its own.
+      this.expectedForClose = null;
+      this.formError = domainMessage(e, 'ui.errLoadDetail');
+    }
   }
 
   /** «Efectivo contado» ← the session's last CLOSING count (cash_register#65).
@@ -414,7 +477,18 @@ export class ErpCashRegisterDashboard extends LitElement {
   // — Cerrar sesión → cash_register.session.close (reconcilia esperado/diferencia en SQL) —
   private async closeSession(ev: Event) {
     ev.preventDefault();
-    if (!this.target || this.closeBalance === '') return;
+    if (!this.target) return;
+    // The primary action of the close stays LIVE (Odoo, Shopify and Square all keep it pressable)
+    // and the form says what is missing. Disabling it while the field was empty made a `danger`
+    // button render as pale grey text on the panel's light surface — QA read it as «un texto
+    // apagado», not a button — and it only covered ONE invalid case: «abc» sailed through and
+    // reached an INTEGER money column as NaN.
+    const counted = parseCountedCash(this.closeBalance);
+    if (counted == null) {
+      this.formMsg = '';
+      this.formError = erplora().t(CATALOG, 'ui.errCountedCashRequired');
+      return;
+    }
     const sessionId = this.target.id;
     // Revisión del turno (cash_register#68): si queda trabajo vivo, el PRIMER clic no cierra —
     // pregunta. El segundo cierra igual: Toast, Square y Lightspeed listan lo que queda abierto y
@@ -435,7 +509,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         // Misma frontera con nombre que la apertura (218): euros tecleados → céntimos.
         // `Number(...)` crudo mandaba EUROS a la columna INTEGER (150,50 € → 1,50 €) y
         // con coma decimal directamente 0 (Number('150,50') = NaN).
-        closing_balance: toMinorUnits(this.closeBalance),
+        closing_balance: counted,
         closing_notes: this.closeNotes.trim(),
       });
       this.closeBalance = '';
@@ -608,9 +682,33 @@ export class ErpCashRegisterDashboard extends LitElement {
     </ok-inline-feedback>`;
   }
 
+  /** Céntimos → dinero CON SIGNO explícito: «+5,10 €» sobra, «-4,90 €» falta (0 no lleva signo).
+   *  `formatMoney` ya trae el menos; el más hay que ponerlo, y sin él un sobrante y un faltante se
+   *  leen igual de un vistazo — que es justo lo que un arqueo tiene que distinguir. */
+  private signedMoney(cents: number): string {
+    const money = this.fmt(cents);
+    return cents > 0 ? `+${money}` : money;
+  }
+
+  /** Esperado + diferencia en vivo, o nada. Vacío cuando el servidor no dio el número (arqueo
+   *  ciego, otro turno, lectura fallida): la diferencia REVELA el esperado, así que se va con él. */
+  private get closeReconcileItems(): OkDetailItem[] {
+    const t = (k: string): string => erplora().t(CATALOG, k);
+    const expected = this.expectedForClose;
+    if (expected == null) return [];
+    // La misma frontera que usa el comando, así que la diferencia que se lee mientras se teclea es
+    // la que el servidor va a guardar. Sin importe válido todavía: guion, nunca un cero inventado.
+    const counted = parseCountedCash(this.closeBalance);
+    return [
+      { label: t('ui.labelExpectedInDrawer'), value: this.fmt(expected) },
+      { label: t('ui.colDifference'), value: counted == null ? '—' : this.signedMoney(counted - expected) },
+    ];
+  }
+
   private renderClosePanel() {
     if (!this.target) return nothing;
     const t = (k: string): string => erplora().t(CATALOG, k);
+    const reconcile = this.closeReconcileItems;
     // Con trabajo vivo ya confirmado, el botón DICE lo que hace: «Cerrar de todos modos». Es la
     // confirmación explícita, y a la vez la promesa de que el turno se cierra igual.
     const closeLabel = this.saving
@@ -619,10 +717,11 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<section class="panel">
       <h3>${t('ui.closeSessionTitle')} · ${this.target.session_number}</h3>
       ${this.renderShiftReview()}
+      ${reconcile.length ? html`<ok-detail-list columns="2" dense .items=${reconcile}></ok-detail-list>` : nothing}
       <form class="form" @submit=${(e: Event) => this.closeSession(e)}>
         <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
         <ion-input fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" color="danger" ?disabled=${this.saving || this.closeBalance === ''}>${closeLabel}</ion-button>
+        <ion-button type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
         <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
