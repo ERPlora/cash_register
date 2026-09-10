@@ -45,6 +45,8 @@ const ROW = {
 /** Lo que `cash_register.current_session` devuelve AHORA: fondo 100 € + una venta de 29,90 €. */
 let currentSession: Array<Record<string, unknown>> = [];
 let queryFails = false;
+/** Resolutor manual de `current_session`, para provocar la carrera «cancelar mientras vuela». */
+let holdCurrentSession: (() => void) | null = null;
 let comandos: { name: string; payload: Record<string, unknown> }[] = [];
 let consultadas: string[] = [];
 
@@ -52,12 +54,14 @@ beforeEach(() => {
   comandos = [];
   consultadas = [];
   queryFails = false;
+  holdCurrentSession = null;
   currentSession = [{ id: 's1', session_number: 'S-260909-0001', opening_balance: 10000, expected_total: 12990, total_sales: 2990, movement_count: 1 }];
   (globalThis as Record<string, unknown>).erplora = {
     query: async (name: string) => {
       consultadas.push(name);
       if (name === 'cash_register.current_session') {
         if (queryFails) throw new Error('boom');
+        if (holdCurrentSession) await new Promise<void>((r) => { holdCurrentSession = r; });
         return currentSession;
       }
       return [];
@@ -83,7 +87,9 @@ interface Wc {
   target: { id: string } | null;
   closeBalance: string;
   formError: string;
+  expectedForClose: number | null;
   openPanel(panel: string, session: unknown): void;
+  resetPanel(): void;
   closeSession(e: Event): Promise<void>;
   updateComplete: Promise<unknown>;
 }
@@ -161,6 +167,20 @@ describe('el cierre dice cuánto debería haber (cash_register#83)', () => {
     el.closeBalance = '129,90';
     await el.updateComplete;
     expect(cuadre(el)['ui.colDifference'], 'ni diferencia en vivo: revelarla equivale a revelar el esperado').toBeUndefined();
+  });
+
+  // El panel se abre, la lectura vuela, y la persona pulsa «Cancelar» (o abre otra fila) antes de
+  // que aterrice. Sin la guarda, el número de un turno se pinta encima del cierre de otro.
+  it('cancelar mientras la lectura vuela NO deja el esperado pegado al panel siguiente', async () => {
+    const el = await montar();
+    holdCurrentSession = () => {};
+    el.openPanel('close', ROW);
+    await new Promise((r) => setTimeout(r, 0));
+    el.resetPanel();
+    holdCurrentSession?.();
+    await asentar(el);
+
+    expect(el.expectedForClose, 'una respuesta que llega tarde no manda sobre el panel que hay ahora').toBeNull();
   });
 
   it('nunca el esperado de OTRO turno: si la sesión abierta no es la que se cierra, no se pinta', async () => {
