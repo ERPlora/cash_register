@@ -634,14 +634,14 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<section class="panel">
       <h3>${t('ui.openSessionTitle')}</h3>
-      <form class="form" @submit=${(e: Event) => this.openSession(e)}>
-        <ion-select fill="outline" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
+      <form data-testid="cash-register-open-form" class="form" @submit=${(e: Event) => this.openSession(e)}>
+        <ion-select data-testid="cash-register-open-register" fill="outline" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
           ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
-        <ion-input fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-open-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
+        <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
+        <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -653,7 +653,7 @@ export class ErpCashRegisterDashboard extends LitElement {
   private renderShiftReview() {
     const t = (k: string, p?: Record<string, unknown>): string => erplora().t(CATALOG, k, p);
     if (this.shiftReviewLoading) {
-      return html`<p class="review-checking">${t('ui.shiftReviewChecking')}</p>`;
+      return html`<p data-testid="cash-register-close-review-checking" class="review-checking">${t('ui.shiftReviewChecking')}</p>`;
     }
     const review = this.shiftReview;
     if (!review) return nothing;
@@ -662,10 +662,10 @@ export class ErpCashRegisterDashboard extends LitElement {
       // paso — sin evidencia de trabajo vivo, cobrar un clic extra castiga al operador por una
       // lectura rota que no es suya.
       return review.incomplete
-        ? html`<ok-inline-feedback class="review-box" tone="neutral" icon="help-circle-outline">${t('ui.shiftReviewUnavailable')}</ok-inline-feedback>`
+        ? html`<ok-inline-feedback data-testid="cash-register-close-review-unavailable" class="review-box" tone="neutral" icon="help-circle-outline">${t('ui.shiftReviewUnavailable')}</ok-inline-feedback>`
         : nothing;
     }
-    return html`<ok-inline-feedback class="review-box" tone="warning" icon="alert-circle-outline" heading=${t('ui.shiftReviewTitle')}>
+    return html`<ok-inline-feedback data-testid="cash-register-close-review" class="review-box" tone="warning" icon="alert-circle-outline" heading=${t('ui.shiftReviewTitle')}>
       <ul class="review">
         ${review.liveOrders > 0
           ? html`<li>
@@ -678,7 +678,7 @@ export class ErpCashRegisterDashboard extends LitElement {
           : nothing}
         ${review.incomplete ? html`<li>${t('ui.shiftReviewUnavailable')}</li>` : nothing}
       </ul>
-      ${this.closeAcknowledged ? html`<p class="review-confirm">${t('ui.shiftReviewConfirm')}</p>` : nothing}
+      ${this.closeAcknowledged ? html`<p data-testid="cash-register-close-review-confirm" class="review-confirm">${t('ui.shiftReviewConfirm')}</p>` : nothing}
     </ok-inline-feedback>`;
   }
 
@@ -717,12 +717,12 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<section class="panel">
       <h3>${t('ui.closeSessionTitle')} · ${this.target.session_number}</h3>
       ${this.renderShiftReview()}
-      ${reconcile.length ? html`<ok-detail-list columns="2" dense .items=${reconcile}></ok-detail-list>` : nothing}
-      <form class="form" @submit=${(e: Event) => this.closeSession(e)}>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
-        <ion-input fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
-        <ion-button type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+      ${reconcile.length ? html`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : nothing}
+      <form data-testid="cash-register-close-form" class="form" @submit=${(e: Event) => this.closeSession(e)}>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-close-notes" fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
+        <ion-button data-testid="cash-register-close-submit" type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
+        <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -732,8 +732,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<section class="panel">
       <h3>${t('ui.movementTitle')} · ${this.target.session_number}</h3>
-      <form class="form" @submit=${(e: Event) => this.addMovement(e)}>
-        <ion-select fill="outline" label=${t('ui.labelType')} label-placement="floating" .value=${this.movType} @ionChange=${(e: any) => (this.movType = e.target.value)}>
+      <form data-testid="cash-register-movement-form" class="form" @submit=${(e: Event) => this.addMovement(e)}>
+        <ion-select data-testid="cash-register-movement-type" fill="outline" label=${t('ui.labelType')} label-placement="floating" .value=${this.movType} @ionChange=${(e: any) => (this.movType = e.target.value)}>
           ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
                 «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
                 mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
@@ -742,10 +742,10 @@ export class ErpCashRegisterDashboard extends LitElement {
             (o) => html`<ion-select-option value=${o.value}>${o.label}</ion-select-option>`,
           )}
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
-        <ion-input fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
-        <ion-button type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-movement-concept" fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
+        <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
+        <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
   }
@@ -757,25 +757,25 @@ export class ErpCashRegisterDashboard extends LitElement {
     // `${k} €`, y en un hub español convivían «0.50 €» con punto y «Total contado 141,50 €» con
     // coma en la misma tarjeta. La CLAVE no cambia (es el contrato con el handler WASM, que la lee
     // como euros); solo lo que lee la persona.
-    const denomInput = (k: string) => html`<ion-input fill="outline" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
+    const denomInput = (k: string) => html`<ion-input data-testid=${`cash-register-count-denom-${k}`} fill="outline" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
     return html`<section class="panel">
       <h3>${t('ui.countTitle')} · ${this.target.session_number}</h3>
-      <form @submit=${(e: Event) => this.addCount(e)}>
+      <form data-testid="cash-register-count-form" @submit=${(e: Event) => this.addCount(e)}>
         <div class="form">
-          <ion-select fill="outline" label=${t('ui.labelCountType')} label-placement="floating" .value=${this.countType} @ionChange=${(e: any) => (this.countType = e.target.value)}>
+          <ion-select data-testid="cash-register-count-type" fill="outline" label=${t('ui.labelCountType')} label-placement="floating" .value=${this.countType} @ionChange=${(e: any) => (this.countType = e.target.value)}>
             <ion-select-option value="opening">${t('ui.countOpening')}</ion-select-option>
             <ion-select-option value="closing">${t('ui.countClosing')}</ion-select-option>
           </ion-select>
-          <ion-input fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.countNotes} @ionInput=${(e: any) => (this.countNotes = e.target.value)}></ion-input>
+          <ion-input data-testid="cash-register-count-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.countNotes} @ionInput=${(e: any) => (this.countNotes = e.target.value)}></ion-input>
         </div>
         <h3>${t('ui.bills')}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t('ui.coins')}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(this.countTotalCents())}</p>
+        <p data-testid="cash-register-count-total" class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(this.countTotalCents())}</p>
         <div class="form">
-          <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
-          <ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
+          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
+          <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
         </div>
       </form>
     </section>`;
@@ -786,7 +786,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<section class="panel">
       <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
-      <div class="form"><ion-button fill="outline" @click=${() => this.resetPanel()}>${t('ui.back')}</ion-button></div>
+      <div class="form"><ion-button data-testid="cash-register-detail-back" fill="outline" @click=${() => this.resetPanel()}>${t('ui.back')}</ion-button></div>
     </section>`;
   }
 
@@ -795,19 +795,19 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<div>
         <header>
           <h2>${t('ui.title')}</h2>
-          <ion-button ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t('ui.errSessionAlreadyOpen') : ''} @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
+          <ion-button data-testid="cash-register-new-session" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t('ui.errSessionAlreadyOpen') : ''} @click=${() => { this.panel = this.panel === 'open' ? null : 'open'; this.target = null; this.formError = ''; this.formMsg = ''; }}>${t('ui.openSession')}</ion-button>
         </header>
         ${this.panel === 'open' ? this.renderOpenPanel() : nothing}
         ${this.panel === 'close' ? this.renderClosePanel() : nothing}
         ${this.panel === 'movement' ? this.renderMovementPanel() : nothing}
         ${this.panel === 'count' ? this.renderCountPanel() : nothing}
         ${this.panel === 'detail' ? this.renderDetailPanel() : nothing}
-        ${this.formMsg ? html`<p class="ok">${this.formMsg}</p>` : nothing}
-        ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
-        ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
+        ${this.formMsg ? html`<p data-testid="cash-register-form-msg" class="ok">${this.formMsg}</p>` : nothing}
+        ${this.formError ? html`<ok-inline-feedback data-testid="cash-register-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
+        ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => String(r.session_number ?? '—')} .cardIcon=${() => 'cash-outline'} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchPlaceholder')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.noSessions')} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @rowClick=${(e: CustomEvent<{ row: Record<string, unknown> }>) => this.openPanel('detail', e.detail.row as unknown as Session)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => String(r.session_number ?? '—')} .cardIcon=${() => 'cash-outline'} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchPlaceholder')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.noSessions')} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @rowClick=${(e: CustomEvent<{ row: Record<string, unknown> }>) => this.openPanel('detail', e.detail.row as unknown as Session)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
       </div>`;
   }
 }

@@ -4516,11 +4516,28 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { key: "notes", header: t5("ui.labelNotes") }
     ];
   }
-  table(ctrl, columns, empty) {
+  /**
+   * The two lists are written apart, not built by one helper, because each carries its OWN
+   * `testid` namespace: `<ok-data-table>` derives every hook it paints — each row, the pager —
+   * from that one attribute (outfitkit#143), so a spec that asks for a movement row and a spec
+   * that asks for a count row have to be asking two different questions. A shared namespace would
+   * answer both with whichever table rendered first.
+   */
+  renderMovements() {
+    const ctrl = this.movements;
     if (!ctrl) return A;
-    return b2`<ok-data-table .serverSide=${true} .columns=${columns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return b2`<ok-data-table testid="cash-register-session-movements-table" .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
-      .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : empty}
+      .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : erplora2().t(CATALOG2, "ui.noMovements")}
+      @pageChange=${(e6) => ctrl.setPage(e6.detail)}
+      @sortChange=${(e6) => ctrl.setSort(e6.detail.sort, e6.detail.dir)}></ok-data-table>`;
+  }
+  renderCounts() {
+    const ctrl = this.counts;
+    if (!ctrl) return A;
+    return b2`<ok-data-table testid="cash-register-session-counts-table" .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
+      .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : erplora2().t(CATALOG2, "ui.noCounts")}
       @pageChange=${(e6) => ctrl.setPage(e6.detail)}
       @sortChange=${(e6) => ctrl.setSort(e6.detail.sort, e6.detail.dir)}></ok-data-table>`;
   }
@@ -4529,12 +4546,12 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`
       <h3>${t5("ui.detailTitle")} · ${this.session.session_number}</h3>
-      ${this.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : A}
-      <ok-detail-list columns="2" dense .items=${this.summaryItems}></ok-detail-list>
+      ${this.error ? b2`<ok-inline-feedback data-testid="cash-register-session-error" tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : A}
+      <ok-detail-list data-testid="cash-register-session-summary" columns="2" dense .items=${this.summaryItems}></ok-detail-list>
       <h4>${t5("ui.detailMovements")}</h4>
-      ${this.table(this.movements, this.movementColumns, t5("ui.noMovements"))}
+      ${this.renderMovements()}
       <h4>${t5("ui.detailCounts")}</h4>
-      ${this.table(this.counts, this.countColumns, t5("ui.noCounts"))}
+      ${this.renderCounts()}
     `;
   }
 };
@@ -5062,14 +5079,14 @@ var ErpCashRegisterDashboard = class extends i3 {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.openSessionTitle")}</h3>
-      <form class="form" @submit=${(e6) => this.openSession(e6)}>
-        <ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
+      <form data-testid="cash-register-open-form" class="form" @submit=${(e6) => this.openSession(e6)}>
+        <ion-select data-testid="cash-register-open-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
-        <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-open-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
+        <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
+        <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
@@ -5080,14 +5097,14 @@ var ErpCashRegisterDashboard = class extends i3 {
   renderShiftReview() {
     const t5 = (k2, p4) => erplora3().t(CATALOG3, k2, p4);
     if (this.shiftReviewLoading) {
-      return b2`<p class="review-checking">${t5("ui.shiftReviewChecking")}</p>`;
+      return b2`<p data-testid="cash-register-close-review-checking" class="review-checking">${t5("ui.shiftReviewChecking")}</p>`;
     }
     const review = this.shiftReview;
     if (!review) return A;
     if (!hasPendingWork(review)) {
-      return review.incomplete ? b2`<ok-inline-feedback class="review-box" tone="neutral" icon="help-circle-outline">${t5("ui.shiftReviewUnavailable")}</ok-inline-feedback>` : A;
+      return review.incomplete ? b2`<ok-inline-feedback data-testid="cash-register-close-review-unavailable" class="review-box" tone="neutral" icon="help-circle-outline">${t5("ui.shiftReviewUnavailable")}</ok-inline-feedback>` : A;
     }
-    return b2`<ok-inline-feedback class="review-box" tone="warning" icon="alert-circle-outline" heading=${t5("ui.shiftReviewTitle")}>
+    return b2`<ok-inline-feedback data-testid="cash-register-close-review" class="review-box" tone="warning" icon="alert-circle-outline" heading=${t5("ui.shiftReviewTitle")}>
       <ul class="review">
         ${review.liveOrders > 0 ? b2`<li>
               ${t5("ui.shiftReviewOrders", { count: review.liveOrders })}
@@ -5096,7 +5113,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${review.pendingPrintJobs > 0 ? b2`<li>${t5("ui.shiftReviewPrints", { count: review.pendingPrintJobs, stations: review.printRoles.join(" \xB7 ") })}</li>` : A}
         ${review.incomplete ? b2`<li>${t5("ui.shiftReviewUnavailable")}</li>` : A}
       </ul>
-      ${this.closeAcknowledged ? b2`<p class="review-confirm">${t5("ui.shiftReviewConfirm")}</p>` : A}
+      ${this.closeAcknowledged ? b2`<p data-testid="cash-register-close-review-confirm" class="review-confirm">${t5("ui.shiftReviewConfirm")}</p>` : A}
     </ok-inline-feedback>`;
   }
   /** Céntimos → dinero CON SIGNO explícito: «+5,10 €» sobra, «-4,90 €» falta (0 no lleva signo).
@@ -5126,12 +5143,12 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
       ${this.renderShiftReview()}
-      ${reconcile.length ? b2`<ok-detail-list columns="2" dense .items=${reconcile}></ok-detail-list>` : A}
-      <form class="form" @submit=${(e6) => this.closeSession(e6)}>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
-        <ion-button type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+      ${reconcile.length ? b2`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : A}
+      <form data-testid="cash-register-close-form" class="form" @submit=${(e6) => this.closeSession(e6)}>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-close-notes" fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
+        <ion-button data-testid="cash-register-close-submit" type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
+        <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
@@ -5140,8 +5157,8 @@ var ErpCashRegisterDashboard = class extends i3 {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
-      <form class="form" @submit=${(e6) => this.addMovement(e6)}>
-        <ion-select fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
+      <form data-testid="cash-register-movement-form" class="form" @submit=${(e6) => this.addMovement(e6)}>
+        <ion-select data-testid="cash-register-movement-type" fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
           ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
         «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
         mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
@@ -5151,35 +5168,35 @@ var ErpCashRegisterDashboard = class extends i3 {
       (o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`
     )}
         </ion-select>
-        <ion-input fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
-        <ion-input fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
-        <ion-button type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
-        <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-movement-concept" fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
+        <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
+        <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderCountPanel() {
     if (!this.target) return A;
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
-    const denomInput = (k2) => b2`<ion-input fill="outline" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
+    const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
-      <form @submit=${(e6) => this.addCount(e6)}>
+      <form data-testid="cash-register-count-form" @submit=${(e6) => this.addCount(e6)}>
         <div class="form">
-          <ion-select fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
+          <ion-select data-testid="cash-register-count-type" fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
             <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
             <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
+          <ion-input data-testid="cash-register-count-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
         <h3>${t5("ui.bills")}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
         <h3>${t5("ui.coins")}</h3>
         <div class="denoms">${COINS.map(denomInput)}</div>
-        <p class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(this.countTotalCents())}</p>
+        <p data-testid="cash-register-count-total" class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(this.countTotalCents())}</p>
         <div class="form">
-          <ion-button type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
-          <ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
+          <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
         </div>
       </form>
     </section>`;
@@ -5189,7 +5206,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<section class="panel">
       <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
-      <div class="form"><ion-button fill="outline" @click=${() => this.resetPanel()}>${t5("ui.back")}</ion-button></div>
+      <div class="form"><ion-button data-testid="cash-register-detail-back" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.back")}</ion-button></div>
     </section>`;
   }
   render() {
@@ -5197,7 +5214,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<div>
         <header>
           <h2>${t5("ui.title")}</h2>
-          <ion-button ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t5("ui.errSessionAlreadyOpen") : ""} @click=${() => {
+          <ion-button data-testid="cash-register-new-session" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t5("ui.errSessionAlreadyOpen") : ""} @click=${() => {
       this.panel = this.panel === "open" ? null : "open";
       this.target = null;
       this.formError = "";
@@ -5209,12 +5226,12 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.panel === "movement" ? this.renderMovementPanel() : A}
         ${this.panel === "count" ? this.renderCountPanel() : A}
         ${this.panel === "detail" ? this.renderDetailPanel() : A}
-        ${this.formMsg ? b2`<p class="ok">${this.formMsg}</p>` : A}
-        ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
-        ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
+        ${this.formMsg ? b2`<p data-testid="cash-register-form-msg" class="ok">${this.formMsg}</p>` : A}
+        ${this.formError ? b2`<ok-inline-feedback data-testid="cash-register-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
+        ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -5367,7 +5384,7 @@ var ErpCashregisterOpen = class extends i3 {
         <p class="sub">${t5("ui.msgSessionOpened")}</p>
 
         <div class="form">
-          ${this.registers.length > 1 ? b2`<ion-select fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
+          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
                 .value=${this.registerId}
                 @ionChange=${(e6) => {
       this.registerId = e6.target.value;
@@ -5375,25 +5392,25 @@ var ErpCashregisterOpen = class extends i3 {
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
 
-          <ion-input fill="outline" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" fill="outline" type="number" min="0" step="0.01"
             label=${t5("ui.labelOpeningBalance")} label-placement="floating"
             .value=${this.balance}
             @ionInput=${(e6) => {
       this.balance = e6.target.value;
     }}></ion-input>
 
-          <ion-input fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
+          <ion-input data-testid="cash-register-opening-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
             placeholder=${t5("ui.optional")} .value=${this.notes}
             @ionInput=${(e6) => {
       this.notes = e6.target.value;
     }}></ion-input>
 
-          <ion-button class="open-session" expand="block" ?disabled=${this.saving}
+          <ion-button data-testid="cash-register-opening-submit" class="open-session" expand="block" ?disabled=${this.saving}
             @click=${() => void this.openSession()}>
             ${this.saving ? t5("ui.opening") : t5("ui.openSession")}
           </ion-button>
 
-          ${this.error ? b2`<p class="error">${this.error}</p>` : A}
+          ${this.error ? b2`<p data-testid="cash-register-opening-error" class="error">${this.error}</p>` : A}
         </div>
       </div>
     `;

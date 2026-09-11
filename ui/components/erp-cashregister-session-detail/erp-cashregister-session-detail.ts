@@ -180,11 +180,29 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     ];
   }
 
-  private table<T>(ctrl: ListController<T> | undefined, columns: DataTableColumn[], empty: string) {
+  /**
+   * The two lists are written apart, not built by one helper, because each carries its OWN
+   * `testid` namespace: `<ok-data-table>` derives every hook it paints — each row, the pager —
+   * from that one attribute (outfitkit#143), so a spec that asks for a movement row and a spec
+   * that asks for a count row have to be asking two different questions. A shared namespace would
+   * answer both with whichever table rendered first.
+   */
+  private renderMovements() {
+    const ctrl = this.movements;
     if (!ctrl) return nothing;
-    return html`<ok-data-table .serverSide=${true} .columns=${columns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return html`<ok-data-table testid="cash-register-session-movements-table" .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
-      .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : empty}
+      .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noMovements')}
+      @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
+      @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => ctrl.setSort(e.detail.sort, e.detail.dir)}></ok-data-table>`;
+  }
+
+  private renderCounts() {
+    const ctrl = this.counts;
+    if (!ctrl) return nothing;
+    return html`<ok-data-table testid="cash-register-session-counts-table" .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
+      .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noCounts')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
       @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => ctrl.setSort(e.detail.sort, e.detail.dir)}></ok-data-table>`;
   }
@@ -194,12 +212,12 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`
       <h3>${t('ui.detailTitle')} · ${this.session.session_number}</h3>
-      ${this.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : nothing}
-      <ok-detail-list columns="2" dense .items=${this.summaryItems}></ok-detail-list>
+      ${this.error ? html`<ok-inline-feedback data-testid="cash-register-session-error" tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : nothing}
+      <ok-detail-list data-testid="cash-register-session-summary" columns="2" dense .items=${this.summaryItems}></ok-detail-list>
       <h4>${t('ui.detailMovements')}</h4>
-      ${this.table(this.movements, this.movementColumns, t('ui.noMovements'))}
+      ${this.renderMovements()}
       <h4>${t('ui.detailCounts')}</h4>
-      ${this.table(this.counts, this.countColumns, t('ui.noCounts'))}
+      ${this.renderCounts()}
     `;
   }
 }
