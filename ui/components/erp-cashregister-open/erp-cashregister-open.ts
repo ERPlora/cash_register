@@ -120,28 +120,28 @@ export class ErpCashregisterOpen extends LitElement {
 
         <div class="form">
           ${this.registers.length > 1
-            ? html`<ion-select fill="outline" label=${t('ui.labelRegister')} label-placement="floating"
+            ? html`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t('ui.labelRegister')} label-placement="floating"
                 .value=${this.registerId}
                 @ionChange=${(e: CustomEvent) => { this.registerId = (e.target as HTMLInputElement).value; }}>
                 ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
               </ion-select>`
             : nothing}
 
-          <ion-input fill="outline" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" fill="outline" type="number" min="0" step="0.01"
             label=${t('ui.labelOpeningBalance')} label-placement="floating"
             .value=${this.balance}
             @ionInput=${(e: CustomEvent) => { this.balance = (e.target as HTMLInputElement).value; }}></ion-input>
 
-          <ion-input fill="outline" label=${t('ui.labelNotes')} label-placement="floating"
+          <ion-input data-testid="cash-register-opening-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating"
             placeholder=${t('ui.optional')} .value=${this.notes}
             @ionInput=${(e: CustomEvent) => { this.notes = (e.target as HTMLInputElement).value; }}></ion-input>
 
-          <ion-button class="open-session" expand="block" ?disabled=${this.saving}
+          <ion-button data-testid="cash-register-opening-submit" class="open-session" expand="block" ?disabled=${this.saving}
             @click=${() => void this.openSession()}>
             ${this.saving ? t('ui.opening') : t('ui.openSession')}
           </ion-button>
 
-          ${this.error ? html`<p class="error">${this.error}</p>` : nothing}
+          ${this.error ? html`<p data-testid="cash-register-opening-error" class="error">${this.error}</p>` : nothing}
         </div>
       </div>
     `;
