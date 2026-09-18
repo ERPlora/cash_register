@@ -141,6 +141,18 @@ export class ErpCashRegisterDashboard extends LitElement {
     /* Touch targets (cash_register#12): Ionic md buttons default to 36 px; a finger needs 44×44
        (WCAG 2.5.5). Same rule OutfitKit applied to the data-table actions. */
     header ion-button, .form ion-button { min-height: 44px; min-width: 44px; margin: 0; }
+    /* cash_register#90 — the close-till button paints its own danger background HERE, inside the
+       shadow root, and not with \`color="danger"\`: Ionic backs \`color=\` with the GLOBAL rule
+       \`.ion-color-danger { --ion-color-base: … }\`, which does not reach this shadow root, so the
+       button rendered white text on a transparent background. Custom properties do inherit through
+       the boundary, so the theme tokens are read fine. Same defect as kitchen#42. */
+    ion-button[data-testid="cash-register-close-submit"] {
+      --background: var(--ion-color-danger, #c5000f);
+      --background-activated: var(--ion-color-danger-shade, #ad000d);
+      --background-focused: var(--ion-color-danger-shade, #ad000d);
+      --background-hover: var(--ion-color-danger-tint, #cb1a27);
+      --color: var(--ion-color-danger-contrast, #fff);
+    }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
@@ -721,7 +733,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       <form data-testid="cash-register-close-form" class="form" @submit=${(e: Event) => this.closeSession(e)}>
         <ion-input data-testid="cash-register-close-counted" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
         <ion-input data-testid="cash-register-close-notes" fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
-        <ion-button data-testid="cash-register-close-submit" type="submit" color="danger" ?disabled=${this.saving}>${closeLabel}</ion-button>
+        <ion-button data-testid="cash-register-close-submit" type="submit" ?disabled=${this.saving}>${closeLabel}</ion-button>
         <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
     </section>`;
