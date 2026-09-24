@@ -4090,6 +4090,7 @@ var es_default = {
     actionClose: "Cerrar",
     actionDetail: "Detalle",
     openSessionTitle: "Abrir sesi\xF3n de caja",
+    subOpenToContinue: "Abre la caja para empezar a vender.",
     labelRegister: "Caj\xF3n",
     labelOpeningBalance: "Fondo de apertura",
     labelNotes: "Notas",
@@ -4293,6 +4294,7 @@ var en_default = {
     actionClose: "Close",
     actionDetail: "Detail",
     openSessionTitle: "Open cash session",
+    subOpenToContinue: "Open the till to start selling.",
     labelRegister: "Register",
     labelOpeningBalance: "Opening float",
     labelNotes: "Notes",
@@ -5529,10 +5531,10 @@ var ErpCashregisterOpen = class extends i3 {
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>
         <h2>${t5("ui.openSessionTitle")}</h2>
-        <p class="sub">${t5("ui.msgSessionOpened")}</p>
+        <p class="sub">${t5("ui.subOpenToContinue")}</p>
 
         <div class="form">
-          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
+          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" label=${t5("ui.labelRegister")} label-placement="floating"
                 .value=${this.registerId}
                 @ionChange=${(e6) => {
       this.registerId = e6.target.value;
@@ -5540,14 +5542,14 @@ var ErpCashregisterOpen = class extends i3 {
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
 
-          <ion-input data-testid="cash-register-opening-balance" fill="outline" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step="0.01"
             label=${t5("ui.labelOpeningBalance")} label-placement="floating"
             .value=${this.balance}
             @ionInput=${(e6) => {
       this.balance = e6.target.value;
     }}></ion-input>
 
-          <ion-input data-testid="cash-register-opening-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
+          <ion-input data-testid="cash-register-opening-notes" label=${t5("ui.labelNotes")} label-placement="floating"
             placeholder=${t5("ui.optional")} .value=${this.notes}
             @ionInput=${(e6) => {
       this.notes = e6.target.value;

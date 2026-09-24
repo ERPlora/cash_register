@@ -74,6 +74,7 @@
     "actionClose": "Cerrar",
     "actionDetail": "Detalle",
     "openSessionTitle": "Abrir sesión de caja",
+    "subOpenToContinue": "Abre la caja para empezar a vender.",
     "labelRegister": "Cajón",
     "labelOpeningBalance": "Fondo de apertura",
     "labelNotes": "Notas",

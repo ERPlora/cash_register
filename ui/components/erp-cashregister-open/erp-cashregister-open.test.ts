@@ -132,3 +132,33 @@ describe('erp-cashregister-open', () => {
     expect(el.shadowRoot.querySelector('.error')?.textContent?.trim()).toBe('ui.errSessionAlreadyOpen');
   });
 });
+
+// cash_register#93 — this screen is mounted precisely because NO session is open. Its subtitle used
+// the success message `ui.msgSessionOpened` («Sesión abierta»), contradicting the title in the same
+// card. It must explain why the till is blocked, in both languages.
+describe('erp-cashregister-open · subtitle', () => {
+  it('does not claim the session is open while asking to open it', async () => {
+    const el = await montar();
+    const sub = el.shadowRoot.querySelector('p.sub')?.textContent?.trim();
+    expect(sub).not.toBe('ui.msgSessionOpened');
+    expect(sub).toBe('ui.subOpenToContinue');
+  });
+
+  it('the subtitle key is translated in en and es', async () => {
+    const en = (await import('../../../locales/en.json')).default as { ui: Record<string, string> };
+    const es = (await import('../../../locales/es.json')).default as { ui: Record<string, string> };
+    expect(en.ui.subOpenToContinue).toBeTruthy();
+    expect(es.ui.subOpenToContinue).toBeTruthy();
+    expect(es.ui.subOpenToContinue).not.toBe(en.ui.subOpenToContinue);
+  });
+});
+
+// Monorepo rule: `fill="outline"` is a no-op on ion-input/ion-select in `ios` mode, so this screen
+// looked different per platform. The rest of the module's forms use the default fill.
+it('form fields do not use fill="outline"', async () => {
+  registros = CAJONES;
+  const el = await montar();
+  const fields = el.shadowRoot.querySelectorAll('ion-input, ion-select, ion-textarea');
+  expect(fields.length).toBeGreaterThan(0);
+  for (const f of fields) expect(f.getAttribute('fill'), f.tagName).toBeNull();
+});
