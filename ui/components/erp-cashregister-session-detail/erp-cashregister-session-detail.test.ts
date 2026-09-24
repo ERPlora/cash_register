@@ -217,7 +217,7 @@ describe('la ficha respeta el arqueo ciego (cash_register#84)', () => {
     expect(names).toContain('cash_register.session.summary');
     expect(names, 'the ungagged twin is a supervisor door').not.toContain('cash_register.session.summary.expected');
     expect(byLabel['ui.colExpected']).toBe('—');
-    expect(byLabel['ui.detailCashSales'], 'the rest of the summary stays').toBe('25.00 €');
+    expect(byLabel['ui.detailSales'], 'the rest of the summary stays').toBe('25.00 €');
   });
 
   it('con el permiso lee la gemela sin guarda y el supervisor ve el esperado', async () => {
@@ -226,6 +226,39 @@ describe('la ficha respeta el arqueo ciego (cash_register#84)', () => {
     expect(summary, 'a supervisor reads the ungagged twin').toBeTruthy();
     expect(summary!.params).toEqual({ session_id: 's1' });
     expect(byLabel['ui.colExpected']).toBe('125.00 €');
+  });
+});
+
+// cash_register#91 — the detail said «Cash sales 94,90 €» for 43,00 € cash + 51,90 € card: the one
+// line summed every tender. The market's X/Z report lists the sales per tender; cash is what the
+// drawer holds.
+describe('la ficha separa las ventas por forma de pago (cash_register#91)', () => {
+  async function montarCon(summary: Record<string, unknown>) {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.query = async (name: string) => (name === 'cash_register.session.summary' ? [{ ...SUMMARY, ...summary }] : []);
+    const el = await montar();
+    const items = (el.shadowRoot?.querySelector('ok-detail-list') as unknown as { items: { label: string; value?: string }[] }).items;
+    return { labels: items.map((i) => i.label), byLabel: Object.fromEntries(items.map((i) => [i.label, i.value])) };
+  }
+
+  it('enseña el total de ventas y, aparte, efectivo y tarjeta', async () => {
+    const { byLabel } = await montarCon({ total_sales: 9490, cash_sales: 4300, card_sales: 5190, other_sales: 0 });
+    expect(byLabel['ui.detailSales']).toBe('94.90 €');
+    expect(byLabel['ui.detailCashSales'], 'cash is only what was paid in cash').toBe('43.00 €');
+    expect(byLabel['ui.detailCardSales']).toBe('51.90 €');
+    expect(byLabel, 'no other tender, no «other» line').not.toHaveProperty('ui.detailOtherSales');
+  });
+
+  it('enseña «otras» solo si hubo cobros por transferencia u otra forma', async () => {
+    const { byLabel } = await montarCon({ total_sales: 10490, cash_sales: 4300, card_sales: 5190, other_sales: 1000 });
+    expect(byLabel['ui.detailOtherSales']).toBe('10.00 €');
+  });
+
+  it('con el arqueo ciego (desglose NULL) solo queda el total, sin inventar el efectivo', async () => {
+    const { labels, byLabel } = await montarCon({ status: 'open', total_sales: 9490, cash_sales: null, card_sales: null, other_sales: null });
+    expect(byLabel['ui.detailSales']).toBe('94.90 €');
+    expect(labels).not.toContain('ui.detailCashSales');
+    expect(labels).not.toContain('ui.detailCardSales');
   });
 });
 

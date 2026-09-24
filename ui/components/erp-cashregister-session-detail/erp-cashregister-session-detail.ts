@@ -38,6 +38,10 @@ interface Summary {
   status: string;
   opening_balance: number;
   total_sales: number;
+  /** Sales split by tender (cash_register#91). NULL for an OPEN session in a blind-count hub. */
+  cash_sales?: number | null;
+  card_sales?: number | null;
+  other_sales?: number | null;
   total_refunds: number;
   total_cash_in: number;
   total_cash_out: number;
@@ -181,7 +185,14 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       { label: t('ui.colStatus'), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s?.status) || '—' },
       { label: t('ui.detailMovements'), value: s ? String(s.movement_count) : '—' },
       { label: t('ui.labelOpeningBalance'), value: this.fmt(s?.opening_balance ?? row?.opening_balance) },
-      { label: t('ui.detailCashSales'), value: this.fmt(s?.total_sales) },
+      { label: t('ui.detailSales'), value: this.fmt(s?.total_sales) },
+      // Per tender, like an X/Z report (cash_register#91): cash is what the drawer holds. Absent
+      // when the server withholds the split (blind count on an open session): no figure of our own.
+      ...(s?.cash_sales == null ? [] : [
+        { label: t('ui.detailCashSales'), value: this.fmt(s.cash_sales) },
+        { label: t('ui.detailCardSales'), value: this.fmt(s.card_sales) },
+        ...(Number(s.other_sales) > 0 ? [{ label: t('ui.detailOtherSales'), value: this.fmt(s.other_sales) }] : []),
+      ]),
       { label: t('ui.detailRefunds'), value: this.fmt(s?.total_refunds) },
       { label: t('ui.detailCashIn'), value: this.fmt(s?.total_cash_in) },
       { label: t('ui.detailCashOut'), value: this.fmt(s?.total_cash_out) },
