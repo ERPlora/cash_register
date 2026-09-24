@@ -4156,6 +4156,9 @@ var es_default = {
     detailMovements: "Movimientos",
     detailCounts: "Arqueos",
     detailCashSales: "Ventas en efectivo",
+    detailSales: "Ventas",
+    detailCardSales: "Ventas con tarjeta",
+    detailOtherSales: "Ventas con otras formas de pago",
     detailRefunds: "Devoluciones",
     detailCashIn: "Entradas",
     detailCashOut: "Salidas",
@@ -4350,6 +4353,9 @@ var en_default = {
     detailMovements: "Movements",
     detailCounts: "Counts",
     detailCashSales: "Cash sales",
+    detailSales: "Sales",
+    detailCardSales: "Card sales",
+    detailOtherSales: "Other payment sales",
     detailRefunds: "Refunds",
     detailCashIn: "Paid in",
     detailCashOut: "Paid out",
@@ -4537,7 +4543,14 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { label: t5("ui.colStatus"), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s5?.status) || "\u2014" },
       { label: t5("ui.detailMovements"), value: s5 ? String(s5.movement_count) : "\u2014" },
       { label: t5("ui.labelOpeningBalance"), value: this.fmt(s5?.opening_balance ?? row?.opening_balance) },
-      { label: t5("ui.detailCashSales"), value: this.fmt(s5?.total_sales) },
+      { label: t5("ui.detailSales"), value: this.fmt(s5?.total_sales) },
+      // Per tender, like an X/Z report (cash_register#91): cash is what the drawer holds. Absent
+      // when the server withholds the split (blind count on an open session): no figure of our own.
+      ...s5?.cash_sales == null ? [] : [
+        { label: t5("ui.detailCashSales"), value: this.fmt(s5.cash_sales) },
+        { label: t5("ui.detailCardSales"), value: this.fmt(s5.card_sales) },
+        ...Number(s5.other_sales) > 0 ? [{ label: t5("ui.detailOtherSales"), value: this.fmt(s5.other_sales) }] : []
+      ],
       { label: t5("ui.detailRefunds"), value: this.fmt(s5?.total_refunds) },
       { label: t5("ui.detailCashIn"), value: this.fmt(s5?.total_cash_in) },
       { label: t5("ui.detailCashOut"), value: this.fmt(s5?.total_cash_out) },
