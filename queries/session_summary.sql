@@ -15,6 +15,16 @@
 SELECT
   s.id, s.session_number, s.status, s.opening_balance,
   COALESCE(SUM(CASE WHEN m.movement_type='sale'   THEN ABS(m.amount) ELSE 0 END),0) AS total_sales,
+  -- The sales split by TENDER (cash_register#91): `total_sales` sums every tender, and the detail
+  -- used to label it «cash sales». Cash is what the drawer holds; transfer and other go together.
+  -- BLIND COUNT (cash_register#84): opening + cash sales + in − out − refunds IS the expected, so an
+  -- OPEN session in a blind hub answers the split as NULL here; the twin keeps it for supervisors.
+  CASE WHEN s.status = 'open' AND COALESCE((SELECT c.require_blind_count FROM cash_register_settings c WHERE c.hub_id = s.hub_id AND c.is_deleted = 0 LIMIT 1), 0) = 1
+       THEN NULL ELSE COALESCE(SUM(CASE WHEN m.movement_type='sale' AND COALESCE(m.payment_method_type,'cash') = 'cash' THEN ABS(m.amount) ELSE 0 END),0) END AS cash_sales,
+  CASE WHEN s.status = 'open' AND COALESCE((SELECT c.require_blind_count FROM cash_register_settings c WHERE c.hub_id = s.hub_id AND c.is_deleted = 0 LIMIT 1), 0) = 1
+       THEN NULL ELSE COALESCE(SUM(CASE WHEN m.movement_type='sale' AND m.payment_method_type = 'card' THEN ABS(m.amount) ELSE 0 END),0) END AS card_sales,
+  CASE WHEN s.status = 'open' AND COALESCE((SELECT c.require_blind_count FROM cash_register_settings c WHERE c.hub_id = s.hub_id AND c.is_deleted = 0 LIMIT 1), 0) = 1
+       THEN NULL ELSE COALESCE(SUM(CASE WHEN m.movement_type='sale' AND m.payment_method_type NOT IN ('cash','card') THEN ABS(m.amount) ELSE 0 END),0) END AS other_sales,
   COALESCE(SUM(CASE WHEN m.movement_type='refund' THEN ABS(m.amount) ELSE 0 END),0) AS total_refunds,
   COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_in,
   COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_out,

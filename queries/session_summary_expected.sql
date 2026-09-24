@@ -24,6 +24,11 @@
 SELECT
   s.id, s.session_number, s.status, s.opening_balance,
   COALESCE(SUM(CASE WHEN m.movement_type='sale'   THEN ABS(m.amount) ELSE 0 END),0) AS total_sales,
+  -- The sales split by TENDER (cash_register#91): `total_sales` sums every tender, and the detail
+  -- used to label it «cash sales». Cash is what the drawer holds; transfer and other go together.
+  COALESCE(SUM(CASE WHEN m.movement_type='sale' AND COALESCE(m.payment_method_type,'cash') = 'cash' THEN ABS(m.amount) ELSE 0 END),0) AS cash_sales,
+  COALESCE(SUM(CASE WHEN m.movement_type='sale' AND m.payment_method_type = 'card' THEN ABS(m.amount) ELSE 0 END),0) AS card_sales,
+  COALESCE(SUM(CASE WHEN m.movement_type='sale' AND m.payment_method_type NOT IN ('cash','card') THEN ABS(m.amount) ELSE 0 END),0) AS other_sales,
   COALESCE(SUM(CASE WHEN m.movement_type='refund' THEN ABS(m.amount) ELSE 0 END),0) AS total_refunds,
   COALESCE(SUM(CASE WHEN m.movement_type='in'     THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_in,
   COALESCE(SUM(CASE WHEN m.movement_type='out'    THEN ABS(m.amount) ELSE 0 END),0) AS total_cash_out,
