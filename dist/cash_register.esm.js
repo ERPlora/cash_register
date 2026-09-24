@@ -4462,6 +4462,7 @@ function denominationLabel(denomination) {
 
 // ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
 var CATALOG2 = { es: es_default, en: en_default };
+var VIEW_EXPECTED_TOTALS = "cash_register.view_expected_totals";
 function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK not initialised by the shell");
@@ -4502,7 +4503,10 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     this.error = "";
     this.summary = null;
     try {
-      const rows2 = await erplora2().query("cash_register.session.summary", { session_id: session.id });
+      const sdk = erplora2();
+      const canSeeExpected = typeof sdk.hasPermission === "function" && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
+      const summaryQuery = canSeeExpected ? "cash_register.session.summary.expected" : "cash_register.session.summary";
+      const rows2 = await sdk.query(summaryQuery, { session_id: session.id });
       this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
     } catch (e6) {
       this.error = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errLoadDetail");
@@ -4540,8 +4544,8 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { label: t5("ui.detailCashOut"), value: this.fmt(s5?.total_cash_out) },
       { label: t5("ui.detailGifts"), value: this.fmt(s5?.total_gifts) },
       // Expected: what the row froze at closing when closed (the audited number), the live figure
-      // otherwise (`session.summary` runs under `view_session`; the blind-count setting hides it
-      // in the dashboard widget, not here — this is the manager's reconciliation view).
+      // otherwise — NULL («—») for an open session in a blind-count hub unless the person holds
+      // `view_expected_totals` (cash_register#84: this detail was the door left open by #24).
       { label: t5("ui.colExpected"), value: this.fmt(closed ? row?.expected_balance ?? s5?.expected_cash : s5?.expected_cash) },
       { label: t5("ui.detailCounted"), value: closed ? this.fmt(row?.closing_balance) : "\u2014" },
       { label: t5("ui.colDifference"), value: closed ? this.fmt(row?.difference) : "\u2014" }
