@@ -152,3 +152,13 @@ describe('erp-cashregister-open · subtitle', () => {
     expect(es.ui.subOpenToContinue).not.toBe(en.ui.subOpenToContinue);
   });
 });
+
+// Monorepo rule: `fill="outline"` is a no-op on ion-input/ion-select in `ios` mode, so this screen
+// looked different per platform. The rest of the module's forms use the default fill.
+it('form fields do not use fill="outline"', async () => {
+  registros = CAJONES;
+  const el = await montar();
+  const fields = el.shadowRoot.querySelectorAll('ion-input, ion-select, ion-textarea');
+  expect(fields.length).toBeGreaterThan(0);
+  for (const f of fields) expect(f.getAttribute('fill'), f.tagName).toBeNull();
+});

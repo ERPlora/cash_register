@@ -5534,7 +5534,7 @@ var ErpCashregisterOpen = class extends i3 {
         <p class="sub">${t5("ui.subOpenToContinue")}</p>
 
         <div class="form">
-          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"
+          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" label=${t5("ui.labelRegister")} label-placement="floating"
                 .value=${this.registerId}
                 @ionChange=${(e6) => {
       this.registerId = e6.target.value;
@@ -5542,14 +5542,14 @@ var ErpCashregisterOpen = class extends i3 {
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
 
-          <ion-input data-testid="cash-register-opening-balance" fill="outline" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step="0.01"
             label=${t5("ui.labelOpeningBalance")} label-placement="floating"
             .value=${this.balance}
             @ionInput=${(e6) => {
       this.balance = e6.target.value;
     }}></ion-input>
 
-          <ion-input data-testid="cash-register-opening-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating"
+          <ion-input data-testid="cash-register-opening-notes" label=${t5("ui.labelNotes")} label-placement="floating"
             placeholder=${t5("ui.optional")} .value=${this.notes}
             @ionInput=${(e6) => {
       this.notes = e6.target.value;

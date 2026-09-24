@@ -120,19 +120,19 @@ export class ErpCashregisterOpen extends LitElement {
 
         <div class="form">
           ${this.registers.length > 1
-            ? html`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t('ui.labelRegister')} label-placement="floating"
+            ? html`<ion-select data-testid="cash-register-opening-register" label=${t('ui.labelRegister')} label-placement="floating"
                 .value=${this.registerId}
                 @ionChange=${(e: CustomEvent) => { this.registerId = (e.target as HTMLInputElement).value; }}>
                 ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
               </ion-select>`
             : nothing}
 
-          <ion-input data-testid="cash-register-opening-balance" fill="outline" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step="0.01"
             label=${t('ui.labelOpeningBalance')} label-placement="floating"
             .value=${this.balance}
             @ionInput=${(e: CustomEvent) => { this.balance = (e.target as HTMLInputElement).value; }}></ion-input>
 
-          <ion-input data-testid="cash-register-opening-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating"
+          <ion-input data-testid="cash-register-opening-notes" label=${t('ui.labelNotes')} label-placement="floating"
             placeholder=${t('ui.optional')} .value=${this.notes}
             @ionInput=${(e: CustomEvent) => { this.notes = (e.target as HTMLInputElement).value; }}></ion-input>
 
