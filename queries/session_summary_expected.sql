@@ -1,3 +1,12 @@
+-- UNGAGGED twin of `session_summary.sql` (cash_register#84) — identical row, but NOT subject to the
+-- `require_blind_count` setting: an OPEN session always carries its live `expected_cash`. It exists
+-- for the two readers that need the real figure while the count is blind:
+--   · the `movement.add` handler (a `reads` entry, system context), which enforces
+--     `allow_negative_balance` on `expected_cash + amount` (cash_register#38) — fed a NULL it would
+--     have nothing to compare against;
+--   · supervisors (`cash_register.view_expected_totals`), same rule as `current_session_expected.sql`.
+-- Keep both files computing the same thing: the blind CASE branch is the only difference.
+--
 -- Resumen de una sesión: totales por tipo de movimiento. Portado de get_session_summary.
 --
 -- SIGNO SERVER-AUTHORITATIVE (cash_register#48): el sentido de un movimiento lo dice su
@@ -22,9 +31,7 @@ SELECT
   -- Physical cash the drawer should hold now (opening + Σ cash movements, signed by their KIND) —
   -- same rule as `close_session.sql`/`current_session.expected` (hub#778: keyed on
   -- payment_method_TYPE). The `movement.add` handler reads it to enforce `allow_negative_balance`
-  -- (cash_register#38) — through the UNGAGGED twin `session_summary_expected.sql`, never this file:
-  -- here the blind-count setting NULLs it for an open session (cash_register#84), the same rule as
-  -- `current_session.sql` and `sessions_list.sql`. Supervisors read the live figure from the twin.
+  -- (cash_register#38), so a wrong number here also disarms that guard.
   --
   -- A CLOSED shift answers with the STORED figure, never with a recount (cash_register#77). That
   -- column is the AUDITED number: `close_session.sql` computed it at the count and derived the
@@ -41,11 +48,6 @@ SELECT
                      s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
                                                            THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
                                                            ELSE 0 END),0))
-       -- BLIND COUNT (cash_register#84): an OPEN session in a blind hub carries NO expected — this is
-       -- the session detail, readable with `view_session` by the very cashier who is about to count.
-       WHEN COALESCE((SELECT c.require_blind_count FROM cash_register_settings c
-                      WHERE c.hub_id = s.hub_id AND c.is_deleted = 0 LIMIT 1), 0) = 1
-       THEN NULL
        ELSE s.opening_balance + COALESCE(SUM(CASE WHEN COALESCE(m.payment_method_type,'cash') = 'cash'
                                                   THEN CASE WHEN m.movement_type IN ('out','refund') THEN -ABS(m.amount) ELSE ABS(m.amount) END
                                                   ELSE 0 END),0)

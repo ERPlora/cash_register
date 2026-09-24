@@ -17,7 +17,7 @@ is that the handler is wired to REAL inputs and REAL writes:
   1. Manifest: the three public commands are WASM handlers, each declares the `reads` its rule
      needs (settings row; the payload's session with `expected_cash` for movements; the open session
      for opens), all required; every code is translated in en/es; the internal SQL commands exist.
-  2. Postgres: `settings.get` returns the three flags exactly as saved; `session.summary` (the read
+  2. Postgres: `settings.get` returns the three flags exactly as saved; `session.summary.expected` (the read
      the movement rule uses) returns `expected_cash` = opening + Σ cash movements, ignoring card;
      the internal SQL commands write what the handler hands over (ids from `new_ids`).
 
@@ -52,7 +52,7 @@ RULES = {
     ),
     "cash_register.movement.add": (
         "add_movement",
-        ["cash_register.settings.get", "cash_register.session.summary"],
+        ["cash_register.settings.get", "cash_register.session.summary.expected"],
         "cash_register._movement_insert",
     ),
 }
@@ -185,7 +185,7 @@ def check_manifest() -> None:
                 )
         if (
             name == "cash_register.movement.add"
-            and declared.get("cash_register.session.summary", {})
+            and declared.get("cash_register.session.summary.expected", {})
             .get("params", {})
             .get("session_id")
             != "payload.session_id"
@@ -296,18 +296,18 @@ def check_against_postgres() -> None:
             ],
             db=DB,
         )
-        summary = run_query("cash_register.session.summary", {"session_id": sid})
+        summary = run_query("cash_register.session.summary.expected", {"session_id": sid})
         if not summary or summary[0].get("expected_cash") != 11500:
             fail(
-                f"session.summary.expected_cash must be 10000 + 2500 - 1000 = 11500 (card ignored), got {summary}"
+                f"session.summary.expected: expected_cash must be 10000 + 2500 - 1000 = 11500 (card ignored), got {summary}"
             )
         else:
             ok(
-                "session.summary carries expected_cash (the number the negative-balance rule uses)"
+                "session.summary.expected carries expected_cash (the number the negative-balance rule uses)"
             )
-        if run_query("cash_register.session.summary", {"session_id": "ghost"}):
+        if run_query("cash_register.session.summary.expected", {"session_id": "ghost"}):
             fail(
-                "session.summary must return no row for an unknown session (the handler refuses on empty)"
+                "session.summary.expected must return no row for an unknown session (the handler refuses on empty)"
             )
         else:
             ok(

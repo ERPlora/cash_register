@@ -615,13 +615,15 @@ fn payment_method_type(method: &str) -> Option<&'static str> {
 
 /// add_movement: payload { session_id, movement_type, amount (magnitude, minor units — the SERVER
 /// signs it, cash_register#48), payment_method?, sale_reference?, description? }.
-/// reads: `cash_register.settings.get`, `cash_register.session.summary` (params session_id) — the
-/// summary carries `expected_cash`.
+/// reads: `cash_register.settings.get`, `cash_register.session.summary.expected` (params session_id)
+/// — the summary carries `expected_cash`. It is the UNGAGGED twin of `session.summary` (cash_register#84):
+/// with `require_blind_count` on, the public summary answers NULL for an open session, which would
+/// leave `allow_negative_balance` below with nothing to compare against.
 pub fn add_movement_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     // pm#146 on this path: a session that is not this hub's (or is deleted) is not preloaded → refuse
     // before writing, so no `movement_added` is ever emitted for a row that does not exist.
-    let Some(session) = read_rows(&input, "cash_register.session.summary").first() else {
+    let Some(session) = read_rows(&input, "cash_register.session.summary.expected").first() else {
         return refuse(
             "cash_register.session_unavailable",
             "That cash session is not available: it does not exist in this business or it has been deleted.",
@@ -1068,7 +1070,7 @@ mod tests {
         let out = add_movement_pure(inp_reads(
             json!({ "session_id": "s1", "movement_type": "out", "amount": -13000, "payment_method": "cash" }),
             json!({ "cash_register.settings.get": settings(0, 0, 0),
-                    "cash_register.session.summary": [{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": 12500 }] }),
+                    "cash_register.session.summary.expected": [{ "id": "s1", "status": "open", "opening_balance": 10000, "expected_cash": 12500 }] }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.negative_balance_not_allowed"));
         assert!(out.operations.is_empty());
@@ -1080,7 +1082,7 @@ mod tests {
         for (amount, allow) in [(-12500, 0), (-13000, 1), (500, 0)] {
             let out = add_movement_pure(inp_reads(
                 json!({ "session_id": "s1", "movement_type": if amount < 0 { "out" } else { "in" }, "amount": amount, "payment_method": "cash", "description": "x" }),
-                json!({ "cash_register.settings.get": settings(0, 0, allow), "cash_register.session.summary": summary }),
+                json!({ "cash_register.settings.get": settings(0, 0, allow), "cash_register.session.summary.expected": summary }),
             ));
             assert!(out.error.is_none(), "amount={amount} allow={allow}: {:?}", out.error);
             assert_eq!(out.operations[0].command, "cash_register._movement_insert");
@@ -1096,7 +1098,7 @@ mod tests {
         // preloaded → the movement is refused, no event is emitted for a row that does not exist.
         let out = add_movement_pure(inp_reads(
             json!({ "session_id": "ghost", "movement_type": "in", "amount": 100 }),
-            json!({ "cash_register.settings.get": settings(0, 0, 1), "cash_register.session.summary": [] }),
+            json!({ "cash_register.settings.get": settings(0, 0, 1), "cash_register.session.summary.expected": [] }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_unavailable"));
     }
@@ -1109,7 +1111,7 @@ mod tests {
         let out = add_movement_pure(inp_reads(
             json!({ "session_id": "s1", "movement_type": "in", "amount": 100 }),
             json!({ "cash_register.settings.get": settings(0, 0, 1),
-                    "cash_register.session.summary": [{ "id": "s1", "status": "closed", "opening_balance": 10000, "expected_cash": 10000 }] }),
+                    "cash_register.session.summary.expected": [{ "id": "s1", "status": "closed", "opening_balance": 10000, "expected_cash": 10000 }] }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.session_not_open"));
         assert!(out.operations.is_empty(), "nothing is booked into a closed session");
@@ -1139,7 +1141,7 @@ mod sign_tests {
         for sent in [9999900_i64, -9999900] {
             let out = add_movement_pure(inp_reads(
                 json!({ "session_id": "s1", "movement_type": "out", "amount": sent, "payment_method": "cash" }),
-                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(10010) }),
+                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary.expected": summary(10010) }),
             ));
             assert!(out.error.is_none(), "sent={sent}: {:?}", out.error);
             assert_eq!(out.operations[0].params["amount"], json!(-9999900), "sent={sent}");
@@ -1153,7 +1155,7 @@ mod sign_tests {
         for sent in [20000_i64, -20000] {
             let out = add_movement_pure(inp_reads(
                 json!({ "session_id": "s1", "movement_type": "out", "amount": sent, "payment_method": "cash" }),
-                json!({ "cash_register.settings.get": settings(0), "cash_register.session.summary": summary(10000) }),
+                json!({ "cash_register.settings.get": settings(0), "cash_register.session.summary.expected": summary(10000) }),
             ));
             assert_eq!(
                 out.error.as_ref().map(|e| e.code.as_str()),
@@ -1177,7 +1179,7 @@ mod sign_tests {
         ] {
             let out = add_movement_pure(inp_reads(
                 json!({ "session_id": "s1", "movement_type": movement_type, "amount": sent, "payment_method": "cash" }),
-                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+                json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary.expected": summary(100000) }),
             ));
             assert!(out.error.is_none(), "{movement_type}/{sent}: {:?}", out.error);
             assert_eq!(out.operations[0].params["amount"], json!(stored), "{movement_type}/{sent}");
@@ -1190,7 +1192,7 @@ mod sign_tests {
     fn an_unknown_movement_type_is_refused() {
         let out = add_movement_pure(inp_reads(
             json!({ "session_id": "s1", "movement_type": "withdrawal", "amount": 1000 }),
-            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary.expected": summary(100000) }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.movement_type_unknown"));
         assert!(out.operations.is_empty());
@@ -1201,7 +1203,7 @@ mod sign_tests {
     fn a_zero_amount_is_refused() {
         let out = add_movement_pure(inp_reads(
             json!({ "session_id": "s1", "movement_type": "out", "amount": 0 }),
-            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary": summary(100000) }),
+            json!({ "cash_register.settings.get": settings(1), "cash_register.session.summary.expected": summary(100000) }),
         ));
         assert_eq!(out.error.as_ref().map(|e| e.code.as_str()), Some("cash_register.amount_required"));
         assert!(out.operations.is_empty());
@@ -1284,7 +1286,7 @@ mod payment_method_tests {
         add_movement_pure(inp_reads(
             payload,
             json!({ "cash_register.settings.get": settings(negative),
-                    "cash_register.session.summary": summary(expected_cash) }),
+                    "cash_register.session.summary.expected": summary(expected_cash) }),
         ))
     }
 

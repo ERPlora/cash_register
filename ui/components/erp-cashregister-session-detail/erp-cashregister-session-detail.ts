@@ -41,7 +41,8 @@ interface Summary {
   total_cash_in: number;
   total_cash_out: number;
   total_gifts: number;
-  expected_cash: number;
+  /** NULL for an OPEN session in a blind-count hub (cash_register#84) — unless read through the twin. */
+  expected_cash: number | null;
   movement_count: number;
 }
 
@@ -54,7 +55,11 @@ interface ErploraClientLike extends ListClient {
   locale: string;
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
   formatMoney(cents: number, opts?: { currency?: string; locale?: string }): string;
+  hasPermission?(perm: string): boolean;
 }
+
+/** Who may read the live expected of an open session in a blind-count hub (cash_register#24/#84). */
+const VIEW_EXPECTED_TOTALS = 'cash_register.view_expected_totals';
 
 function erplora(): ErploraClientLike {
   const c = (globalThis as { erplora?: ErploraClientLike }).erplora;
@@ -115,7 +120,17 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     this.error = '';
     this.summary = null;
     try {
-      const rows = await erplora().query<Summary[]>('cash_register.session.summary', { session_id: session.id });
+      // cash_register#84: `session.summary` (view_session) gags the live expected of an OPEN session
+      // when the hub counts blind — the cashier about to count must not read it here either. A
+      // supervisor reads the ungagged twin instead; the server enforces the permission on both, this
+      // only picks the door so a supervisor is not left with «—».
+      const sdk = erplora();
+      const canSeeExpected = typeof sdk.hasPermission === 'function' && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
+      // Two literal calls, not a variable name: the contracts scan (ADR-0127) reads query names off the
+      // SDK call itself.
+      const rows = canSeeExpected
+        ? await sdk.query<Summary[]>('cash_register.session.summary.expected', { session_id: session.id })
+        : await sdk.query<Summary[]>('cash_register.session.summary', { session_id: session.id });
       this.summary = Array.isArray(rows) && rows.length ? rows[0] : null;
     } catch (e) {
       this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errLoadDetail');
@@ -151,8 +166,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       { label: t('ui.detailCashOut'), value: this.fmt(s?.total_cash_out) },
       { label: t('ui.detailGifts'), value: this.fmt(s?.total_gifts) },
       // Expected: what the row froze at closing when closed (the audited number), the live figure
-      // otherwise (`session.summary` runs under `view_session`; the blind-count setting hides it
-      // in the dashboard widget, not here — this is the manager's reconciliation view).
+      // otherwise — NULL («—») for an open session in a blind-count hub unless the person holds
+      // `view_expected_totals` (cash_register#84: this detail was the door left open by #24).
       { label: t('ui.colExpected'), value: this.fmt(closed ? row?.expected_balance ?? s?.expected_cash : s?.expected_cash) },
       { label: t('ui.detailCounted'), value: closed ? this.fmt(row?.closing_balance) : '—' },
       { label: t('ui.colDifference'), value: closed ? this.fmt(row?.difference) : '—' },
