@@ -13,7 +13,9 @@
       "hub.print.coverage"
     ],
     "optional_queries": [
-      "kitchen.orders.display"
+      "invoice.by_source",
+      "kitchen.orders.display",
+      "sales.get"
     ],
     "commands": [
       "cash_register.count.add",

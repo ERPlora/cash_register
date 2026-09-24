@@ -4105,6 +4105,12 @@ var es_default = {
     movementRefund: "Devoluci\xF3n",
     labelAmount: "Importe",
     labelConcept: "Concepto",
+    conceptInvoice: "Factura {number}",
+    conceptReceipt: "Tique {number}",
+    conceptSale: "Venta {number}",
+    conceptSaleUnnumbered: "Venta",
+    conceptVoidOf: "Anulaci\xF3n de {document}",
+    conceptRefundOf: "Devoluci\xF3n de {document}",
     countTitle: "Arqueo de caja",
     labelCountType: "Tipo de arqueo",
     countOpening: "Apertura",
@@ -4299,6 +4305,12 @@ var en_default = {
     movementRefund: "Refund",
     labelAmount: "Amount",
     labelConcept: "Concept",
+    conceptInvoice: "Invoice {number}",
+    conceptReceipt: "Receipt {number}",
+    conceptSale: "Sale {number}",
+    conceptSaleUnnumbered: "Sale",
+    conceptVoidOf: "Void of {document}",
+    conceptRefundOf: "Refund of {document}",
     countTitle: "Cash count",
     labelCountType: "Count type",
     countOpening: "Opening",
@@ -4460,6 +4472,42 @@ function denominationLabel(denomination) {
   return client.formatMoney(Math.round(major * 10 ** decimals));
 }
 
+// ui/lib/movement-concept.ts
+var DOCUMENT_KEY = {
+  invoice: "ui.conceptInvoice",
+  receipt: "ui.conceptReceipt",
+  sale: "ui.conceptSale"
+};
+var VOID_PREFIX = "[VOID] ";
+function movementConcept(row, doc, t5) {
+  const description = row.description == null ? "" : String(row.description);
+  const saleRef = row.sale_reference == null ? "" : String(row.sale_reference);
+  const type = String(row.movement_type ?? "");
+  if (!saleRef || type !== "sale" && type !== "refund") return description;
+  const document3 = doc ? t5(DOCUMENT_KEY[doc.kind], { number: doc.number }) : t5("ui.conceptSaleUnnumbered");
+  if (type === "sale") return document3;
+  return t5(description.startsWith(VOID_PREFIX) ? "ui.conceptVoidOf" : "ui.conceptRefundOf", { document: document3 });
+}
+function firstRow(rows2) {
+  const row = Array.isArray(rows2) ? rows2[0] : rows2;
+  return row && typeof row === "object" ? row : void 0;
+}
+async function resolveSaleDocument(sdk, saleId) {
+  try {
+    const invoice = firstRow(await sdk.queryOptional("invoice.by_source", { source_id: saleId }));
+    const number = invoice?.number == null ? "" : String(invoice.number);
+    if (number) return { kind: invoice?.invoice_type === "F2" ? "receipt" : "invoice", number };
+  } catch {
+  }
+  try {
+    const sale = firstRow(await sdk.queryOptional("sales.get", { sale_id: saleId }));
+    const number = sale?.sale_number == null ? "" : String(sale.sale_number);
+    if (number) return { kind: "sale", number };
+  } catch {
+  }
+  return null;
+}
+
 // ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
 var CATALOG2 = { es: es_default, en: en_default };
 var VIEW_EXPECTED_TOTALS = "cash_register.view_expected_totals";
@@ -4474,6 +4522,9 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     this.session = null;
     this.summary = null;
     this.error = "";
+    /** cash_register#89 — the document of each sale on screen, by `sale_reference`: `null` = none
+     *  resolvable, absent = not asked yet. One entry per SALE, so a mixed payment asks once. */
+    this.saleDocuments = /* @__PURE__ */ new Map();
     this.onLocaleChange = () => this.requestUpdate();
   }
   static {
@@ -4495,6 +4546,20 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   }
   updated(changed) {
     if (changed.has("session")) void this.load();
+    this.resolveDocuments();
+  }
+  /** Ask, once per sale, which document the sales on the current page produced (cash_register#89).
+   *  Only rows the concept cell names by their sale; a manual movement asks nobody. */
+  resolveDocuments() {
+    for (const row of this.movements?.rows ?? []) {
+      const ref = row.sale_reference ? String(row.sale_reference) : "";
+      if (!ref || row.movement_type !== "sale" && row.movement_type !== "refund" || this.saleDocuments.has(ref)) continue;
+      this.saleDocuments.set(ref, null);
+      void resolveSaleDocument(erplora2(), ref).then((doc) => {
+        this.saleDocuments.set(ref, doc);
+        if (doc) this.requestUpdate();
+      });
+    }
   }
   /** Reload everything (the dashboard calls it after a movement/count on this session). */
   async load() {
@@ -4557,7 +4622,12 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { key: "movement_type", header: t5("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
       { key: "amount", header: t5("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
       { key: "payment_method", header: t5("ui.colMethod"), sortable: true, format: (r6) => paymentMethodLabel(r6.payment_method) },
-      { key: "description", header: t5("ui.labelConcept"), sortable: true }
+      {
+        key: "description",
+        header: t5("ui.labelConcept"),
+        sortable: true,
+        format: (r6) => movementConcept(r6, this.saleDocuments.get(String(r6.sale_reference ?? "")), (k2, p4) => erplora2().t(CATALOG2, k2, p4))
+      }
     ];
   }
   get countColumns() {
