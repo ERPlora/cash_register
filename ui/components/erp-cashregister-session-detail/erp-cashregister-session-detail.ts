@@ -17,6 +17,7 @@ const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 // columna CUÁNDO soltaba `2026-08-21T17:52:13.198500671+00:00` — el timestamp del motor con nueve
 // decimales de segundo. Mismo patrón que `staff/ui/lib/enums.ts` (staff#37).
 import { COUNT_TYPE_KEY, MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, enumLabel, formatDateTime, paymentMethodLabel } from '../../lib/enums';
+import { movementConcept, resolveSaleDocument, type SaleDocument } from '../../lib/movement-concept';
 
 /** The session row as the dashboard table has it (`cash_register.sessions.list`). */
 export interface SessionRow {
@@ -52,6 +53,7 @@ interface Count { id: string; count_type: string; total: number; denominations: 
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
+  queryOptional<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T | undefined>;
   locale: string;
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
   formatMoney(cents: number, opts?: { currency?: string; locale?: string }): string;
@@ -97,6 +99,10 @@ export class ErpCashRegisterSessionDetail extends LitElement {
 
   private counts?: ListController<Count>;
 
+  /** cash_register#89 — the document of each sale on screen, by `sale_reference`: `null` = none
+   *  resolvable, absent = not asked yet. One entry per SALE, so a mixed payment asks once. */
+  private readonly saleDocuments = new Map<string, SaleDocument | null>();
+
   private readonly onLocaleChange = (): void => this.requestUpdate();
 
   connectedCallback() {
@@ -111,6 +117,21 @@ export class ErpCashRegisterSessionDetail extends LitElement {
 
   protected updated(changed: Map<string, unknown>) {
     if (changed.has('session')) void this.load();
+    this.resolveDocuments();
+  }
+
+  /** Ask, once per sale, which document the sales on the current page produced (cash_register#89).
+   *  Only rows the concept cell names by their sale; a manual movement asks nobody. */
+  private resolveDocuments(): void {
+    for (const row of this.movements?.rows ?? []) {
+      const ref = row.sale_reference ? String(row.sale_reference) : '';
+      if (!ref || (row.movement_type !== 'sale' && row.movement_type !== 'refund') || this.saleDocuments.has(ref)) continue;
+      this.saleDocuments.set(ref, null);
+      void resolveSaleDocument(erplora(), ref).then((doc) => {
+        this.saleDocuments.set(ref, doc);
+        if (doc) this.requestUpdate();
+      });
+    }
   }
 
   /** Reload everything (the dashboard calls it after a movement/count on this session). */
@@ -181,7 +202,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       { key: 'movement_type', header: t('ui.labelType'), sortable: true, format: (r) => enumLabel(MOVEMENT_TYPE_KEY, r.movement_type) },
       { key: 'amount', header: t('ui.labelAmount'), align: 'right', sortable: true, format: (r) => this.fmt(r.amount as number) },
       { key: 'payment_method', header: t('ui.colMethod'), sortable: true, format: (r) => paymentMethodLabel(r.payment_method) },
-      { key: 'description', header: t('ui.labelConcept'), sortable: true },
+      { key: 'description', header: t('ui.labelConcept'), sortable: true,
+        format: (r) => movementConcept(r, this.saleDocuments.get(String(r.sale_reference ?? '')), (k, p) => erplora().t(CATALOG, k, p)) },
     ];
   }
 
