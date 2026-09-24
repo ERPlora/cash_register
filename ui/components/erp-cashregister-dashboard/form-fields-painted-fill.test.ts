@@ -1,7 +1,11 @@
-// Monorepo rule: `fill="outline"` is a no-op on ion-input/ion-select/ion-textarea in `ios` mode (the
-// shell pins it), so the attribute only made the dashboard forms render differently per platform.
-// Every panel of the dashboard (open, close, movement, count) uses the default fill; the buttons
-// keep `fill="outline"` because on ion-button it does paint (cash_register#98, sibling of #97).
+// hub#760 / cash_register#98 — the dashboard forms (open, close, movement, count) must show a BOX
+// around every field. The Hub shell pins `mode: 'ios'` (ADR-0143) and there Ionic never paints
+// `fill` on ion-input/ion-select/ion-textarea: a `fill="outline"` alone is a silent no-op and a
+// control with no `fill` at all renders as loose text, with no border and no surface — the cashier
+// cannot see where to type. The one combination that paints is `fill="outline" mode="md"`, which is
+// what the shell (Employees, Business settings) and the modules already swept by ERPlora/pm#152
+// (customers, tickets, kitchen, inventory, staff, tables) use. The buttons keep their own
+// `fill="outline"`: on ion-button it paints in both modes.
 import { beforeEach, describe, expect, it } from 'vitest';
 
 const SESSION = {
@@ -55,14 +59,21 @@ function fieldsOf(el: Wc): Element[] {
   return [...el.shadowRoot.querySelectorAll('ion-input, ion-select, ion-textarea')];
 }
 
-describe('dashboard form fields use the default fill (cash_register#98)', () => {
+/** A field is visible only when its `fill` is real: `outline` AND `mode="md"`, together. */
+function expectPaintedFill(f: Element): void {
+  const id = f.getAttribute('data-testid') ?? f.tagName;
+  expect(f.getAttribute('fill'), `${id}: no fill → no box in ios mode`).toBe('outline');
+  expect(f.getAttribute('mode'), `${id}: fill without mode="md" never paints in ios mode`).toBe('md');
+}
+
+describe('dashboard form fields paint their box in ios mode (cash_register#98)', () => {
   it('open panel', async () => {
     const el = await mount();
     el.panel = 'open';
     await settle(el);
     const fields = fieldsOf(el);
     expect(fields.length).toBeGreaterThan(0);
-    for (const f of fields) expect(f.getAttribute('fill'), f.getAttribute('data-testid') ?? f.tagName).toBeNull();
+    for (const f of fields) expectPaintedFill(f);
   });
 
   for (const panel of ['close', 'movement', 'count'] as const) {
@@ -72,7 +83,7 @@ describe('dashboard form fields use the default fill (cash_register#98)', () => 
       await settle(el);
       const fields = fieldsOf(el);
       expect(fields.length).toBeGreaterThan(0);
-      for (const f of fields) expect(f.getAttribute('fill'), f.getAttribute('data-testid') ?? f.tagName).toBeNull();
+      for (const f of fields) expectPaintedFill(f);
     });
   }
 

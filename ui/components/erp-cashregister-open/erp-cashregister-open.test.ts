@@ -154,8 +154,10 @@ describe('erp-cashregister-open · subtitle', () => {
 });
 
 // Monorepo rule: `fill="outline"` is a no-op on ion-input/ion-select in `ios` mode, so this screen
-// looked different per platform. The dashboard forms are guarded the same way in
-// erp-cashregister-dashboard/form-fields-default-fill.test.ts (cash_register#98).
+// looked different per platform. The dashboard forms went the other way in cash_register#98 —
+// `fill="outline" mode="md"`, the combination that paints the box, as the shell does (hub#760) —
+// guarded by erp-cashregister-dashboard/form-fields-painted-fill.test.ts. This screen still renders
+// its fields without a box; bringing it in line is a separate issue (see cash_register#98).
 it('form fields do not use fill="outline"', async () => {
   registros = CAJONES;
   const el = await montar();
