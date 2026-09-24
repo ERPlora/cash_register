@@ -92,7 +92,10 @@ is declared). Below it, the two lists of that session, both 50 rows per page:
 
 - **Movements** (`cash_register.movements.list`, needs `cash_register.view_movement`) — searchable by
   sale reference or description; filterable by type (`sale`, `refund`, `in`, `out`), amount range,
-  payment method, sale reference or date. Newest first.
+  payment method, sale reference or date. Newest first. The **Concept** of a sale names the document
+  the customer was given — "Invoice FACT-2026-000001" or "Receipt T-2026-000042" (from the Invoicing
+  app), or the sale number when there is no Invoicing app or you may not read invoices; a void reads
+  "Void of …" and a refund "Refund of …". A manual movement shows the text you typed.
 - **Counts** (`cash_register.counts.list`, needs `cash_register.view_count`) — the drawer counts of a
   register, with their denominations, total and notes.
 

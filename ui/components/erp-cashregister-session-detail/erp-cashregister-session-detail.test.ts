@@ -261,3 +261,68 @@ describe('la ficha separa las ventas por forma de pago (cash_register#91)', () =
     expect(labels).not.toContain('ui.detailCardSales');
   });
 });
+
+// cash_register#89 — the CONCEPT cell of a sale printed the stored `Sale <uuid>`. It now names the
+// document the owner holds, resolved once per sale (a mixed payment is N rows of ONE sale).
+describe('el concepto de una venta nombra su documento (cash_register#89)', () => {
+  const SALE_ID = '3c9ccc35-550d-4905-8b98-bfcb0b09b5f4';
+
+  async function montarConVentas(rows: Record<string, unknown>[], optional: (name: string, params: Record<string, unknown>) => unknown) {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.t = (_c: unknown, key: string, params?: Record<string, unknown>) =>
+      params ? `${key}(${Object.entries(params).map(([k, v]) => `${k}=${v}`).join(',')})` : key;
+    sdk.queryOptional = async (name: string, params: Record<string, unknown>) => {
+      calls.push({ name, params });
+      return optional(name, params);
+    };
+    sdk.queryPage = async (name: string, params: unknown) => {
+      calls.push({ name, params });
+      if (name === 'cash_register.movements.list') return { rows, total: rows.length, limit: 50, offset: 0 };
+      return { rows: [], total: 0, limit: 50, offset: 0 };
+    };
+    const el = await montar();
+    const col = (el as unknown as Record<string, { key: string; format?: (r: Record<string, unknown>) => unknown }[]>)
+      .movementColumns.find((c) => c.key === 'description')!;
+    return { el, col };
+  }
+
+  it('la celda CONCEPTO dice «Factura FACT-…», no «Sale <uuid>»', async () => {
+    const row = { id: 'm1', movement_type: 'sale', amount: 2990, payment_method: 'Cash', sale_reference: SALE_ID, description: `Sale ${SALE_ID}`, employee_id: 'u1', created_at: '2026-09-16T20:14:00Z' };
+    const { col } = await montarConVentas([row], (name) =>
+      name === 'invoice.by_source' ? [{ id: 'i1', invoice_type: 'F1', number: 'FACT-2026-000001' }] : undefined);
+    expect(col.format, 'the CONCEPT column prints the stored description raw').toBeTruthy();
+    const shown = String(col.format!(row));
+    expect(shown).toBe('ui.conceptInvoice(number=FACT-2026-000001)');
+    expect(shown).not.toContain(SALE_ID);
+  });
+
+  it('una venta con pago mixto (dos filas) se resuelve UNA vez', async () => {
+    const legs = ['m1', 'm2'].map((id) => ({ id, movement_type: 'sale', amount: 1000, payment_method: 'Cash', sale_reference: SALE_ID, description: `Sale ${SALE_ID}`, employee_id: 'u1', created_at: '2026-09-16T20:14:00Z' }));
+    await montarConVentas(legs, () => [{ invoice_type: 'F2', number: 'T-1' }]);
+    expect(calls.filter((c) => c.name === 'invoice.by_source')).toHaveLength(1);
+  });
+
+  it('repaints the table when the invoice arrives AFTER the first paint', async () => {
+    // The first paint happens before `invoice.by_source` answers (the cell reads «Sale»). The data
+    // table only repaints when it is handed a NEW `columns` value; the cell text alone never changes
+    // what `ok-data-table` holds, so without a re-render the invoice number would never reach the screen.
+    let answer!: (rows: unknown) => void;
+    const pending = new Promise((r) => { answer = r; });
+    const row = { id: 'm1', movement_type: 'sale', amount: 2990, payment_method: 'Cash', sale_reference: SALE_ID, description: `Sale ${SALE_ID}`, employee_id: 'u1', created_at: '2026-09-16T20:14:00Z' };
+    const { el } = await montarConVentas([row], (name) => (name === 'invoice.by_source' ? pending : undefined));
+    const table = () => el.shadowRoot!.querySelector('[testid="cash-register-session-movements-table"]') as unknown as { columns: { key: string; format?: (r: unknown) => unknown }[] };
+    const before = table().columns;
+    expect(String(before.find((c) => c.key === 'description')!.format!(row))).toBe('ui.conceptSaleUnnumbered');
+    answer([{ invoice_type: 'F1', number: 'FACT-2026-000007' }]);
+    for (let i = 0; i < 3; i++) { await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete; await new Promise((r) => setTimeout(r, 0)); }
+    expect(table().columns, 'the table was never handed its columns again').not.toBe(before);
+    expect(String(table().columns.find((c) => c.key === 'description')!.format!(row))).toBe('ui.conceptInvoice(number=FACT-2026-000007)');
+  });
+
+  it('un movimiento manual no pregunta a nadie y enseña lo tecleado', async () => {
+    const row = { id: 'm2', movement_type: 'out', amount: -500, payment_method: 'cash', sale_reference: '', description: 'supplier bread', employee_id: 'u1', created_at: '2026-08-18T11:00:00Z' };
+    const { col } = await montarConVentas([row], () => { throw new Error('must not be asked'); });
+    expect(calls.some((c) => c.name === 'invoice.by_source' || c.name === 'sales.get')).toBe(false);
+    expect(col.format!(row)).toBe('supplier bread');
+  });
+});
