@@ -4090,6 +4090,7 @@ var es_default = {
     actionClose: "Cerrar",
     actionDetail: "Detalle",
     openSessionTitle: "Abrir sesi\xF3n de caja",
+    subOpenToContinue: "Abre la caja para empezar a vender.",
     labelRegister: "Caj\xF3n",
     labelOpeningBalance: "Fondo de apertura",
     labelNotes: "Notas",
@@ -4293,6 +4294,7 @@ var en_default = {
     actionClose: "Close",
     actionDetail: "Detail",
     openSessionTitle: "Open cash session",
+    subOpenToContinue: "Open the till to start selling.",
     labelRegister: "Register",
     labelOpeningBalance: "Opening float",
     labelNotes: "Notes",
@@ -5529,7 +5531,7 @@ var ErpCashregisterOpen = class extends i3 {
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>
         <h2>${t5("ui.openSessionTitle")}</h2>
-        <p class="sub">${t5("ui.msgSessionOpened")}</p>
+        <p class="sub">${t5("ui.subOpenToContinue")}</p>
 
         <div class="form">
           ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating"

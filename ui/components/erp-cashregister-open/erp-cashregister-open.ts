@@ -116,7 +116,7 @@ export class ErpCashregisterOpen extends LitElement {
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>
         <h2>${t('ui.openSessionTitle')}</h2>
-        <p class="sub">${t('ui.msgSessionOpened')}</p>
+        <p class="sub">${t('ui.subOpenToContinue')}</p>
 
         <div class="form">
           ${this.registers.length > 1

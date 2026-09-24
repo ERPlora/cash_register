@@ -73,6 +73,7 @@
     "actionClose": "Close",
     "actionDetail": "Detail",
     "openSessionTitle": "Open cash session",
+    "subOpenToContinue": "Open the till to start selling.",
     "labelRegister": "Register",
     "labelOpeningBalance": "Opening float",
     "labelNotes": "Notes",
