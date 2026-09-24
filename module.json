@@ -180,7 +180,14 @@
       "permission": "cash_register.view_session",
       "sql": "queries/session_summary.sql",
       "ai": {
-        "description": "Returns the totals and movement summary for a specific cash register session"
+        "description": "Returns the totals and movement summary for a specific cash register session. For an OPEN session `expected_cash` is empty when the blind-count setting is on."
+      }
+    },
+    "cash_register.session.summary.expected": {
+      "permission": "cash_register.view_expected_totals",
+      "sql": "queries/session_summary_expected.sql",
+      "ai": {
+        "description": "Returns the totals and movement summary for a specific cash register session including its expected cash, for supervisors — not subject to the blind-count setting."
       }
     },
     "cash_register.movements.list": {
@@ -501,7 +508,7 @@
           "required": true
         },
         {
-          "query": "cash_register.session.summary",
+          "query": "cash_register.session.summary.expected",
           "params": {
             "session_id": "payload.session_id"
           },

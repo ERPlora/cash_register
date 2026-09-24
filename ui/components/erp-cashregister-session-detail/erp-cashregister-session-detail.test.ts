@@ -187,3 +187,44 @@ describe('la forma de pago se lee en el idioma del hub (cash_register#66)', () =
     expect(col.format!({})).toBe('');
   });
 });
+
+// cash_register#84 — the detail was the door next to the one #24 closed: `session.summary` streamed
+// the live expected of an OPEN session to anyone with `view_session`. The server now gags it in a
+// blind hub; the detail asks for the ungagged twin only when the person may see expected totals,
+// and never paints a number of its own.
+describe('la ficha respeta el arqueo ciego (cash_register#84)', () => {
+  async function montarAbierta(canSee: boolean, blindSummary: boolean) {
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.hasPermission = (perm: string) => canSee && perm === 'cash_register.view_expected_totals';
+    sdk.query = async (name: string, params: unknown) => {
+      calls.push({ name, params });
+      if (name === 'cash_register.session.summary') return [{ ...SUMMARY, status: 'open', expected_cash: blindSummary ? null : 12500 }];
+      if (name === 'cash_register.session.summary.expected') return [{ ...SUMMARY, status: 'open' }];
+      return [];
+    };
+    await import('./erp-cashregister-session-detail');
+    const el = document.createElement('erp-cashregister-session-detail') as HTMLElement & { session: unknown; updateComplete: Promise<unknown> };
+    el.session = { ...SESSION, status: 'open', expected_balance: null, closing_balance: null, difference: null };
+    document.body.appendChild(el);
+    for (let i = 0; i < 3; i++) { await el.updateComplete; await new Promise((r) => setTimeout(r, 0)); }
+    const items = (el.shadowRoot?.querySelector('ok-detail-list') as unknown as { items: { label: string; value?: string }[] }).items;
+    return Object.fromEntries(items.map((i) => [i.label, i.value]));
+  }
+
+  it('sin el permiso de ver totales esperados lee la puerta con guarda y no enseña esperado', async () => {
+    const byLabel = await montarAbierta(false, true);
+    const names = calls.map((c) => c.name);
+    expect(names).toContain('cash_register.session.summary');
+    expect(names, 'the ungagged twin is a supervisor door').not.toContain('cash_register.session.summary.expected');
+    expect(byLabel['ui.colExpected']).toBe('—');
+    expect(byLabel['ui.detailCashSales'], 'the rest of the summary stays').toBe('25.00 €');
+  });
+
+  it('con el permiso lee la gemela sin guarda y el supervisor ve el esperado', async () => {
+    const byLabel = await montarAbierta(true, true);
+    const summary = calls.find((c) => c.name === 'cash_register.session.summary.expected');
+    expect(summary, 'a supervisor reads the ungagged twin').toBeTruthy();
+    expect(summary!.params).toEqual({ session_id: 's1' });
+    expect(byLabel['ui.colExpected']).toBe('125.00 €');
+  });
+});

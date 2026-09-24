@@ -24,6 +24,7 @@ versión instalada y cita la de TU versión, no la de la última publicada. En i
 | Tipo | Nombre | Permiso |
 | ---- | ------ | ------- |
 | query | `cash_register.sessions.list` / `.session.summary` / `.current_session` / `.registers.list` / `.settings.get` | `view_session` |
+| query | `cash_register.current_session.expected` / `.session.summary.expected` (esperado sin la guarda del arqueo ciego) | `view_expected_totals` |
 | query | `cash_register.movements.list` | `view_movement` |
 | query | `cash_register.counts.list` | `view_count` |
 | command | `cash_register.session.open` / `.close` | `add_session` / `close_session` |

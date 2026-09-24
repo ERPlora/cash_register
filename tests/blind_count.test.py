@@ -22,7 +22,14 @@ migrations:
      dedicated `cash_register.current_session.expected` query (supervisor permission) still does.
   3. With the setting off (default, and with no settings row at all) `current_session` keeps
      returning `expected_total` — nothing changes for hubs that never turn it on.
-  4. The difference is only computed when the count is DECLARED (`session.close` stores expected,
+  4. The session DETAIL is the same door (cash_register#84): with the setting on,
+     `cash_register.session.summary` (under `view_session`, opened by tapping a row of the grid)
+     carries NO `expected_cash` for an OPEN session, while its supervisor twin
+     `cash_register.session.summary.expected` does — and the `movement.add` handler reads the TWIN,
+     because it needs the figure to enforce `allow_negative_balance` (cash_register#38): gagging the
+     one it read would have disarmed that guard. A CLOSED session keeps answering with the audited
+     number (the count is declared, nothing left to hide).
+  5. The difference is only computed when the count is DECLARED (`session.close` stores expected,
      counted and difference on the row — the audit trail), never before.
 
 Usage: tests/blind_count.test.py   (exit 0 = green)
@@ -63,6 +70,8 @@ GUARD_QUERY = "cash_register.current_session"
 EXPECTED_QUERY = "cash_register.current_session.expected"
 WIDGET = "cash_register.current_session"
 SETTING = "require_blind_count"
+SUMMARY_QUERY = "cash_register.session.summary"
+SUMMARY_EXPECTED_QUERY = "cash_register.session.summary.expected"
 
 failures: list[str] = []
 
@@ -227,6 +236,30 @@ def check_manifest() -> None:
             f"`{GUARD_QUERY}` must stay readable with `cash_register.view_session` (it is the POS guard)"
         )
 
+    # cash_register#84 — the session detail is a door too, and the handler must not read through it.
+    queries = MANIFEST.get("queries", {})
+    if queries.get(SUMMARY_QUERY, {}).get("permission") != "cash_register.view_session":
+        fail(f"`{SUMMARY_QUERY}` must stay readable with `cash_register.view_session` (the session detail)")
+    twin = queries.get(SUMMARY_EXPECTED_QUERY)
+    if not twin:
+        fail(f"`{SUMMARY_EXPECTED_QUERY}` missing — nothing ungagged is left for supervisors and the handler")
+    elif twin.get("permission") != PERMISSION:
+        fail(f"`{SUMMARY_EXPECTED_QUERY}` must require `{PERMISSION}`, got {twin.get('permission')!r}")
+    else:
+        ok(f"`{SUMMARY_EXPECTED_QUERY}` requires `{PERMISSION}`")
+    reads = MANIFEST.get("commands", {}).get("cash_register.movement.add", {}).get("reads", [])
+    read_names = [r.get("query") if isinstance(r, dict) else r for r in reads]
+    twin_read = next((r for r in reads if isinstance(r, dict) and r.get("query") == SUMMARY_EXPECTED_QUERY), None)
+    if SUMMARY_QUERY in read_names:
+        fail(
+            f"movement.add reads the GAGGED `{SUMMARY_QUERY}` — in a blind hub its expected_cash is NULL "
+            "and `allow_negative_balance` is disarmed"
+        )
+    if not twin_read or not twin_read.get("required") or twin_read.get("params", {}).get("session_id") != "payload.session_id":
+        fail(f"movement.add must read `{SUMMARY_EXPECTED_QUERY}` (required, session_id from the payload), got {reads}")
+    else:
+        ok(f"movement.add reads the ungagged `{SUMMARY_EXPECTED_QUERY}`")
+
     for lang in ("en", "es"):
         ui = json.loads((MODULE_DIR / "locales" / f"{lang}.json").read_text()).get(
             "ui", {}
@@ -306,6 +339,11 @@ def check_against_postgres() -> None:
             )
         else:
             ok(f"{SETTING}=0 → current_session shows expected_total")
+        detail = run_query(SUMMARY_QUERY, {"session_id": sid})
+        if len(detail) != 1 or detail[0].get("expected_cash") != 12500:
+            fail(f"{SETTING}=0 → session.summary must show expected_cash=12500, got {detail}")
+        else:
+            ok(f"{SETTING}=0 → session.summary shows expected_cash")
 
         # Setting ON: the guard still proves the drawer is open, but says nothing about the amount.
         run_command(
@@ -338,6 +376,27 @@ def check_against_postgres() -> None:
         else:
             ok(f"{EXPECTED_QUERY} still returns expected_total for supervisors")
 
+        # cash_register#84: the session DETAIL (a tap on the grid row) is the door next to it.
+        detail = run_query(SUMMARY_QUERY, {"session_id": sid})
+        if len(detail) != 1 or detail[0].get("id") != sid:
+            fail(f"{SETTING}=1 → session.summary must still describe the session, got {detail}")
+        elif detail[0].get("expected_cash") is not None:
+            fail(f"{SETTING}=1 → session.summary LEAKS expected_cash={detail[0].get('expected_cash')} of an OPEN session")
+        elif detail[0].get("total_sales") != 2500 or detail[0].get("movement_count") != 1:
+            fail(f"{SETTING}=1 → session.summary must keep the rest of the summary, got {detail}")
+        else:
+            ok(f"{SETTING}=1 → session.summary describes the open session WITHOUT expected_cash")
+        twin = run_query(SUMMARY_EXPECTED_QUERY, {"session_id": sid})
+        if len(twin) != 1 or twin[0].get("expected_cash") != 12500 or twin[0].get("status") != "open":
+            fail(f"{SUMMARY_EXPECTED_QUERY} must return expected_cash=12500 even when blind (handler + supervisors), got {twin}")
+        else:
+            ok(f"{SUMMARY_EXPECTED_QUERY} still returns expected_cash (negative-balance guard stays armed)")
+        other_hub = run_query(SUMMARY_EXPECTED_QUERY, {"session_id": sid}, hub="hub-b")
+        if other_hub:
+            fail(f"{SUMMARY_EXPECTED_QUERY} answers another hub's session: {other_hub}")
+        else:
+            ok(f"{SUMMARY_EXPECTED_QUERY} is scoped by hub_id")
+
         # Declaring the count reveals (and audits) the difference on the row itself.
         run_command(
             "cash_register.session.close",
@@ -361,6 +420,11 @@ def check_against_postgres() -> None:
             ok(
                 "the count declared → expected/difference stored on the session (audited, revealed after)"
             )
+        detail = run_query(SUMMARY_QUERY, {"session_id": sid})
+        if len(detail) != 1 or detail[0].get("expected_cash") != 12500:
+            fail(f"{SETTING}=1 → a CLOSED session's summary keeps the audited expected_cash=12500, got {detail}")
+        else:
+            ok(f"{SETTING}=1 → a closed session's summary shows the audited expected_cash")
     finally:
         psql(["-c", f'DROP DATABASE IF EXISTS "{DB}" WITH (FORCE)'])
 

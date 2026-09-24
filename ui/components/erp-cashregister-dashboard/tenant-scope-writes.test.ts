@@ -73,12 +73,12 @@ describe('un movimiento solo cuelga de una sesión del mismo hub (pm#146)', () =
     // query scopes by :hub_id) and the handler refuses when it is not there.
     expect(cmd.handler, 'movement.add es un handler WASM (cash_register#38)').toBeTruthy();
     const read = (cmd.reads ?? []).find(
-      (r) => typeof r === 'object' && r.query === 'cash_register.session.summary',
+      (r) => typeof r === 'object' && r.query === 'cash_register.session.summary.expected',
     ) as { query: string; params?: Record<string, string>; required?: boolean } | undefined;
     expect(read, 'el handler tiene que recibir la sesión del payload precargada por el host').toBeTruthy();
     expect(read!.params?.session_id).toBe('payload.session_id');
     expect(read!.required, 'una read obligatoria que falla aborta en vez de degradar').toBe(true);
-    const summarySql = readFileSync(join(ROOT, manifest.queries['cash_register.session.summary'].sql), 'utf8');
+    const summarySql = readFileSync(join(ROOT, manifest.queries['cash_register.session.summary.expected'].sql), 'utf8');
     expect(summarySql, 'la sesión precargada tiene que ser de ESTE hub').toMatch(/s\.hub_id\s*=\s*:hub_id/);
   });
 });
