@@ -269,6 +269,23 @@ describe('el concepto de una venta nombra su documento (cash_register#89)', () =
     expect(calls.filter((c) => c.name === 'invoice.by_source')).toHaveLength(1);
   });
 
+  it('repaints the table when the invoice arrives AFTER the first paint', async () => {
+    // The first paint happens before `invoice.by_source` answers (the cell reads «Sale»). The data
+    // table only repaints when it is handed a NEW `columns` value; the cell text alone never changes
+    // what `ok-data-table` holds, so without a re-render the invoice number would never reach the screen.
+    let answer!: (rows: unknown) => void;
+    const pending = new Promise((r) => { answer = r; });
+    const row = { id: 'm1', movement_type: 'sale', amount: 2990, payment_method: 'Cash', sale_reference: SALE_ID, description: `Sale ${SALE_ID}`, employee_id: 'u1', created_at: '2026-09-16T20:14:00Z' };
+    const { el } = await montarConVentas([row], (name) => (name === 'invoice.by_source' ? pending : undefined));
+    const table = () => el.shadowRoot!.querySelector('[testid="cash-register-session-movements-table"]') as unknown as { columns: { key: string; format?: (r: unknown) => unknown }[] };
+    const before = table().columns;
+    expect(String(before.find((c) => c.key === 'description')!.format!(row))).toBe('ui.conceptSaleUnnumbered');
+    answer([{ invoice_type: 'F1', number: 'FACT-2026-000007' }]);
+    for (let i = 0; i < 3; i++) { await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete; await new Promise((r) => setTimeout(r, 0)); }
+    expect(table().columns, 'the table was never handed its columns again').not.toBe(before);
+    expect(String(table().columns.find((c) => c.key === 'description')!.format!(row))).toBe('ui.conceptInvoice(number=FACT-2026-000007)');
+  });
+
   it('un movimiento manual no pregunta a nadie y enseña lo tecleado', async () => {
     const row = { id: 'm2', movement_type: 'out', amount: -500, payment_method: 'cash', sale_reference: '', description: 'supplier bread', employee_id: 'u1', created_at: '2026-08-18T11:00:00Z' };
     const { col } = await montarConVentas([row], () => { throw new Error('must not be asked'); });
