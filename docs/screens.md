@@ -80,7 +80,11 @@ The session moves to `closed` and `cash_register.session_closed` is emitted. Req
 
 The **Detalle** row action opens the detail of any session — open or closed, like Square's drawer
 report or Toast's cash drawer details. On top, the reconciliation summary
-(`cash_register.session.summary`): opening float, cash sales, refunds, paid in, paid out,
+(`cash_register.session.summary`): opening float, **sales** (all tenders) and, below, the sales
+**by payment method** — cash, card, and other methods (transfer, other) only when there were any;
+only the cash line enters the drawer, like the tender breakdown of an X/Z report. In a hub with
+blind count on, an OPEN session shows the total sales without the split (the cash line would give
+the expected away). Then refunds, paid in, paid out,
 **Invitaciones** (gifts) listed **separately, at cost** — a comped item never entered the drawer, so
 it must not be mixed with cash —, the expected cash, and, once the session is closed, the counted
 cash and the difference (an open session shows "—" there: the difference is revealed when the count
