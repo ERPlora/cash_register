@@ -126,8 +126,11 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       // only picks the door so a supervisor is not left with «—».
       const sdk = erplora();
       const canSeeExpected = typeof sdk.hasPermission === 'function' && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
-      const summaryQuery = canSeeExpected ? 'cash_register.session.summary.expected' : 'cash_register.session.summary';
-      const rows = await sdk.query<Summary[]>(summaryQuery, { session_id: session.id });
+      // Two literal calls, not a variable name: the contracts scan (ADR-0127) reads query names off the
+      // SDK call itself.
+      const rows = canSeeExpected
+        ? await sdk.query<Summary[]>('cash_register.session.summary.expected', { session_id: session.id })
+        : await sdk.query<Summary[]>('cash_register.session.summary', { session_id: session.id });
       this.summary = Array.isArray(rows) && rows.length ? rows[0] : null;
     } catch (e) {
       this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errLoadDetail');

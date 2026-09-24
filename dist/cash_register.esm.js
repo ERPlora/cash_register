@@ -4505,8 +4505,7 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     try {
       const sdk = erplora2();
       const canSeeExpected = typeof sdk.hasPermission === "function" && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
-      const summaryQuery = canSeeExpected ? "cash_register.session.summary.expected" : "cash_register.session.summary";
-      const rows2 = await sdk.query(summaryQuery, { session_id: session.id });
+      const rows2 = canSeeExpected ? await sdk.query("cash_register.session.summary.expected", { session_id: session.id }) : await sdk.query("cash_register.session.summary", { session_id: session.id });
       this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
     } catch (e6) {
       this.error = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errLoadDetail");

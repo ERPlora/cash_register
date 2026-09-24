@@ -8,6 +8,7 @@
       "cash_register.movements.list",
       "cash_register.registers.list",
       "cash_register.session.summary",
+      "cash_register.session.summary.expected",
       "cash_register.sessions.list",
       "hub.print.coverage"
     ],
