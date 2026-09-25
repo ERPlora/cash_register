@@ -4858,6 +4858,10 @@ var ErpCashRegisterDashboard = class extends i3 {
       --color: var(--ion-color-danger-contrast, #fff);
     }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
+    /* The painted (md) box pads 16px a side; in a 5.5rem cell that truncates «500,00 €» before anything is
+       typed. Ionic sets the padding on .sc-ion-input-md-h.input-fill-outline (two classes), so the override
+       needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
+    .denoms ion-input.input-fill-outline { --padding-start:.5rem; --padding-end:.5rem; }
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
@@ -5230,11 +5234,11 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.openSessionTitle")}</h3>
       <form data-testid="cash-register-open-form" class="form" @submit=${(e6) => this.openSession(e6)}>
-        <ion-select data-testid="cash-register-open-register" fill="outline" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
+        <ion-select data-testid="cash-register-open-register" fill="outline" mode="md" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input data-testid="cash-register-open-balance" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-open-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-open-notes" fill="outline" mode="md" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
         <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
         <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -5295,8 +5299,8 @@ var ErpCashRegisterDashboard = class extends i3 {
       ${this.renderShiftReview()}
       ${reconcile.length ? b2`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : A}
       <form data-testid="cash-register-close-form" class="form" @submit=${(e6) => this.closeSession(e6)}>
-        <ion-input data-testid="cash-register-close-counted" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-close-notes" fill="outline" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-close-notes" fill="outline" mode="md" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
         <ion-button data-testid="cash-register-close-submit" type="submit" ?disabled=${this.saving}>${closeLabel}</ion-button>
         <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -5308,7 +5312,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     return b2`<section class="panel">
       <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-movement-form" class="form" @submit=${(e6) => this.addMovement(e6)}>
-        <ion-select data-testid="cash-register-movement-type" fill="outline" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
+        <ion-select data-testid="cash-register-movement-type" fill="outline" mode="md" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
           ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
         «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
         mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
@@ -5318,8 +5322,8 @@ var ErpCashRegisterDashboard = class extends i3 {
       (o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`
     )}
         </ion-select>
-        <ion-input data-testid="cash-register-movement-amount" fill="outline" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-movement-concept" fill="outline" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-movement-concept" fill="outline" mode="md" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
         <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
         <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
       </form>
@@ -5328,16 +5332,16 @@ var ErpCashRegisterDashboard = class extends i3 {
   renderCountPanel() {
     if (!this.target) return A;
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
-    const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
+    const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" mode="md" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-count-form" @submit=${(e6) => this.addCount(e6)}>
         <div class="form">
-          <ion-select data-testid="cash-register-count-type" fill="outline" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
+          <ion-select data-testid="cash-register-count-type" fill="outline" mode="md" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
             <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
             <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input data-testid="cash-register-count-notes" fill="outline" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
+          <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
         <h3>${t5("ui.bills")}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>

@@ -154,6 +154,10 @@ export class ErpCashRegisterDashboard extends LitElement {
       --color: var(--ion-color-danger-contrast, #fff);
     }
     .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
+    /* The painted (md) box pads 16px a side; in a 5.5rem cell that truncates «500,00 €» before anything is
+       typed. Ionic sets the padding on .sc-ion-input-md-h.input-fill-outline (two classes), so the override
+       needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
+    .denoms ion-input.input-fill-outline { --padding-start:.5rem; --padding-end:.5rem; }
     .total { font-weight:700; margin:.25rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
@@ -647,11 +651,11 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<section class="panel">
       <h3>${t('ui.openSessionTitle')}</h3>
       <form data-testid="cash-register-open-form" class="form" @submit=${(e: Event) => this.openSession(e)}>
-        <ion-select data-testid="cash-register-open-register" fill="outline" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
+        <ion-select data-testid="cash-register-open-register" fill="outline" mode="md" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
           ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input data-testid="cash-register-open-balance" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
-        <ion-input data-testid="cash-register-open-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-open-notes" fill="outline" mode="md" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
         <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
@@ -731,8 +735,8 @@ export class ErpCashRegisterDashboard extends LitElement {
       ${this.renderShiftReview()}
       ${reconcile.length ? html`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : nothing}
       <form data-testid="cash-register-close-form" class="form" @submit=${(e: Event) => this.closeSession(e)}>
-        <ion-input data-testid="cash-register-close-counted" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
-        <ion-input data-testid="cash-register-close-notes" fill="outline" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-close-notes" fill="outline" mode="md" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-close-submit" type="submit" ?disabled=${this.saving}>${closeLabel}</ion-button>
         <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
@@ -745,7 +749,7 @@ export class ErpCashRegisterDashboard extends LitElement {
     return html`<section class="panel">
       <h3>${t('ui.movementTitle')} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-movement-form" class="form" @submit=${(e: Event) => this.addMovement(e)}>
-        <ion-select data-testid="cash-register-movement-type" fill="outline" label=${t('ui.labelType')} label-placement="floating" .value=${this.movType} @ionChange=${(e: any) => (this.movType = e.target.value)}>
+        <ion-select data-testid="cash-register-movement-type" fill="outline" mode="md" label=${t('ui.labelType')} label-placement="floating" .value=${this.movType} @ionChange=${(e: any) => (this.movType = e.target.value)}>
           ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
                 «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
                 mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
@@ -754,8 +758,8 @@ export class ErpCashRegisterDashboard extends LitElement {
             (o) => html`<ion-select-option value=${o.value}>${o.label}</ion-select-option>`,
           )}
         </ion-select>
-        <ion-input data-testid="cash-register-movement-amount" fill="outline" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
-        <ion-input data-testid="cash-register-movement-concept" fill="outline" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-movement-concept" fill="outline" mode="md" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
         <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
       </form>
@@ -769,16 +773,16 @@ export class ErpCashRegisterDashboard extends LitElement {
     // `${k} €`, y en un hub español convivían «0.50 €» con punto y «Total contado 141,50 €» con
     // coma en la misma tarjeta. La CLAVE no cambia (es el contrato con el handler WASM, que la lee
     // como euros); solo lo que lee la persona.
-    const denomInput = (k: string) => html`<ion-input data-testid=${`cash-register-count-denom-${k}`} fill="outline" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
+    const denomInput = (k: string) => html`<ion-input data-testid=${`cash-register-count-denom-${k}`} fill="outline" mode="md" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
     return html`<section class="panel">
       <h3>${t('ui.countTitle')} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-count-form" @submit=${(e: Event) => this.addCount(e)}>
         <div class="form">
-          <ion-select data-testid="cash-register-count-type" fill="outline" label=${t('ui.labelCountType')} label-placement="floating" .value=${this.countType} @ionChange=${(e: any) => (this.countType = e.target.value)}>
+          <ion-select data-testid="cash-register-count-type" fill="outline" mode="md" label=${t('ui.labelCountType')} label-placement="floating" .value=${this.countType} @ionChange=${(e: any) => (this.countType = e.target.value)}>
             <ion-select-option value="opening">${t('ui.countOpening')}</ion-select-option>
             <ion-select-option value="closing">${t('ui.countClosing')}</ion-select-option>
           </ion-select>
-          <ion-input data-testid="cash-register-count-notes" fill="outline" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.countNotes} @ionInput=${(e: any) => (this.countNotes = e.target.value)}></ion-input>
+          <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.countNotes} @ionInput=${(e: any) => (this.countNotes = e.target.value)}></ion-input>
         </div>
         <h3>${t('ui.bills')}</h3>
         <div class="denoms">${BILLS.map(denomInput)}</div>
