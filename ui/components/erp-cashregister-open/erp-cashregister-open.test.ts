@@ -153,15 +153,23 @@ describe('erp-cashregister-open · subtitle', () => {
   });
 });
 
-// Monorepo rule: `fill="outline"` is a no-op on ion-input/ion-select in `ios` mode, so this screen
-// looked different per platform. The dashboard forms went the other way in cash_register#98 —
-// `fill="outline" mode="md"`, the combination that paints the box, as the shell does (hub#760) —
-// guarded by erp-cashregister-dashboard/form-fields-painted-fill.test.ts. This screen still renders
-// its fields without a box; bringing it in line is a separate issue (see cash_register#98).
-it('form fields do not use fill="outline"', async () => {
+// cash_register#100 — the fields of this screen must show a BOX, like the dashboard panels
+// (cash_register#98). The Hub shell pins `mode: 'ios'` (ADR-0143) and there Ionic never paints
+// `fill` on ion-input/ion-select/ion-textarea: no `fill` renders as loose text and `fill="outline"`
+// alone is a silent no-op. The one combination that paints is `fill="outline" mode="md"`, the
+// shell's (hub#760). Same assertion as erp-cashregister-dashboard/form-fields-painted-fill.test.ts.
+it('form fields paint their box in ios mode (fill="outline" + mode="md")', async () => {
   registros = CAJONES;
   const el = await montar();
-  const fields = el.shadowRoot.querySelectorAll('ion-input, ion-select, ion-textarea');
-  expect(fields.length).toBeGreaterThan(0);
-  for (const f of fields) expect(f.getAttribute('fill'), f.tagName).toBeNull();
+  const fields = [...el.shadowRoot.querySelectorAll('ion-input, ion-select, ion-textarea')];
+  expect(fields.map((f) => f.getAttribute('data-testid'))).toEqual([
+    'cash-register-opening-register',
+    'cash-register-opening-balance',
+    'cash-register-opening-notes',
+  ]);
+  for (const f of fields) {
+    const id = f.getAttribute('data-testid');
+    expect(f.getAttribute('fill'), `${id}: no fill → no box in ios mode`).toBe('outline');
+    expect(f.getAttribute('mode'), `${id}: fill without mode="md" never paints in ios mode`).toBe('md');
+  }
 });
