@@ -64,33 +64,6 @@ function fromMinorUnits(minor: number): string {
   return minorToMajor(minor, scale).toFixed(scale);
 }
 
-/**
- * Columns whose `range` filter is money (cash_register#103, pm#498). The column paints the INTEGER
- * in the minor unit as money of the hub («100,00 €»), so the person types the major unit («100»);
- * the dispatcher compares against the integer, so each edge is scaled before the list is asked for.
- */
-const MONEY_RANGE_FILTERS = new Set(['opening_balance', 'expected_balance', 'closing_balance']);
-
-/**
- * One typed edge of a money range → minor units, with the hub's currency decimals. The table emits
- * a Number from the panel and text from the inline control («12,5» included). Empty or not a
- * number → `''`, which the list controller drops: a stray keystroke never becomes «from 0».
- */
-function moneyEdgeToMinor(edge: unknown, decimals: number): number | '' {
-  const text = typeof edge === 'string' ? edge.trim().replace(',', '.') : edge;
-  if (text === '' || text === null || text === undefined) return '';
-  const n = Number(text);
-  return Number.isFinite(n) ? majorToMinor(n, decimals) : '';
-}
-
-/** The `{ from?, to? }` a money range emits, scaled edge by edge; any other shape travels as is. */
-function moneyRangeToMinor(value: unknown, decimals: number): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([edge, v]) => [edge, moneyEdgeToMinor(v, decimals)]),
-  );
-}
-
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
   /** TODAS las filas (sin tope). Para lo que no es «una página»: la rejilla del TPV, un
@@ -316,6 +289,10 @@ export class ErpCashRegisterDashboard extends LitElement {
       pageSize: 50,
       sort: 'id',
       dir: 'asc',
+      // cash_register#103, pm#501: the three balances are INTEGER in the minor unit and the columns
+      // paint them as money of the hub, so the person types the major unit («100»). The SDK scales
+      // each edge with the hub's currency decimals before asking; the screen must NOT scale it again.
+      moneyFilters: ['opening_balance', 'expected_balance', 'closing_balance'],
     });
     await Promise.all([this.ctrl.load(), this.loadRegisters(), this.loadCurrentSession()]);
     try {
@@ -334,11 +311,6 @@ export class ErpCashRegisterDashboard extends LitElement {
   /** Balances de sesión en CÉNTIMOS (ADR-0123) → formatMoney divide. Con formatAmount
    *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
   private fmt(n: number | null): string { return n == null ? '—' : erplora().formatMoney(Number(n)); }
-
-  /** A column filter from the table: money ranges travel in the minor unit (cash_register#103). */
-  private onFilterChange(col: string, value: unknown): void {
-    this.ctrl.setFilter(col, MONEY_RANGE_FILTERS.has(col) ? moneyRangeToMinor(value, erplora().currencyDecimals) : value);
-  }
 
   private async loadRegisters() {
     try {
@@ -855,7 +827,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => String(r.session_number ?? '—')} .cardIcon=${() => 'cash-outline'} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchPlaceholder')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.noSessions')} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @rowClick=${(e: CustomEvent<{ row: Record<string, unknown> }>) => this.openPanel('detail', e.detail.row as unknown as Session)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => String(r.session_number ?? '—')} .cardIcon=${() => 'cash-outline'} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchPlaceholder')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.noSessions')} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @rowClick=${(e: CustomEvent<{ row: Record<string, unknown> }>) => this.openPanel('detail', e.detail.row as unknown as Session)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
       </div>`;
   }
 }
