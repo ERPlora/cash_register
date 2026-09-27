@@ -40,11 +40,12 @@ function stripComments(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
 }
 
-/** Every `NumberFormat(…)` call whose arguments (up to the balancing paren, across lines) name a
- *  `currency`: the options object usually sits on its own lines, so a per-line match misses it. */
+/** Every `NumberFormat(…)` or `.toLocaleString(…)` call whose arguments (up to the balancing paren,
+ *  across lines) name a `currency`: the options object usually sits on its own lines, so a per-line
+ *  match misses it. `toLocaleString` is the same Intl path without spelling `NumberFormat`. */
 function currencyNumberFormatCalls(code: string): string[] {
   const calls: string[] = [];
-  const open = /NumberFormat\s*\(/g;
+  const open = /(?:NumberFormat|\.toLocaleString)\s*\(/g;
   let m: RegExpExecArray | null;
   while ((m = open.exec(code))) {
     let depth = 1;
@@ -85,7 +86,16 @@ describe('money display goes through the shared formatter (pm#289)', () => {
   it('no hand-formatted amount in ui/ outside the triaged non-display cases', () => {
     const uiRoot = join(moduleRoot(), 'ui');
     const found: string[] = [];
-    for (const f of uiSources(uiRoot)) {
+    const sources = uiSources(uiRoot);
+    // The control that keeps this from passing vacuously: the two screens that paint amounts
+    // (balances + history, and the session detail) are always scanned.
+    expect(sources.map((f) => f.slice(uiRoot.length + 1))).toEqual(
+      expect.arrayContaining([
+        'components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts',
+        'components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts',
+      ]),
+    );
+    for (const f of sources) {
       const rel = f.slice(uiRoot.length + 1);
       for (const h of handFormattedMoney(readFileSync(f, 'utf8'))) found.push(`${rel}: ${h}`);
     }
@@ -115,5 +125,40 @@ describe('money display goes through the shared formatter (pm#289)', () => {
     expect(handFormattedMoney("new Intl.NumberFormat(locale, { maximumFractionDigits: 3 })")).toHaveLength(0);
     // The shape prettier produces: the options object on its own lines (this is how it comes back).
     expect(handFormattedMoney("new Intl.NumberFormat('es-ES', {\n  style: 'currency',\n  currency: 'EUR',\n});")).toHaveLength(1);
+    // Same Intl path without spelling `NumberFormat` (gap noted in the review of verifactu#136).
+    expect(handFormattedMoney("const s = (total / 100).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });")).toHaveLength(1);
+    expect(handFormattedMoney("const s = (total / 100).toLocaleString(locale, {\n  style: 'currency',\n  currency,\n});")).toHaveLength(1);
+    expect(handFormattedMoney("const s = new Date(x).toLocaleString(locale, { hour: '2-digit' });")).toHaveLength(0);
+  });
+});
+
+// GUARD (rv-payment_gateways-36, copied to every module of pm#289): OutfitKit is imported by ENTRY POINT (`@erplora/outfitkit/ok-money`),
+// never as a value from the barrel (`@erplora/outfitkit`). The barrel re-exports every `ok-*`
+// component, so a single `import { formatMinor } from '@erplora/outfitkit'` made esbuild inline the
+// whole library into this module's bundle: `dist/` went from 216 KB to 1.1 MB and registered 90
+// components the screen never paints. Type-only imports are erased and stay allowed.
+export function barrelValueImports(src: string): string[] {
+  const code = stripComments(src);
+  const re = /import\s+(?!type\b)[^;]*?\bfrom\s+['"]@erplora\/outfitkit['"]/g;
+  return (code.match(re) ?? []).map((m) => m.replace(/\s+/g, ' ').trim());
+}
+
+describe('OutfitKit comes in by entry point, not by the barrel (bundle size)', () => {
+  it('no value import from `@erplora/outfitkit` in ui/', () => {
+    const uiRoot = join(moduleRoot(), 'ui');
+    const found: string[] = [];
+    for (const f of uiSources(uiRoot)) {
+      const rel = f.slice(uiRoot.length + 1);
+      for (const h of barrelValueImports(readFileSync(f, 'utf8'))) found.push(`${rel}: ${h}`);
+    }
+    expect(found, 'import it from @erplora/outfitkit/<component> (the barrel drags every ok-* into dist/)').toEqual([]);
+  });
+
+  it('the detector catches the positive and lets type-only imports through', () => {
+    expect(barrelValueImports("import { formatMinor } from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import {\n  formatMinor,\n} from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import type { DataTableColumn } from '@erplora/outfitkit';")).toHaveLength(0);
+    expect(barrelValueImports("import { formatMinor } from '@erplora/outfitkit/ok-money';")).toHaveLength(0);
+    expect(barrelValueImports("// import { formatMinor } from '@erplora/outfitkit';")).toHaveLength(0);
   });
 });
