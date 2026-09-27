@@ -15,7 +15,7 @@ import { checkMoneyDisplay } from '@erplora/module-toolkit/money-display-guard';
 //   empty or over-stripped content must not stay green on that declaration (rv-combos-22). The
 //   other helpers of `lib/` are witnesses too: a shared money helper would land there first, so the
 //   scan must provably read them (rv-taxes-78).
-// * notDisplay — the one triaged in pm#289 (`minorToInput`, the value of the money ion-input). It is
+// * notDisplay — the one triaged in pm#289 (`fromMinorUnits`, the value of the money ion-input). It is
 //   also the witness on the detector's OUTPUT: if the scan were fed empty or cut content, it would
 //   come back as `stale_exception` (rv-taxes-78). Add an entry (`'file: exact code line'` → why)
 //   only with the reason it is not a screen amount.
