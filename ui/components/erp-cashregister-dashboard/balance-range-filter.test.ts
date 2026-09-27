@@ -1,5 +1,6 @@
-// The «Opening / Expected / Counted» range filters of the sessions list filter in the unit the
-// column shows (cash_register#103, sibling of pm#498).
+// The «Opening / Expected / Counted / Difference» range filters of the sessions list filter in the
+// unit the column shows (cash_register#103, sibling of pm#498; «Difference» since cash_register#107,
+// where it was an exact-match text box over cents and «5» looked for 0,05 €).
 //
 // `cash_register_session.opening_balance`, `expected_balance` and `closing_balance` are INTEGER in
 // the minor unit (cents in EUR, ADR-0007/0123) and the dispatcher compares the `range` filter
@@ -155,6 +156,50 @@ describe('«Opening / Expected / Counted» range filters compare in the unit the
     const el = await mount();
     expect(await type(el, 'session_number', '12')).toEqual({ session_number: '12' });
     expect(await type(el, 'status', 'open')).toEqual({ session_number: '12', status: 'open' });
+  });
+
+  it('«Difference» is money too (cash_register#107): «from 5» asks for 500 cents, not 5', async () => {
+    const el = await mount();
+    expect(await type(el, 'difference', { from: 5 })).toEqual({ difference: { from: 500 } });
+  });
+
+  it('«Difference» takes a shortage: «from -5 to -0.5» asks for -500…-50 cents', async () => {
+    // A short drawer is a NEGATIVE difference: the range has to take the minus sign, typed as a
+    // Number by the panel or as text («-0,5») by the inline control.
+    const el = await mount();
+    await type(el, 'difference', { from: -5 });
+    expect(await type(el, 'difference', { to: '-0,5' })).toEqual({ difference: { from: -500, to: -50 } });
+  });
+
+  it('«Difference» is offered as a from / to range, like its three neighbours', async () => {
+    const el = await mount();
+    type Table = HTMLElement & { columns: Array<{ key: string; filterType?: string }> };
+    const table = el.shadowRoot.querySelector('ok-data-table') as Table;
+    const filterTypes = Object.fromEntries(table.columns.map((c) => [c.key, c.filterType]));
+    expect(filterTypes).toMatchObject({
+      opening_balance: 'range',
+      expected_balance: 'range',
+      closing_balance: 'range',
+      difference: 'range',
+    });
+  });
+
+  it('typed in the real Filters panel: «Difference from -5» asks for -500 cents and shows «-5»', async () => {
+    const el = await mount();
+    type Table = HTMLElement & { open(panel: 'filters'): void; shadowRoot: ShadowRoot; updateComplete: Promise<unknown> };
+    const table = el.shadowRoot.querySelector('ok-data-table') as Table;
+    table.open('filters');
+    await table.updateComplete;
+    const fromOfDifference = (): HTMLInputElement => {
+      const label = [...table.shadowRoot.querySelectorAll('.flabel')].find((l) => l.textContent === 'ui.colDifference');
+      return label!.parentElement!.querySelector('ion-input') as unknown as HTMLInputElement;
+    };
+    fromOfDifference().value = '-5';
+    fromOfDifference().dispatchEvent(new CustomEvent('ionInput', { bubbles: true, composed: true }));
+    await settle(el);
+    await table.updateComplete;
+    expect(asked[asked.length - 1]).toEqual({ difference: { from: -500 } });
+    expect(String(fromOfDifference().value)).toBe('-5');
   });
 
   it('a range that is not money (the dates `sessions.list` filters by) is never scaled', async () => {

@@ -4950,7 +4950,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       { key: "opening_balance", header: t5("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
       { key: "expected_balance", header: t5("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
       { key: "closing_balance", header: t5("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
-      { key: "difference", header: t5("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "text", format: (r6) => this.fmt(r6.difference) }
+      { key: "difference", header: t5("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
     ];
   }
   get rowActions() {
@@ -4971,10 +4971,11 @@ var ErpCashRegisterDashboard = class extends i3 {
       pageSize: 50,
       sort: "id",
       dir: "asc",
-      // cash_register#103, pm#501: the three balances are INTEGER in the minor unit and the columns
-      // paint them as money of the hub, so the person types the major unit («100»). The SDK scales
-      // each edge with the hub's currency decimals before asking; the screen must NOT scale it again.
-      moneyFilters: ["opening_balance", "expected_balance", "closing_balance"]
+      // cash_register#103, #107, pm#501: the three balances and the difference are INTEGER in the
+      // minor unit and the columns paint them as money of the hub, so the person types the major
+      // unit («100», «-5» for a short drawer). The SDK scales each edge with the hub's currency
+      // decimals before asking; the screen must NOT scale it again.
+      moneyFilters: ["opening_balance", "expected_balance", "closing_balance", "difference"]
     });
     await Promise.all([this.ctrl.load(), this.loadRegisters(), this.loadCurrentSession()]);
     try {

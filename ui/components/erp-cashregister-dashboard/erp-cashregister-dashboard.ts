@@ -262,7 +262,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       { key: 'opening_balance', header: t('ui.colOpening'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.opening_balance as number | null) },
       { key: 'expected_balance', header: t('ui.colExpected'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.expected_balance as number | null) },
       { key: 'closing_balance', header: t('ui.colCounted'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.closing_balance as number | null) },
-      { key: 'difference', header: t('ui.colDifference'), align: 'right', sortable: true, filterable: true, filterType: 'text', format: (r) => this.fmt(r.difference as number | null) },
+      { key: 'difference', header: t('ui.colDifference'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.difference as number | null) },
     ];
   }
 
@@ -289,10 +289,11 @@ export class ErpCashRegisterDashboard extends LitElement {
       pageSize: 50,
       sort: 'id',
       dir: 'asc',
-      // cash_register#103, pm#501: the three balances are INTEGER in the minor unit and the columns
-      // paint them as money of the hub, so the person types the major unit («100»). The SDK scales
-      // each edge with the hub's currency decimals before asking; the screen must NOT scale it again.
-      moneyFilters: ['opening_balance', 'expected_balance', 'closing_balance'],
+      // cash_register#103, #107, pm#501: the three balances and the difference are INTEGER in the
+      // minor unit and the columns paint them as money of the hub, so the person types the major
+      // unit («100», «-5» for a short drawer). The SDK scales each edge with the hub's currency
+      // decimals before asking; the screen must NOT scale it again.
+      moneyFilters: ['opening_balance', 'expected_balance', 'closing_balance', 'difference'],
     });
     await Promise.all([this.ctrl.load(), this.loadRegisters(), this.loadCurrentSession()]);
     try {
