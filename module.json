@@ -167,7 +167,7 @@
             "op": "range"
           },
           "difference": {
-            "op": "eq"
+            "op": "range"
           }
         },
         "page_size": 50

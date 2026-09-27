@@ -18,6 +18,10 @@ pins the same five behaviours (no separate issue: ported as-is from the hub e2e)
   5/6. The REAL chain `sales.complete_sale` → outbox → `cash_register.record_sale`: the movement
      lands in the session AND the same data-ready event fires, so a listener never sees a KPI query
      race the write that produced it.
+  7. The «Difference» filter of `sessions.list` is a from / to RANGE (cash_register#107): the list
+     engine reads the `op` of the manifest, so only a runtime proves that `f_difference_from/_to`
+     are accepted and that a NEGATIVE edge (a short drawer) narrows the list. The UI half — typing
+     «-5» asks for -500 cents — lives in `balance-range-filter.test.ts`.
 
 `install_registers_capabilities` (the sixth original test) is not ported as its own case: every
 command it named is exercised below (`session.open`/`movement.add`/`count.add`), and the
@@ -204,6 +208,36 @@ def test_6_record_sale_emits_movement_added_after_relay(hub_sales: Hub, sale_id:
     )
 
 
+def closed_with_difference(hub: Hub, counted: int) -> str:
+    """A session opened with a 100,00 € float, no movements, closed counting `counted` cents — so
+    its stored difference is `counted - 10000`."""
+    sid = open_session(hub, 10_000)
+    hub.run(
+        "cash_register.session.close",
+        {"session_id": sid, "closing_balance": counted, "closing_notes": ""},
+    )
+    return sid
+
+
+def test_7_difference_filter_is_a_money_range(hub: Hub) -> None:
+    print("\n7 · the «Difference» filter of sessions.list is a range, minus sign included (#107)")
+    over = closed_with_difference(hub, 10_500)  # +5,00 €
+    short = closed_with_difference(hub, 9_500)  # -5,00 €
+    slightly_short = closed_with_difference(hub, 9_950)  # -0,50 €
+    ids = {over, short, slightly_short}
+
+    def mine(filters: dict) -> set[str]:
+        # The hub is shared with every other battery of the run: only the ids minted here count.
+        rows = hub.query("cash_register.sessions.list", {"limit": 500, **filters})
+        return {r["id"] for r in rows} & ids
+
+    rows = [r for r in hub.query("cash_register.sessions.list", {"limit": 500}) if r["id"] in ids]
+    hub.check("stored differences", sorted(cents(r["difference"]) for r in rows), [-500, -50, 500])
+    hub.check("from -500 to -50", mine({"f_difference_from": -500, "f_difference_to": -50}), {short, slightly_short})
+    hub.check("from 0", mine({"f_difference_from": 0}), {over})
+    hub.check("to -100", mine({"f_difference_to": -100}), {short})
+
+
 def main() -> int:
     hub = Hub("session.hub")
     print(
@@ -218,6 +252,9 @@ def main() -> int:
     sale_id = test_5_sale_completed_records_cash_movement(hub_sales)
     test_6_record_sale_emits_movement_added_after_relay(hub_sales, sale_id)
     hub.failures += hub_sales.failures
+
+    # After §6 on purpose: §6 reads the NEWEST `movement_added`, and §7 opens and closes sessions.
+    test_7_difference_filter_is_a_money_range(hub)
 
     return hub.finish(
         "sessions open, accrue, reconcile and relay a sale into the drawer, against the real kernel"
