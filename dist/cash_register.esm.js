@@ -4780,6 +4780,19 @@ function fromMinorUnits(minor) {
   const scale = typeof decimals === "number" ? decimals : 2;
   return minorToMajor(minor, scale).toFixed(scale);
 }
+var MONEY_RANGE_FILTERS = /* @__PURE__ */ new Set(["opening_balance", "expected_balance", "closing_balance"]);
+function moneyEdgeToMinor(edge, decimals) {
+  const text2 = typeof edge === "string" ? edge.trim().replace(",", ".") : edge;
+  if (text2 === "" || text2 === null || text2 === void 0) return "";
+  const n6 = Number(text2);
+  return Number.isFinite(n6) ? majorToMinor(n6, decimals) : "";
+}
+function moneyRangeToMinor(value, decimals) {
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([edge, v3]) => [edge, moneyEdgeToMinor(v3, decimals)])
+  );
+}
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
 function erplora3() {
@@ -4945,6 +4958,10 @@ var ErpCashRegisterDashboard = class extends i3 {
    *  (que NO divide) 15050 céntimos se pintaban como «15050.00 €» (bug ×100). */
   fmt(n6) {
     return n6 == null ? "\u2014" : erplora3().formatMoney(Number(n6));
+  }
+  /** A column filter from the table: money ranges travel in the minor unit (cash_register#103). */
+  onFilterChange(col, value) {
+    this.ctrl.setFilter(col, MONEY_RANGE_FILTERS.has(col) ? moneyRangeToMinor(value, erplora3().currencyDecimals) : value);
   }
   async loadRegisters() {
     try {
@@ -5385,7 +5402,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.onFilterChange(e6.detail.col, e6.detail.value)}></ok-data-table>
       </div>`;
   }
 };
