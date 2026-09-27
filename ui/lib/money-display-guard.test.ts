@@ -136,10 +136,12 @@ describe('money display goes through the shared formatter (pm#289)', () => {
 // never as a value from the barrel (`@erplora/outfitkit`). The barrel re-exports every `ok-*`
 // component, so a single `import { formatMinor } from '@erplora/outfitkit'` made esbuild inline the
 // whole library into this module's bundle: `dist/` went from 216 KB to 1.1 MB and registered 90
-// components the screen never paints. Type-only imports are erased and stay allowed.
+// components the screen never paints. Type-only imports/exports are erased and stay allowed; a
+// side-effect, dynamic or re-export of the barrel drags it in just the same.
 export function barrelValueImports(src: string): string[] {
   const code = stripComments(src);
-  const re = /import\s+(?!type\b)[^;]*?\bfrom\s+['"]@erplora\/outfitkit['"]/g;
+  const re =
+    /(?:import|export)\s+(?!type\b)[^;]*?\bfrom\s+['"]@erplora\/outfitkit['"]|\bimport\s*\(?\s*['"]@erplora\/outfitkit['"]/g;
   return (code.match(re) ?? []).map((m) => m.replace(/\s+/g, ' ').trim());
 }
 
@@ -160,5 +162,14 @@ describe('OutfitKit comes in by entry point, not by the barrel (bundle size)', (
     expect(barrelValueImports("import type { DataTableColumn } from '@erplora/outfitkit';")).toHaveLength(0);
     expect(barrelValueImports("import { formatMinor } from '@erplora/outfitkit/ok-money';")).toHaveLength(0);
     expect(barrelValueImports("// import { formatMinor } from '@erplora/outfitkit';")).toHaveLength(0);
+    // The other doors to the same barrel: a side-effect import (the shape of this module's own
+    // `import '@erplora/outfitkit/ok-data-table'` with the entry point dropped), a dynamic import
+    // and a re-export all evaluate every `ok-*` just the same.
+    expect(barrelValueImports("import '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("const ok = await import('@erplora/outfitkit');")).toHaveLength(1);
+    expect(barrelValueImports("export { formatMinor } from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("export * from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import '@erplora/outfitkit/ok-data-table';")).toHaveLength(0);
+    expect(barrelValueImports("export type { OkDetailItem } from '@erplora/outfitkit';")).toHaveLength(0);
   });
 });
