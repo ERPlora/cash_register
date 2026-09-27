@@ -10,6 +10,7 @@
 // What the table types (major unit) is scaled to the minor unit with the hub's currency decimals
 // before the list is asked for; the edges of every other column travel untouched.
 import { beforeEach, describe, expect, it } from 'vitest';
+import { buildListParams } from '@erplora/module-sdk';
 import './erp-cashregister-dashboard';
 
 /** The `filters` of every page the screen asked the hub for, in call order. */
@@ -118,9 +119,11 @@ describe('«Opening / Expected / Counted» range filters compare in the unit the
   });
 
   it('text that is not a number is not turned into «from 0»', async () => {
+    // Judged on what the hub RECEIVES (`buildListParams`, what the real `queryPage` sends): the SDK
+    // keeps the empty edge until it flattens, and it travels as nothing, never as 0.
     const el = await mount();
-    expect(await type(el, 'opening_balance', { from: 'abc' })).toEqual({});
-    expect(await type(el, 'opening_balance', { to: '   ' })).toEqual({});
+    expect(buildListParams({ filters: await type(el, 'opening_balance', { from: 'abc' }) })).toEqual({});
+    expect(buildListParams({ filters: await type(el, 'opening_balance', { to: '   ' }) })).toEqual({});
   });
 
   it('a cleared filter (null) clears it, never a crash', async () => {
