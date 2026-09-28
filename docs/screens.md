@@ -55,8 +55,10 @@ in cash, a tip taken out, change brought in from the safe. Requires
 3. Confirm.
 
 The notes and coins are those of the **hub currency** (cash_register#111): euros show 500 € … 0,01 €,
-yen show ¥10,000 … ¥1, Kuwaiti dinars go down to the 5-fils coin. The module carries a table for EUR,
-USD, GBP, CHF, PLN, RON, MXN, JPY and KWD. For any other currency the card shows **no breakdown** —
+yen show ¥10,000 … ¥1, Kuwaiti dinars go down to the 5-fils coin. The module carries a table for
+every currency the hub settings offer (EUR, USD, GBP, CHF, SEK, NOK, DKK, PLN, MXN, BRL) plus RON,
+CZK, HUF, COP, CLP, PEN, JPY and KWD (cash_register#113), with the notes and coins that circulate
+today. For any other currency the card shows **no breakdown** —
 never another currency's notes — and asks for the **total counted** instead, typed like any other
 amount (`150,50`).
 

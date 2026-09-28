@@ -2,10 +2,16 @@
 
 ## Known limitations you should know about
 
-**The note-and-coin breakdown of the count exists for nine currencies.** The count card offers notes
-and coins for EUR, USD, GBP, CHF, PLN, RON, MXN, JPY and KWD (cash_register#111). In any other hub
-currency it shows no breakdown and asks for the total counted instead: the count is still exact,
-but you add up the drawer yourself. More currencies: cash_register#113.
+**The note-and-coin breakdown of the count exists for eighteen currencies.** The count card offers
+notes and coins for every currency the hub settings offer (EUR, USD, GBP, CHF, SEK, NOK, DKK, PLN,
+MXN, BRL) plus RON, CZK, HUF, COP, CLP, PEN, JPY and KWD (cash_register#111, cash_register#113). In
+any other hub currency —a currency typed by hand through the API, or the Argentine peso, whose
+notes change faster than a module release— it shows no breakdown and asks for the total counted
+instead: the count is still exact, but you add up the drawer yourself.
+
+**A note and a coin of the same value are counted once.** The count keeps one field per face value,
+so the US $1 coin and the Mexican $20 coin are not offered next to their notes: count them with the
+note of the same value, the total is the same.
 
 
 **Sessions that were already open when this fix shipped may still close short.** Until
