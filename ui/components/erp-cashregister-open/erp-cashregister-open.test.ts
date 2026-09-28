@@ -56,7 +56,7 @@ function teclear(el: HTMLElement & { shadowRoot: ShadowRoot }, selector: string,
 describe('erp-cashregister-open', () => {
   it('pide el fondo de apertura y ofrece abrir la caja', async () => {
     const el = await montar();
-    expect(el.shadowRoot.querySelector('ion-input[type="number"]'), 'falta el fondo de apertura').toBeTruthy();
+    expect(el.shadowRoot.querySelector('ion-input[data-testid="cash-register-opening-balance"]'), 'falta el fondo de apertura').toBeTruthy();
     expect(el.shadowRoot.querySelector('ion-button.open-session')).toBeTruthy();
   });
 
@@ -66,7 +66,7 @@ describe('erp-cashregister-open', () => {
     // Un salón o un bar pequeño tienen un cajón. Preguntar cuál es fricción diaria inútil.
     expect(el.shadowRoot.querySelector('ion-select')).toBeFalsy();
 
-    teclear(el, 'ion-input[type="number"]', '150');
+    teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', '150');
     el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -91,7 +91,7 @@ describe('erp-cashregister-open', () => {
   it('el fondo de apertura viaja en CÉNTIMOS, no en euros', async () => {
     registros = [CAJONES[0]];
     const el = await montar();
-    teclear(el, 'ion-input[type="number"]', '150.50');
+    teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', '150.50');
     el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -107,7 +107,7 @@ describe('erp-cashregister-open', () => {
   it('no compone el número de turno: eso es del servidor', async () => {
     registros = [CAJONES[0]];
     const el = await montar();
-    teclear(el, 'ion-input[type="number"]', '150.50');
+    teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', '150.50');
     el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -177,34 +177,92 @@ it('form fields paint their box in ios mode (fill="outline" + mode="md")', async
 // cash_register#106 — the opening float is typed in MAJOR units of the HUB's currency and stored in
 // its MINOR units (ADR-0123). The screen used a fixed ×100: in a yen hub «1000» was stored as
 // 100 000 yen, and in a Kuwaiti-dinar hub «10,5» as 1,050 fils instead of 10,500. The scale is
-// `erplora.currencyDecimals`, the same one the close and the dashboard already use.
+// `erplora.currencyDecimals`, the same one the close and the dashboard already use. Since pm#521
+// the field is text (no `step`): leaving it rewrites the amount with the scale of the currency.
 describe('erp-cashregister-open · opening float in the hub currency scale (cash_register#106)', () => {
-  async function openWith(decimals: number | undefined, typed: string) {
+  async function openWith(decimals: number | undefined, typed: string, currency?: string) {
     registros = [CAJONES[0]];
     const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
     if (decimals !== undefined) sdk.currencyDecimals = decimals;
+    if (currency !== undefined) sdk.currency = currency;
+    const el = await montar();
+    teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', typed);
+    const input = el.shadowRoot.querySelector('ion-input[data-testid="cash-register-opening-balance"]')!;
+    input.dispatchEvent(new CustomEvent('ionBlur', { bubbles: true, composed: true }));
+    await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+    const shown = (input as HTMLElement & { value: string }).value;
+    el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
+    await new Promise((r) => setTimeout(r, 0));
+    const open = comandos.find((c) => c.name === 'cash_register.session.open')!;
+    return { balance: open.payload.opening_balance, shown };
+  }
+
+  it('JPY (0 decimals): 1000 yen is stored as 1000, and the field keeps whole yen', async () => {
+    expect(await openWith(0, '1000', 'JPY')).toEqual({ balance: 1000, shown: '1000' });
+  });
+
+  it('EUR (2 decimals): «150,50» is stored as 15050 cents', async () => {
+    expect(await openWith(2, '150,5', 'EUR')).toEqual({ balance: 15050, shown: '150,50' });
+  });
+
+  it('KWD (3 decimals): «10,5» is stored as 10500 fils, and the field shows fils', async () => {
+    expect(await openWith(3, '10,5', 'KWD')).toEqual({ balance: 10500, shown: '10,500' });
+  });
+
+  it('a shell that does not inject the scale falls back to 2 decimals, never NaN', async () => {
+    expect(await openWith(undefined, '0,29')).toEqual({ balance: 29, shown: '0,29' });
+  });
+});
+
+// pm#521 — the float is read with the toolkit's `money-input`, like every other money field of
+// the hub. This screen was `type="number"`: a real browser DROPS a pasted «1.250,50» (the value
+// arrives empty) and the till opened with 0; and what did arrive went through
+// `replace(',', '.')`, so «1.250» opened with 1,25 €.
+describe('erp-cashregister-open · what is typed or pasted in the float (pm#521)', () => {
+  async function typeAndOpen(typed: string) {
+    comandos = [];
+    registros = [CAJONES[0]];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.currency = 'EUR';
+    sdk.currencyDecimals = 2;
+    sdk.t = (_catalog: unknown, key: string, params?: Record<string, unknown>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key;
     const el = await montar();
     teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', typed);
     el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
     await new Promise((r) => setTimeout(r, 0));
-    const input = el.shadowRoot.querySelector('ion-input[data-testid="cash-register-opening-balance"]')!;
-    const open = comandos.find((c) => c.name === 'cash_register.session.open')!;
-    return { balance: open.payload.opening_balance, step: input.getAttribute('step') };
+    await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+    return {
+      sent: comandos.find((c) => c.name === 'cash_register.session.open')?.payload.opening_balance,
+      error: el.shadowRoot.querySelector('[data-testid="cash-register-opening-error"]')?.textContent?.trim(),
+    };
   }
 
-  it('JPY (0 decimals): 1000 yen is stored as 1000, and the input steps by whole yen', async () => {
-    expect(await openWith(0, '1000')).toEqual({ balance: 1000, step: '1' });
+  it('the field is text with a decimal keypad, never type="number"', async () => {
+    const el = await montar();
+    const input = el.shadowRoot.querySelector('ion-input[data-testid="cash-register-opening-balance"]')!;
+    expect(input.getAttribute('type')).toBe('text');
+    expect(input.getAttribute('inputmode')).toBe('decimal');
   });
 
-  it('EUR (2 decimals): «150,50» is stored as 15050 cents, and the input steps by cents', async () => {
-    expect(await openWith(2, '150,50')).toEqual({ balance: 15050, step: '0.01' });
+  it('«1.250,50» opens with 125050, and so does a copy with a narrow no-break space', async () => {
+    expect(await typeAndOpen('1.250,50')).toEqual({ sent: 125050, error: undefined });
+    expect((await typeAndOpen('1\u202f250,50')).sent).toBe(125050);
   });
 
-  it('KWD (3 decimals): «10,5» is stored as 10500 fils, and the input steps by fils', async () => {
-    expect(await openWith(3, '10,5')).toEqual({ balance: 10500, step: '0.001' });
+  it('«1.250» is ambiguous: nothing is opened and both readings are shown', async () => {
+    expect(await typeAndOpen(' 1.250 ')).toEqual({
+      sent: undefined,
+      error: `ui.errAmbiguousAmount ${JSON.stringify({ typed: '1.250', grouped: '1250,00', decimal: '1,25' })}`,
+    });
   });
 
-  it('a shell that does not inject the scale falls back to 2 decimals, never NaN', async () => {
-    expect(await openWith(undefined, '0.29')).toEqual({ balance: 29, step: '0.01' });
+  it('garbage and a negative float say why and open nothing', async () => {
+    expect(await typeAndOpen('abc')).toEqual({ sent: undefined, error: 'ui.errNotAnAmount' });
+    expect(await typeAndOpen('-1.250,50')).toEqual({ sent: undefined, error: 'ui.errNegativeAmount' });
+  });
+
+  it('an empty float opens with 0', async () => {
+    expect(await typeAndOpen('')).toEqual({ sent: 0, error: undefined });
   });
 });

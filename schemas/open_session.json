@@ -20,8 +20,9 @@
     },
     "opening_balance": {
       "type": "integer",
+      "minimum": 0,
       "default": 0,
-      "description": "Fondo de apertura en CÉNTIMOS (ADR-0007/0123). 150,50 € = 15050."
+      "description": "Opening float in MINOR units of the hub currency (ADR-0007/0123): 150,50 € = 15050. Never negative: nobody opens a drawer with minus cash (pm#521)."
     },
     "opening_notes": {
       "type": "string",

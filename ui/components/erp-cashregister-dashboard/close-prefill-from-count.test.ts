@@ -103,7 +103,7 @@ describe('el cierre hereda el arqueo ya registrado (cash_register#65)', () => {
     expect(
       el.closeBalance,
       'el cajón ya se contó (251,30 €): volver a teclearlo a mano es como se cuela un descuadre',
-    ).toBe('251.30');
+    ).toBe('251,30');
     expect(pedidas.some((p) => p.name === 'cash_register.counts.list'), 'el panel lee los arqueos de ESA sesión').toBe(true);
     const q = pedidas.find((p) => p.name === 'cash_register.counts.list')!;
     expect((q.params.params as Record<string, unknown>).session_id, 'acotado a la sesión que se cierra').toBe('s1');
@@ -118,6 +118,19 @@ describe('el cierre hereda el arqueo ya registrado (cash_register#65)', () => {
     const cierre = comandos.find((c) => c.name === 'cash_register.session.close');
     expect(cierre, 'se cierra con lo heredado, sin pedir que se teclee otra vez').toBeTruthy();
     expect(cierre!.payload.closing_balance).toBe(25130);
+  });
+
+  // pm#521: the field is written back in the hub locale, UNGROUPED — es does not group four
+  // digits, so a five-digit total is what proves no thousands separator sneaks in («12.345,50»
+  // would be read back as ambiguous by the very gate that sends it).
+  it('prefills in the hub locale without grouping, and sends back the same minor units', async () => {
+    counts = [{ id: 'c3', count_type: 'closing', total: 1234550, denominations: '{}', notes: '', counted_at: '2026-08-25T15:00:00Z' }];
+    const el = await montar();
+    el.openPanel('close', SESSION);
+    await asentar(el);
+    expect(el.closeBalance).toBe('12345,50');
+    await el.closeSession(new Event('submit'));
+    expect(comandos.find((c) => c.name === 'cash_register.session.close')!.payload.closing_balance).toBe(1234550);
   });
 
   it('sin arqueo de cierre no se inventa nada: el campo se queda vacío', async () => {
@@ -152,7 +165,7 @@ describe('el cierre hereda el arqueo ya registrado (cash_register#65)', () => {
 
     expect(el.panel, 'un arqueo de CIERRE que deja la sesión abierta y el número escondido no es un cierre').toBe('close');
     expect(el.target?.id, 'sigue apuntando a la sesión que se estaba contando').toBe('s1');
-    expect(el.closeBalance, 'el total recién contado llega al cierre').toBe('251.30');
+    expect(el.closeBalance, 'el total recién contado llega al cierre').toBe('251,30');
   });
 
   it('un arqueo de «Apertura» NO empuja al cierre (es la verificación del fondo)', async () => {

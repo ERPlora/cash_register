@@ -79,6 +79,7 @@ const COVERED: Record<
       'cash-register-count-notes',
       'cash-register-count-submit',
       'cash-register-count-total',
+      'cash-register-count-total-error',
       'cash-register-count-total-input',
       'cash-register-count-type',
       'cash-register-detail-back',
