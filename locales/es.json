@@ -103,6 +103,8 @@
     "bills": "Billetes",
     "coins": "Monedas",
     "totalCounted": "Total contado",
+    "countTotalInput": "Total contado",
+    "countNoBreakdown": "No hay desglose de billetes y monedas para {currency}: cuenta la caja y escribe el total.",
     "registerCount": "Registrar arqueo",
     "msgSessionOpened": "Sesión abierta",
     "msgSessionClosed": "Sesión cerrada",

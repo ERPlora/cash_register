@@ -75,9 +75,11 @@ const COVERED: Record<
       'cash-register-close-submit',
       'cash-register-count-cancel',
       'cash-register-count-form',
+      'cash-register-count-no-breakdown',
       'cash-register-count-notes',
       'cash-register-count-submit',
       'cash-register-count-total',
+      'cash-register-count-total-input',
       'cash-register-count-type',
       'cash-register-detail-back',
       'cash-register-form-error',
@@ -99,7 +101,7 @@ const COVERED: Record<
     ],
     // The denomination grid: one field per note and per coin, all built by the same helper. A spec
     // types into the 50 € note by its VALUE — `cash-register-count-denom-50` — never by its
-    // position in the grid, which moves the day a currency without 500 € notes shows up.
+    // position in the grid, which moves with the hub currency (cash_register#111: yen, dinars…).
     computed: ['cash-register-count-denom-'],
     tables: ['cash-register-table'],
   },

@@ -54,8 +54,14 @@ in cash, a tip taken out, change brought in from the safe. Requires
 2. Enter how many of each note and coin you have. The total updates live as you type.
 3. Confirm.
 
-The total that gets stored is recomputed from the denominations by the server, not taken from the
-screen. A count is either an **opening** count or a **closing** count. Requires
+The notes and coins are those of the **hub currency** (cash_register#111): euros show 500 € … 0,01 €,
+yen show ¥10,000 … ¥1, Kuwaiti dinars go down to the 5-fils coin. The module carries a table for EUR,
+USD, GBP, CHF, PLN, RON, MXN, JPY and KWD. For any other currency the card shows **no breakdown** —
+never another currency's notes — and asks for the **total counted** instead, typed like any other
+amount (`150,50`).
+
+The total that gets stored is recomputed from the denominations by the server, with the decimals of
+the hub currency, not taken from the screen. A count is either an **opening** count or a **closing** count. Requires
 `cash_register.add_count`.
 
 A **closing** count leads straight to the close, with its total already in **Efectivo contado** —

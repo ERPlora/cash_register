@@ -4171,6 +4171,8 @@ var es_default = {
     bills: "Billetes",
     coins: "Monedas",
     totalCounted: "Total contado",
+    countTotalInput: "Total contado",
+    countNoBreakdown: "No hay desglose de billetes y monedas para {currency}: cuenta la caja y escribe el total.",
     registerCount: "Registrar arqueo",
     msgSessionOpened: "Sesi\xF3n abierta",
     msgSessionClosed: "Sesi\xF3n cerrada",
@@ -4375,6 +4377,8 @@ var en_default = {
     bills: "Bills",
     coins: "Coins",
     totalCounted: "Total counted",
+    countTotalInput: "Total counted",
+    countNoBreakdown: "There is no breakdown by notes and coins for {currency}: count the drawer and type the total.",
     registerCount: "Record count",
     msgSessionOpened: "Session opened",
     msgSessionClosed: "Session closed",
@@ -4773,6 +4777,60 @@ function amountStep() {
   return (10 ** -scale).toFixed(scale);
 }
 
+// ui/lib/denominations.ts
+var TABLES = {
+  EUR: {
+    bills: ["500", "200", "100", "50", "20", "10", "5"],
+    coins: ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"]
+  },
+  USD: {
+    bills: ["100", "50", "20", "10", "5", "2", "1"],
+    coins: ["0.50", "0.25", "0.10", "0.05", "0.01"]
+  },
+  GBP: {
+    bills: ["50", "20", "10", "5"],
+    coins: ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"]
+  },
+  CHF: {
+    bills: ["1000", "200", "100", "50", "20", "10"],
+    coins: ["5", "2", "1", "0.50", "0.20", "0.10", "0.05"]
+  },
+  PLN: {
+    bills: ["500", "200", "100", "50", "20", "10"],
+    coins: ["5", "2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"]
+  },
+  RON: {
+    bills: ["500", "200", "100", "50", "20", "10", "5", "1"],
+    coins: ["0.50", "0.10", "0.05", "0.01"]
+  },
+  MXN: {
+    bills: ["1000", "500", "200", "100", "50", "20"],
+    coins: ["10", "5", "2", "1", "0.50"]
+  },
+  JPY: {
+    bills: ["10000", "5000", "2000", "1000"],
+    coins: ["500", "100", "50", "10", "5", "1"]
+  },
+  KWD: {
+    bills: ["20", "10", "5", "1", "0.5", "0.25"],
+    coins: ["0.1", "0.05", "0.02", "0.01", "0.005"]
+  }
+};
+function denominationsFor(currency) {
+  return TABLES[String(currency ?? "").trim().toUpperCase()] ?? null;
+}
+function pieceCount(raw) {
+  const n6 = Math.trunc(Number(raw ?? 0));
+  return Number.isFinite(n6) && n6 > 0 ? n6 : 0;
+}
+function countTotalMinor(counts, decimals) {
+  let total = 0;
+  for (const [face, raw] of Object.entries(counts)) {
+    total += Math.round(Number(face) * 10 ** decimals) * pieceCount(raw);
+  }
+  return total;
+}
+
 // ui/lib/shift-review.ts
 var MAX_LISTED_ORDERS = 6;
 function toRows(answer) {
@@ -4840,8 +4898,6 @@ function parseCountedCash(raw) {
   if (!Number.isFinite(n6) || n6 < 0) return null;
   return toMinorUnits(text2);
 }
-var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
-var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
 function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -4887,6 +4943,7 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.countType = "closing";
     this.countNotes = "";
     this.denomCounts = {};
+    this.countTotalInput = "";
     this.registers = [];
     this.hasOpenSession = false;
     // Re-render al cambiar el idioma del shell (ADR-0055): los getters `columns`/`rowActions` y el
@@ -4923,6 +4980,7 @@ var ErpCashRegisterDashboard = class extends i3 {
        needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
     .denoms ion-input.input-fill-outline { --padding-start:.5rem; --padding-end:.5rem; }
     .total { font-weight:700; margin:.25rem 0; }
+    .hint { color: var(--ion-color-medium, #6b6b6b); margin:.5rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
     /* Revisión del turno (cash_register#68): va DENTRO del aviso, así que no lleva color propio —
@@ -5048,6 +5106,10 @@ var ErpCashRegisterDashboard = class extends i3 {
     this.panel = panel;
     this.formError = "";
     this.formMsg = "";
+    if (panel === "count") {
+      this.denomCounts = {};
+      this.countTotalInput = "";
+    }
     if (panel === "close") {
       this.closeBalance = "";
       this.clearShiftReview();
@@ -5248,30 +5310,39 @@ var ErpCashRegisterDashboard = class extends i3 {
     }
   }
   // — Arqueo → cash_register.count.add (el handler WASM calcula el total desde denominaciones) —
-  denominationsPayload() {
+  /** The notes and coins of the hub currency, or `null` when the module has no table for it — then
+   *  the card asks for the total instead of showing another currency's drawer (cash_register#111). */
+  denominations() {
+    return denominationsFor(erplora3().currency);
+  }
+  denominationsPayload(table) {
     const pick = (keys) => {
       const out = {};
       for (const k2 of keys) {
-        const n6 = Number(this.denomCounts[k2] ?? 0);
+        const n6 = pieceCount(this.denomCounts[k2]);
         if (n6 > 0) out[k2] = n6;
       }
       return out;
     };
-    return { bills: pick(BILLS), coins: pick(COINS) };
+    return { bills: pick(table.bills), coins: pick(table.coins) };
   }
-  /** Total del recuento en CÉNTIMOS enteros: cada denominación se convierte una vez
-   *  (0,05 € = 5 céntimos, exacto) y se suma en entero — nada de acumular euros en f64
-   *  (0,05×3 = 0.15000000000000002). */
-  countTotalCents() {
-    let cents = 0;
-    for (const k2 of [...BILLS, ...COINS]) cents += Math.round(Number(k2) * 100) * (Number(this.denomCounts[k2] ?? 0) || 0);
-    return cents;
+  /** Total of the count in INTEGER minor units of the hub currency: the notes and coins scaled with
+   *  its decimals, or the total typed by hand when there is no breakdown (`null` = not an amount). */
+  countTotalMinor() {
+    const table = this.denominations();
+    if (!table) return parseCountedCash(this.countTotalInput);
+    const counts = {};
+    for (const k2 of [...table.bills, ...table.coins]) counts[k2] = this.denomCounts[k2] ?? "";
+    return countTotalMinor(counts, currencyDecimals());
   }
   async addCount(ev) {
     ev.preventDefault();
     if (!this.target) return;
     const session = this.target;
     const wasClosingCount = this.countType === "closing";
+    const table = this.denominations();
+    const total = this.countTotalMinor();
+    if (total === null) return;
     this.saving = true;
     this.formError = "";
     this.formMsg = "";
@@ -5279,15 +5350,16 @@ var ErpCashRegisterDashboard = class extends i3 {
       await erplora3().command("cash_register.count.add", {
         session_id: session.id,
         count_type: this.countType,
-        denominations: this.denominationsPayload(),
+        // With a breakdown the SERVER adds it up with the hub scale; without one, the typed total.
+        ...table ? { denominations: this.denominationsPayload(table) } : { total },
         notes: this.countNotes.trim()
       });
-      const totalCents = this.countTotalCents();
       this.denomCounts = {};
+      this.countTotalInput = "";
       this.countNotes = "";
       this.resetPanel();
       if (wasClosingCount) this.openPanel("close", session);
-      this.formMsg = erplora3().t(CATALOG3, "ui.msgCountAdded", { total: erplora3().formatMoney(totalCents) });
+      this.formMsg = erplora3().t(CATALOG3, "ui.msgCountAdded", { total: erplora3().formatMoney(total) });
     } catch (e6) {
       this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errAddCount");
     } finally {
@@ -5397,6 +5469,8 @@ var ErpCashRegisterDashboard = class extends i3 {
   renderCountPanel() {
     if (!this.target) return A;
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const table = this.denominations();
+    const total = this.countTotalMinor();
     const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" mode="md" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
       <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
@@ -5408,13 +5482,16 @@ var ErpCashRegisterDashboard = class extends i3 {
           </ion-select>
           <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
-        <h3>${t5("ui.bills")}</h3>
-        <div class="denoms">${BILLS.map(denomInput)}</div>
-        <h3>${t5("ui.coins")}</h3>
-        <div class="denoms">${COINS.map(denomInput)}</div>
-        <p data-testid="cash-register-count-total" class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(this.countTotalCents())}</p>
+        ${table ? b2`<h3>${t5("ui.bills")}</h3>
+              <div class="denoms">${table.bills.map(denomInput)}</div>
+              <h3>${t5("ui.coins")}</h3>
+              <div class="denoms">${table.coins.map(denomInput)}</div>
+              <p data-testid="cash-register-count-total" class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(total ?? 0)}</p>` : b2`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora3().t(CATALOG3, "ui.countNoBreakdown", { currency: erplora3().currency })}</p>
+              <div class="form">
+                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.countTotalInput")} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e6) => this.countTotalInput = e6.target.value ?? ""}></ion-input>
+              </div>`}
         <div class="form">
-          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
+          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving || total === null}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
           <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
         </div>
       </form>
@@ -5517,6 +5594,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "denomCounts", 2);
+__decorateClass([
+  r5()
+], ErpCashRegisterDashboard.prototype, "countTotalInput", 2);
 __decorateClass([
   r5()
 ], ErpCashRegisterDashboard.prototype, "registers", 2);

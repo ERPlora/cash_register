@@ -1,6 +1,12 @@
 # Cash Register — Limits and troubleshooting
 
-## Known limitation you should know about
+## Known limitations you should know about
+
+**The note-and-coin breakdown of the count exists for nine currencies.** The count card offers notes
+and coins for EUR, USD, GBP, CHF, PLN, RON, MXN, JPY and KWD (cash_register#111). In any other hub
+currency it shows no breakdown and asks for the total counted instead: the count is still exact,
+but you add up the drawer yourself. More currencies: cash_register#113.
+
 
 **Sessions that were already open when this fix shipped may still close short.** Until
 cash_register#33, a sale's movement did not record *how* it was paid: the column existed with a

@@ -22,7 +22,7 @@
 //!    host preloads (`context.reads`, ADR-0069) — never from the payload. The writes themselves stay
 //!    in SQL (`_open_session_insert`, `_close_session_apply`, `_movement_insert`).
 
-use erplora_guest_sdk::money;
+use erplora_guest_sdk::{currency, money};
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use erplora_guest_sdk::{DomainError, Operation, Output};
@@ -91,18 +91,33 @@ fn new_id(input: &Value, i: usize) -> Value {
         .and_then(|a| a.get(i)).cloned().unwrap_or(Value::Null)
 }
 
-/// Σ denom×count sobre bills y coins, en **céntimos** (ADR-0007). Las claves de
-/// denominación son etiquetas de EUROS de la moneda/billete físico ("50", "0.50"),
-/// así que se escalan a céntimos (×100). Fiel a calculate_total_from_denominations.
-fn total_from_denoms(denoms: &Value) -> i64 {
-    let mut total: i64 = 0; // céntimos
+/// The hub currency's scale (cash_register#111) out of the trusted `cash_register.currency_scale`
+/// row the host preloads: what the hub declared by hand (`currency_decimals`, 0..=4, stored as TEXT)
+/// → the ISO-4217 registry for `currency` → the explicit default. The same resolution the runtime
+/// uses for the screen and the paper (`settings::currency_decimals_in`), so the count cannot add up
+/// with a scale the screen does not show. No `currency` row means the hub is in euros.
+fn hub_currency_decimals(input: &Value) -> u32 {
+    let row = read_rows(input, "cash_register.currency_scale").first();
+    let field = |k: &str| row.and_then(|r| r.get(k)).map(s).unwrap_or_default();
+    let declared = field("currency_decimals").trim().parse::<u32>().ok().filter(|n| *n <= 4);
+    declared.unwrap_or_else(|| {
+        let currency = field("currency");
+        let code = if currency.trim().is_empty() { "EUR" } else { currency.trim() };
+        currency::decimals_for(code).unwrap_or(currency::DEFAULT_DECIMALS)
+    })
+}
+
+/// Σ denom×count over bills and coins, in **minor units** of the hub currency (ADR-0007/0123).
+/// The denomination keys are the FACE VALUE of the note/coin in major units («1000», «0.50»,
+/// «0.005»), so each one crosses the named border `major_to_minor` with the hub's scale — once, and
+/// then everything adds up as integers.
+fn total_from_denoms(denoms: &Value, decimals: u32) -> i64 {
+    let mut total: i64 = 0;
     for section in ["bills", "coins"] {
         if let Some(Value::Object(m)) = denoms.get(section) {
             for (denom, count) in m {
-                // La etiqueta del billete/moneda está en EUROS ("50", "0.50") → frontera CON NOMBRE.
-                let euros = Decimal::from_str(denom.trim()).unwrap_or(Decimal::ZERO);
-                let denom_cents = money::euros_to_cents(euros);
-                total += denom_cents * f(count, 0.0) as i64;
+                let face = Decimal::from_str(denom.trim()).unwrap_or(Decimal::ZERO);
+                total += money::major_to_minor(face, decimals) * f(count, 0.0) as i64;
             }
         }
     }
@@ -110,12 +125,13 @@ fn total_from_denoms(denoms: &Value) -> i64 {
 }
 
 /// add_count: payload { session_id, count_type, denominations?, total?, notes? }.
+/// reads: `cash_register.currency_scale`.
 pub fn add_count_pure(input: Value) -> Output {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let denoms = payload.get("denominations").cloned().unwrap_or(json!({}));
     let total = match payload.get("total") {
-        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => money::from_json(v, 0), // céntimos
-        _ => total_from_denoms(&denoms),
+        Some(v) if !v.is_null() && f(v, -1.0) >= 0.0 => money::from_json(v, 0), // minor units
+        _ => total_from_denoms(&denoms, hub_currency_decimals(&input)),
     };
     let mut p = Map::new();
     p.insert("count_id".into(), new_id(&input, 0));
@@ -708,6 +724,62 @@ mod tests {
         assert_eq!(out.operations[0].command, "cash_register._insert_count");
         assert_eq!(out.operations[0].params["total"], json!(21000));
         assert_eq!(out.operations[0].params["count_id"], json!("id-0"));
+    }
+
+    // ── cash_register#111: the count adds up with the HUB currency scale, not a fixed ×100 ───
+    // The denomination keys are the face value in MAJOR units («1000», «0.50», «0.005»); the scale
+    // that turns them into minor units comes from the hub's settings the host preloads
+    // (`cash_register.currency_scale`, ADR-0069) — never from the payload.
+
+    fn count_in(currency: Value, decimals: Value, denominations: Value) -> Value {
+        json!({ "payload": { "session_id": "s", "count_type": "closing", "denominations": denominations },
+                "context": { "new_ids": ["id-0"], "now": "2026-09-28T10:00:00+00:00",
+                             "reads": { "cash_register.currency_scale": [{ "currency": currency, "currency_decimals": decimals }] } } })
+    }
+
+    #[test]
+    fn count_in_yen_adds_whole_yen() {
+        // 5 × ¥1000 + 3 × ¥1 = ¥5003 — the yen has no minor unit, so 5003, not 500300.
+        let out = add_count_pure(count_in(json!("JPY"), Value::Null, json!({ "bills": { "1000": 5 }, "coins": { "1": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(5003));
+    }
+
+    #[test]
+    fn count_in_kuwaiti_dinars_adds_fils() {
+        // 2 × 0.25 KWD + 3 × 0.005 KWD = 0.515 KWD = 515 fils (3 decimals), not 51.
+        let out = add_count_pure(count_in(json!("KWD"), Value::Null, json!({ "bills": { "0.25": 2 }, "coins": { "0.005": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(515));
+    }
+
+    #[test]
+    fn count_uses_the_decimals_the_hub_declared_by_hand() {
+        // A currency the registry does not know, with `currency_decimals` declared by the hub
+        // (stored as TEXT in hub_settings): the hub's word wins, same resolution as the runtime.
+        let out = add_count_pure(count_in(json!("XTS"), json!("3"), json!({ "coins": { "0.005": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(15));
+        // …and it wins over the registry too: JPY declared with 2 decimals counts in hundredths.
+        let out = add_count_pure(count_in(json!("JPY"), json!("2"), json!({ "coins": { "1": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(300));
+    }
+
+    #[test]
+    fn count_ignores_a_declared_scale_out_of_range() {
+        // `currency_decimals` outside 0..=4 is not a scale: the registry decides (EUR → 2).
+        let out = add_count_pure(count_in(json!("EUR"), json!("9"), json!({ "coins": { "0.05": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(15));
+    }
+
+    #[test]
+    fn count_in_an_unknown_currency_without_declared_scale_uses_the_default() {
+        let out = add_count_pure(count_in(json!("XTS"), Value::Null, json!({ "bills": { "10": 1 } })));
+        assert_eq!(out.operations[0].params["total"], json!(1000));
+    }
+
+    #[test]
+    fn count_in_euros_keeps_counting_cents() {
+        // No `currency` row in hub_settings → the hub is in euros (the runtime's default).
+        let out = add_count_pure(count_in(Value::Null, Value::Null, json!({ "bills": { "50": 2 }, "coins": { "0.05": 3 } })));
+        assert_eq!(out.operations[0].params["total"], json!(10015));
     }
 
     #[test]
