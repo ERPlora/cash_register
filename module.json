@@ -272,6 +272,13 @@
         "description": "Lists cash counts (till counts) performed on a register"
       }
     },
+    "cash_register.currency_scale": {
+      "permission": "cash_register.add_count",
+      "sql": "queries/currency_scale.sql",
+      "ai": {
+        "description": "Returns the hub's currency code and, if declared by hand, its number of decimals — the scale the till count adds up with"
+      }
+    },
     "cash_register.settings.get": {
       "permission": "cash_register.view_session",
       "sql": "queries/settings_get.sql",
@@ -537,8 +544,14 @@
         "function": "add_count"
       },
       "schema": "schemas/add_count.json",
+      "reads": [
+        {
+          "query": "cash_register.currency_scale",
+          "required": true
+        }
+      ],
       "ai": {
-        "description": "Performs a cash count by recording the number of each denomination in the drawer"
+        "description": "Performs a cash count by recording the number of each note and coin in the drawer. `denominations` is `{bills: {<face value>: count}, coins: {<face value>: count}}` where the face value is written in MAJOR units of the hub currency (\"50\", \"0.50\" in euros; \"1000\" in yen; \"0.005\" in Kuwaiti dinars); the server adds it up with the hub currency's decimals. Alternatively send `total` in minor units instead of denominations."
       }
     },
     "cash_register.record_sale": {

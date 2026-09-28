@@ -102,6 +102,8 @@
     "bills": "Bills",
     "coins": "Coins",
     "totalCounted": "Total counted",
+    "countTotalInput": "Total counted",
+    "countNoBreakdown": "There is no breakdown by notes and coins for {currency}: count the drawer and type the total.",
     "registerCount": "Record count",
     "msgSessionOpened": "Session opened",
     "msgSessionClosed": "Session closed",

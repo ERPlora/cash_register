@@ -7,7 +7,9 @@ import '@erplora/outfitkit/ok-detail-list';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction, OkDetailItem } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
-import { fromMinorUnits, toMinorUnits } from '../../lib/money';
+import { currencyDecimals, fromMinorUnits, toMinorUnits } from '../../lib/money';
+// The notes and coins of the count follow the hub currency (cash_register#111).
+import { countTotalMinor, denominationsFor, pieceCount, type DenominationTable } from '../../lib/denominations';
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
@@ -76,10 +78,6 @@ interface Register { id: string; name: string; is_active: number }
 /** A till count of a session (`cash_register.counts.list`). `total` is MINOR units (ADR-0007/0400). */
 interface Count { id: string; count_type: string; total: number; counted_at: string }
 
-/** Denominaciones EUR para el arqueo (billetes y monedas). */
-const BILLS = ['500', '200', '100', '50', '20', '10', '5'];
-const COINS = ['2', '1', '0.50', '0.20', '0.10', '0.05', '0.02', '0.01'];
-
 function erplora(): ErploraClientLike {
   const c = (globalThis as { erplora?: ErploraClientLike }).erplora;
   if (!c) throw new Error('erplora SDK no inicializado por el shell');
@@ -136,6 +134,7 @@ export class ErpCashRegisterDashboard extends LitElement {
        needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
     .denoms ion-input.input-fill-outline { --padding-start:.5rem; --padding-end:.5rem; }
     .total { font-weight:700; margin:.25rem 0; }
+    .hint { color: var(--ion-color-medium, #6b6b6b); margin:.5rem 0; }
     .err { color:#d9480f; font-weight:600; }
     .ok { color:#2b8a3e; font-weight:600; }
     /* Revisión del turno (cash_register#68): va DENTRO del aviso, así que no lleva color propio —
@@ -203,6 +202,9 @@ export class ErpCashRegisterDashboard extends LitElement {
   @state() countNotes = '';
 
   @state() denomCounts: Record<string, string> = {};
+
+  /** The total typed by hand when the hub currency has no denomination table (cash_register#111). */
+  @state() countTotalInput = '';
 
   @state() registers: Register[] = [];
 
@@ -332,6 +334,11 @@ export class ErpCashRegisterDashboard extends LitElement {
     this.panel = panel;
     this.formError = '';
     this.formMsg = '';
+    // A count starts clean too: counts typed for another session (or abandoned) are not this drawer.
+    if (panel === 'count') {
+      this.denomCounts = {};
+      this.countTotalInput = '';
+    }
     // The close starts from the drawer that was already counted (cash_register#65). It also starts
     // CLEAN: whatever was typed for another session (or abandoned with Cancel) must never carry
     // over into this one — a leftover amount is a fake difference somebody has to answer for.
@@ -572,25 +579,33 @@ export class ErpCashRegisterDashboard extends LitElement {
   }
 
   // — Arqueo → cash_register.count.add (el handler WASM calcula el total desde denominaciones) —
-  private denominationsPayload(): { bills: Record<string, number>; coins: Record<string, number> } {
+
+  /** The notes and coins of the hub currency, or `null` when the module has no table for it — then
+   *  the card asks for the total instead of showing another currency's drawer (cash_register#111). */
+  private denominations(): DenominationTable | null {
+    return denominationsFor(erplora().currency);
+  }
+
+  private denominationsPayload(table: DenominationTable): { bills: Record<string, number>; coins: Record<string, number> } {
     const pick = (keys: string[]) => {
       const out: Record<string, number> = {};
       for (const k of keys) {
-        const n = Number(this.denomCounts[k] ?? 0);
+        const n = pieceCount(this.denomCounts[k]);
         if (n > 0) out[k] = n;
       }
       return out;
     };
-    return { bills: pick(BILLS), coins: pick(COINS) };
+    return { bills: pick(table.bills), coins: pick(table.coins) };
   }
 
-  /** Total del recuento en CÉNTIMOS enteros: cada denominación se convierte una vez
-   *  (0,05 € = 5 céntimos, exacto) y se suma en entero — nada de acumular euros en f64
-   *  (0,05×3 = 0.15000000000000002). */
-  private countTotalCents(): number {
-    let cents = 0;
-    for (const k of [...BILLS, ...COINS]) cents += Math.round(Number(k) * 100) * (Number(this.denomCounts[k] ?? 0) || 0);
-    return cents;
+  /** Total of the count in INTEGER minor units of the hub currency: the notes and coins scaled with
+   *  its decimals, or the total typed by hand when there is no breakdown (`null` = not an amount). */
+  private countTotalMinor(): number | null {
+    const table = this.denominations();
+    if (!table) return parseCountedCash(this.countTotalInput);
+    const counts: Record<string, string> = {};
+    for (const k of [...table.bills, ...table.coins]) counts[k] = this.denomCounts[k] ?? '';
+    return countTotalMinor(counts, currencyDecimals());
   }
 
   private async addCount(ev: Event) {
@@ -598,6 +613,9 @@ export class ErpCashRegisterDashboard extends LitElement {
     if (!this.target) return;
     const session = this.target;
     const wasClosingCount = this.countType === 'closing';
+    const table = this.denominations();
+    const total = this.countTotalMinor();
+    if (total === null) return;
     this.saving = true;
     this.formError = '';
     this.formMsg = '';
@@ -605,11 +623,12 @@ export class ErpCashRegisterDashboard extends LitElement {
       await erplora().command('cash_register.count.add', {
         session_id: session.id,
         count_type: this.countType,
-        denominations: this.denominationsPayload(),
+        // With a breakdown the SERVER adds it up with the hub scale; without one, the typed total.
+        ...(table ? { denominations: this.denominationsPayload(table) } : { total }),
         notes: this.countNotes.trim(),
       });
-      const totalCents = this.countTotalCents();
       this.denomCounts = {};
+      this.countTotalInput = '';
       this.countNotes = '';
       this.resetPanel();
       // A count typed as «Cierre» has to lead somewhere (cash_register#65): it used to be filed and
@@ -620,7 +639,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       // operator still has to confirm it — one count, one decision, no permission collapsed.
       // (Before the message: `openPanel` clears it, and the confirmation is the point.)
       if (wasClosingCount) this.openPanel('close', session);
-      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatMoney(totalCents) });
+      this.formMsg = erplora().t(CATALOG, 'ui.msgCountAdded', { total: erplora().formatMoney(total) });
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errAddCount');
     } finally {
@@ -751,10 +770,13 @@ export class ErpCashRegisterDashboard extends LitElement {
   private renderCountPanel() {
     if (!this.target) return nothing;
     const t = (k: string): string => erplora().t(CATALOG, k);
+    const table = this.denominations();
+    const total = this.countTotalMinor();
     // La etiqueta es DINERO, así que se formatea como dinero (cash_register#50): era el literal
     // `${k} €`, y en un hub español convivían «0.50 €» con punto y «Total contado 141,50 €» con
-    // coma en la misma tarjeta. La CLAVE no cambia (es el contrato con el handler WASM, que la lee
-    // como euros); solo lo que lee la persona.
+    // coma en la misma tarjeta. The KEY is the face value in major units — the contract with the WASM
+    // handler, which scales it with the hub currency (cash_register#111); only what the person reads
+    // is formatted.
     const denomInput = (k: string) => html`<ion-input data-testid=${`cash-register-count-denom-${k}`} fill="outline" mode="md" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
     return html`<section class="panel">
       <h3>${t('ui.countTitle')} · ${this.target.session_number}</h3>
@@ -766,13 +788,18 @@ export class ErpCashRegisterDashboard extends LitElement {
           </ion-select>
           <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.countNotes} @ionInput=${(e: any) => (this.countNotes = e.target.value)}></ion-input>
         </div>
-        <h3>${t('ui.bills')}</h3>
-        <div class="denoms">${BILLS.map(denomInput)}</div>
-        <h3>${t('ui.coins')}</h3>
-        <div class="denoms">${COINS.map(denomInput)}</div>
-        <p data-testid="cash-register-count-total" class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(this.countTotalCents())}</p>
+        ${table
+          ? html`<h3>${t('ui.bills')}</h3>
+              <div class="denoms">${table.bills.map(denomInput)}</div>
+              <h3>${t('ui.coins')}</h3>
+              <div class="denoms">${table.coins.map(denomInput)}</div>
+              <p data-testid="cash-register-count-total" class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(total ?? 0)}</p>`
+          : html`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora().t(CATALOG, 'ui.countNoBreakdown', { currency: erplora().currency })}</p>
+              <div class="form">
+                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.countTotalInput')} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e: any) => (this.countTotalInput = e.target.value ?? '')}></ion-input>
+              </div>`}
         <div class="form">
-          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
+          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving || total === null}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>
           <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
         </div>
       </form>

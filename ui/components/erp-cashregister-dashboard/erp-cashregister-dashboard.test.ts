@@ -265,9 +265,9 @@ describe('cerrar caja: el campo acepta coma decimal (no es type=number, #272)', 
 describe('el arqueo por denominaciones se suma en CÉNTIMOS enteros (exacto)', () => {
   it('3 monedas de 0,05 € son 15 céntimos exactos (no 0.15000000000000002 €)', async () => {
     const el = await montar();
-    const wc = el as unknown as { denomCounts: Record<string, string>; countTotalCents(): number };
+    const wc = el as unknown as { denomCounts: Record<string, string>; countTotalMinor(): number };
     wc.denomCounts = { '0.05': '3' };
-    expect(wc.countTotalCents()).toBe(15);
+    expect(wc.countTotalMinor()).toBe(15);
   });
 });
 

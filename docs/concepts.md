@@ -75,8 +75,10 @@ module accumulates the **cost** of the gifts in a sale and the session summary e
 
 ## The count is computed from the denominations, not typed
 
-When you count the drawer you enter how many of each note and coin. The stored total is recomputed
-server-side from those denominations. If you send an explicit total it is accepted, but the normal
+When you count the drawer you enter how many of each note and coin of the hub currency. The stored
+total is recomputed server-side from those denominations: each face value (`"50"`, `"0.50"`,
+`"1000"`, `"0.005"` — written in major units) is scaled with the hub currency's decimals, read from
+the hub's own settings, never from what the screen sends (cash_register#111). If you send an explicit total it is accepted, but the normal
 path is: count the money, let the machine add it up.
 
 A count is `opening` or `closing`. The denominations themselves are stored, so an audit can see the

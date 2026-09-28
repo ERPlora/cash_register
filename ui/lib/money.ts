@@ -9,7 +9,7 @@ import { majorToMinor, minorToMajor } from '@erplora/module-sdk';
 /** Decimals of the hub currency (`erplora.currencyDecimals`: 0 in JPY, 2 in EUR, 3 in KWD).
  *  A shell too old to inject the scale would give `undefined`, and `10 ** undefined` is NaN —
  *  silent corruption in an INTEGER column. Same fallback the SDK client uses: 2. */
-function currencyDecimals(): number {
+export function currencyDecimals(): number {
   const decimals = (globalThis as { erplora?: { currencyDecimals?: unknown } }).erplora?.currencyDecimals;
   return typeof decimals === 'number' ? decimals : 2;
 }
