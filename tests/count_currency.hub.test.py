@@ -9,6 +9,8 @@ by hand; only a runtime proves the three links together — the setting the admi
   1. In yen (0 decimals): 5 × ¥1000 + 3 × ¥1 = 5003, not 500300.
   2. In Kuwaiti dinars (3 decimals): 2 × 0.25 + 3 × 0.005 = 515 fils, not 51.
   3. Back in euros (2 decimals): 2 × 50 € + 3 × 0,05 € = 10015 cents — the euro did not move.
+  4. In Chilean pesos (0 decimals): 2 × $20.000 + 3 × $10 = 40030 (cash_register#113).
+  5. In Brazilian reais: 3 × R$2 notes + 4 × R$1 coins + 2 × 0,25 = 1050 centavos (cash_register#113).
 
 The hub is shared with every battery of the run, so the currency it had is restored at the end
 whatever happens.
@@ -83,6 +85,24 @@ def main() -> int:
             "€ total (cents)",
             counted(hub, {"bills": {"50": 2}, "coins": {"0.05": 3}}),
             10015,
+        )
+
+        # cash_register#113: the currencies added to the table count with the kernel's ISO-4217
+        # scale too — the screen and the stored total must agree in every one of them.
+        print("\n4 · Chilean peso: no minor unit either (cash_register#113)")
+        set_currency(hub, "CLP")
+        hub.check(
+            "CLP total",
+            counted(hub, {"bills": {"20000": 2}, "coins": {"10": 3}}),
+            40030,
+        )
+
+        print("\n5 · Brazilian real: the R$2 note and the R$1 coin (cash_register#113)")
+        set_currency(hub, "BRL")
+        hub.check(
+            "BRL total (centavos)",
+            counted(hub, {"bills": {"2": 3}, "coins": {"1": 4, "0.25": 2}}),
+            1050,
         )
     finally:
         set_currency(hub, original)
