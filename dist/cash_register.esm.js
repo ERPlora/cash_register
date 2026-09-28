@@ -1261,6 +1261,55 @@ function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
+// lit-html/directive.js
+var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
+var e4 = (t6) => (...e6) => ({ _$litDirective$: t6, values: e6 });
+var i4 = class {
+  constructor(t6) {
+  }
+  get _$AU() {
+    return this._$AM._$AU;
+  }
+  _$AT(t6, e6, i7) {
+    this._$Ct = t6, this._$AM = e6, this._$Ci = i7;
+  }
+  _$AS(t6, e6) {
+    return this.update(t6, e6);
+  }
+  update(t6, e6) {
+    return this.render(...e6);
+  }
+};
+
+// lit-html/directives/style-map.js
+var n5 = "important";
+var i5 = " !" + n5;
+var o6 = e4(class extends i4 {
+  constructor(t6) {
+    if (super(t6), t6.type !== t3.ATTRIBUTE || "style" !== t6.name || t6.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
+  }
+  render(t6) {
+    return Object.keys(t6).reduce((e6, r6) => {
+      const s5 = t6[r6];
+      return null == s5 ? e6 : e6 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
+    }, "");
+  }
+  update(e6, [r6]) {
+    const { style: s5 } = e6.element;
+    if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
+    for (const t6 of this.ft) null == r6[t6] && (this.ft.delete(t6), t6.includes("-") ? s5.removeProperty(t6) : s5[t6] = null);
+    for (const t6 in r6) {
+      const e7 = r6[t6];
+      if (null != e7) {
+        this.ft.add(t6);
+        const r7 = "string" == typeof e7 && e7.endsWith(i5);
+        t6.includes("-") || r7 ? s5.setProperty(t6, r7 ? e7.slice(0, -11) : e7, r7 ? n5 : "") : s5[t6] = e7;
+      }
+    }
+    return E;
+  }
+});
+
 // @erplora/outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
@@ -1636,29 +1685,9 @@ __decorateClass2([
 ], OkInlineFeedback.prototype, "hasActions");
 define("ok-inline-feedback", OkInlineFeedback);
 
-// lit-html/directive.js
-var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
-var e4 = (t6) => (...e6) => ({ _$litDirective$: t6, values: e6 });
-var i4 = class {
-  constructor(t6) {
-  }
-  get _$AU() {
-    return this._$AM._$AU;
-  }
-  _$AT(t6, e6, i7) {
-    this._$Ct = t6, this._$AM = e6, this._$Ci = i7;
-  }
-  _$AS(t6, e6) {
-    return this.update(t6, e6);
-  }
-  update(t6, e6) {
-    return this.render(...e6);
-  }
-};
-
 // lit-html/directive-helpers.js
 var { I: t4 } = j;
-var i5 = (o8) => o8;
+var i6 = (o8) => o8;
 var s4 = () => document.createComment("");
 var v2 = (o8, n6, e6) => {
   const l3 = o8._$AA.parentNode, d3 = void 0 === n6 ? o8._$AB : n6._$AA;
@@ -1674,8 +1703,8 @@ var v2 = (o8, n6, e6) => {
     if (t6 !== d3 || c5) {
       let o9 = e6._$AA;
       for (; o9 !== t6; ) {
-        const t7 = i5(o9).nextSibling;
-        i5(l3).insertBefore(o9, d3), o9 = t7;
+        const t7 = i6(o9).nextSibling;
+        i6(l3).insertBefore(o9, d3), o9 = t7;
       }
     }
   }
@@ -1739,35 +1768,6 @@ var c4 = e4(class extends i4 {
       null !== e6 && h3(e6);
     }
     return this.ut = a3, p3(s5, v3), E;
-  }
-});
-
-// lit-html/directives/style-map.js
-var n5 = "important";
-var i6 = " !" + n5;
-var o6 = e4(class extends i4 {
-  constructor(t6) {
-    if (super(t6), t6.type !== t3.ATTRIBUTE || "style" !== t6.name || t6.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
-  }
-  render(t6) {
-    return Object.keys(t6).reduce((e6, r6) => {
-      const s5 = t6[r6];
-      return null == s5 ? e6 : e6 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
-    }, "");
-  }
-  update(e6, [r6]) {
-    const { style: s5 } = e6.element;
-    if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
-    for (const t6 of this.ft) null == r6[t6] && (this.ft.delete(t6), t6.includes("-") ? s5.removeProperty(t6) : s5[t6] = null);
-    for (const t6 in r6) {
-      const e7 = r6[t6];
-      if (null != e7) {
-        this.ft.add(t6);
-        const r7 = "string" == typeof e7 && e7.endsWith(i6);
-        t6.includes("-") || r7 ? s5.setProperty(t6, r7 ? e7.slice(0, -11) : e7, r7 ? n5 : "") : s5[t6] = e7;
-      }
-    }
-    return E;
   }
 });
 
@@ -4536,7 +4536,8 @@ function denominationLabel(denomination) {
   const decimals = typeof client2.currencyDecimals === "number" ? client2.currencyDecimals : 2;
   const major = Number(denomination);
   if (!Number.isFinite(major)) return denomination;
-  return client2.formatMoney(Math.round(major * 10 ** decimals));
+  const whole = Number.isInteger(major);
+  return client2.formatMoney(Math.round(major * 10 ** decimals), whole ? { maximumFractionDigits: 0 } : void 0);
 }
 
 // ui/lib/movement-concept.ts
@@ -5172,7 +5173,10 @@ var ErpCashRegisterDashboard = class extends i3 {
       --background-hover: var(--ion-color-danger-tint, #cb1a27);
       --color: var(--ion-color-danger-contrast, #fff);
     }
-    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
+    /* Each box is as wide as the longest label of the table needs (--denom-chars, set in render), never
+       narrower than the 5.5rem that keeps the euro drawer in three columns on a phone: a fixed 5.5rem cut
+       «1.000,00 SEK» and «20,000 KWD» on every viewport (cash_register#114). */
+    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(max(5.5rem, calc(var(--denom-chars, 0) * 1ch + 2rem)), 1fr)); gap:.75rem; margin:.5rem 0; }
     /* The painted (md) box pads 16px a side; in a 5.5rem cell that truncates «500,00 €» before anything is
        typed. Ionic sets the padding on .sc-ion-input-md-h.input-fill-outline (two classes), so the override
        needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
@@ -5690,6 +5694,8 @@ var ErpCashRegisterDashboard = class extends i3 {
     const typedTotal = table ? null : readMoneyField(this.countTotalInput);
     const totalRefusal = typedTotal && !typedTotal.ok ? typedTotal.message : "";
     const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" mode="md" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
+    const denomChars = table ? Math.max(...[...table.bills, ...table.coins].map((k2) => [...denominationLabel(k2)].length)) : 0;
+    const gridWidth = o6({ "--denom-chars": String(denomChars) });
     return b2`<section class="panel">
       <h3>${t6("ui.countTitle")} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-count-form" @submit=${(e6) => this.addCount(e6)}>
@@ -5701,9 +5707,9 @@ var ErpCashRegisterDashboard = class extends i3 {
           <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t6("ui.labelNotes")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
         ${table ? b2`<h3>${t6("ui.bills")}</h3>
-              <div class="denoms">${table.bills.map(denomInput)}</div>
+              <div class="denoms" style=${gridWidth}>${table.bills.map(denomInput)}</div>
               <h3>${t6("ui.coins")}</h3>
-              <div class="denoms">${table.coins.map(denomInput)}</div>
+              <div class="denoms" style=${gridWidth}>${table.coins.map(denomInput)}</div>
               <p data-testid="cash-register-count-total" class="total">${t6("ui.totalCounted")}: ${erplora3().formatMoney(total ?? 0)}</p>` : b2`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora3().t(CATALOG4, "ui.countNoBreakdown", { currency: erplora3().currency })}</p>
               <div class="form">
                 <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t6("ui.countTotalInput")} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e6) => this.countTotalInput = e6.target.value ?? ""} @ionBlur=${() => this.countTotalInput = normaliseMoneyField(this.countTotalInput)}></ion-input>

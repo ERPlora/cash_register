@@ -25,8 +25,13 @@ beforeEach(() => {
     // The real client resolves the key against the module catalogue; here the KEY comes back, so a
     // test that passes proves the label is looked up and not hardcoded.
     t: (_catalog: unknown, key: string) => key,
-    formatMoney: (cents: number) =>
-      new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100),
+    // Honours maximumFractionDigits like the SDK does (cash_register#114).
+    formatMoney: (cents: number, opts?: { maximumFractionDigits?: number }) =>
+      new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: 'EUR',
+        ...(opts?.maximumFractionDigits != null ? { maximumFractionDigits: opts.maximumFractionDigits } : {}),
+      }).format(cents / 100),
     currencyDecimals: 2,
   };
 });
@@ -132,8 +137,57 @@ describe('denominations are money, so they are formatted like money', () => {
     expect(denominationLabel('0.05')).toBe(`0,05${NBSP}€`);
   });
 
-  it('a note keeps its whole-euro shape', () => {
-    expect(denominationLabel('500')).toBe(`500,00${NBSP}€`);
+  // cash_register#114: «500,00 €» on a note is two characters of nothing, and with thousands and a
+  // currency code («1.000,00 SEK», «20,000 KWD») the label no longer fitted its box and was cut —
+  // on a 390 px phone and on a 1440 px desktop alike. A drawer count reads like the drawer (Square,
+  // Lightspeed: «$100», «20 KWD»): a whole face value prints without decimals.
+  it('a whole face value prints without decimals: «500 €», not «500,00 €»', () => {
+    expect(denominationLabel('500')).toBe(`500${NBSP}€`);
+    expect(denominationLabel('2')).toBe(`2${NBSP}€`);
+  });
+
+  it('a fractional face value keeps the currency scale: «0,50 €», not «0,5 €»', () => {
+    expect(denominationLabel('0.50')).toBe(`0,50${NBSP}€`);
+    expect(denominationLabel('0.5')).toBe(`0,50${NBSP}€`);
+  });
+
+  describe('with the SDK formatter itself (a METHOD that reads this, honouring maximumFractionDigits)', () => {
+    // The SDK's formatMoney is a class method that reads this.locale/this.currency and passes
+    // maximumFractionDigits to Intl. An arrow-function double would hide a lost `this`
+    // (area-modulos-sdk, cash_register#116) and a double that ignores the option would hide a
+    // label that still prints its zeros.
+    function sdkHub(currency: string, currencyDecimals: number) {
+      (globalThis as Record<string, unknown>).erplora = {
+        locale: 'es-ES',
+        currency,
+        currencyDecimals,
+        formatMoney(this: { locale: string; currency: string; currencyDecimals: number }, minor: number, opts?: { maximumFractionDigits?: number }) {
+          return new Intl.NumberFormat(this.locale, {
+            style: 'currency',
+            currency: this.currency,
+            useGrouping: true,
+            ...(opts?.maximumFractionDigits != null ? { maximumFractionDigits: opts.maximumFractionDigits } : {}),
+          }).format(minor / 10 ** this.currencyDecimals);
+        },
+      };
+    }
+
+    it('SEK: the 1.000 note reads «1.000 SEK», the label the bench saw cut as «1.000,00…»', () => {
+      sdkHub('SEK', 2);
+      expect(denominationLabel('1000')).toBe(`1.000${NBSP}SEK`);
+    });
+
+    it('KWD (3 decimals): «20 KWD» on the note, «0,005 KWD» and «0,250 KWD» keep the fils', () => {
+      sdkHub('KWD', 3);
+      expect(denominationLabel('20')).toBe(`20${NBSP}KWD`);
+      expect(denominationLabel('0.005')).toBe(`0,005${NBSP}KWD`);
+      expect(denominationLabel('0.25')).toBe(`0,250${NBSP}KWD`);
+    });
+
+    it('JPY and CLP (0 decimals) are unchanged: nothing to drop', () => {
+      sdkHub('CLP', 0);
+      expect(denominationLabel('20000')).toBe(`20.000${NBSP}CLP`);
+    });
   });
 
   it('uses the hub currency scale, not a hardcoded x100', () => {

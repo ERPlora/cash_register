@@ -28,8 +28,10 @@ function hub(currency: string, currencyDecimals: number) {
       params ? `${key} ${JSON.stringify(params)}` : key,
     currency,
     formatAmount: (units: number) => `${units} ${currency}`,
-    // Minor units in, the hub currency out — the shell divides by the currency's own scale.
-    formatMoney: (minor: number) => `${((minor || 0) / 10 ** currencyDecimals).toFixed(currencyDecimals)} ${currency}`,
+    // Minor units in, the hub currency out — the shell divides by the currency's own scale, and
+    // honours maximumFractionDigits like the SDK (a whole note reads «500 EUR», cash_register#114).
+    formatMoney: (minor: number, opts?: { maximumFractionDigits?: number }) =>
+      `${((minor || 0) / 10 ** currencyDecimals).toFixed(Math.min(currencyDecimals, opts?.maximumFractionDigits ?? currencyDecimals))} ${currency}`,
     currencyDecimals,
   };
 }
@@ -234,5 +236,43 @@ describe('the no-breakdown notice is written in both languages', () => {
     expect(es).toContain('{currency}');
     expect(read('en').countTotalInput).toBeTruthy();
     expect(read('es').countTotalInput).toBeTruthy();
+  });
+});
+
+// cash_register#114: the note/coin boxes were a fixed 5.5rem, so any label longer than «500,00 €» was
+// cut before anything was typed — «1.000,00 SEK», «20,000 KWD» — on a phone AND on a desktop. The box
+// now takes its minimum width from the longest label of the table: the euro drawer keeps its three
+// columns on a phone and a peso or forint drawer gets boxes wide enough for «100.000 COP».
+describe('every note and coin box is wide enough for its label', () => {
+  const grids = (el: Wc) => [...el.shadowRoot!.querySelectorAll<HTMLElement>('.denoms')];
+  const labels = (el: Wc) =>
+    [...el.shadowRoot!.querySelectorAll('[data-testid^="cash-register-count-denom-"]')].map((n) => n.getAttribute('label') ?? '');
+
+  // EUR is the case where the longest label is a COIN («0.50 EUR» against «500 EUR»): both grids
+  // take the width of the whole table, not of the notes alone.
+  it('EUR: the width comes from the coins when a coin has the longest label', async () => {
+    const el = await countCard();
+    expect(grids(el)[0].style.getPropertyValue('--denom-chars')).toBe(String('0.50 EUR'.length));
+  });
+
+  for (const [cur, dec] of [['EUR', 2], ['COP', 2], ['KWD', 3], ['JPY', 0]] as const) {
+    it(`${cur}: both grids carry the length of the longest label`, async () => {
+      hub(cur, dec);
+      const el = await countCard();
+      const longest = Math.max(...labels(el).map((l) => [...l].length));
+      expect(longest).toBeGreaterThan(0);
+      expect(grids(el)).toHaveLength(2);
+      for (const g of grids(el)) expect(g.style.getPropertyValue('--denom-chars')).toBe(String(longest));
+    });
+  }
+
+  it('the grid sizes its columns from that length, never below the old 5.5rem', async () => {
+    const { ErpCashRegisterDashboard } = (await import('./erp-cashregister-dashboard')) as unknown as {
+      ErpCashRegisterDashboard: { styles: { cssText: string } | { cssText: string }[] };
+    };
+    const styles = ErpCashRegisterDashboard.styles;
+    const cssText = (Array.isArray(styles) ? styles : [styles]).map((s) => s.cssText).join('\n');
+    const rule = cssText.match(/\.denoms\s*\{[^}]*\}/)?.[0] ?? '';
+    expect(rule).toMatch(/grid-template-columns:\s*repeat\(auto-fill,\s*minmax\(max\(5\.5rem,\s*calc\(var\(--denom-chars[^)]*\)\s*\*\s*1ch\s*\+\s*[\d.]+rem\)\),\s*1fr\)\)/);
   });
 });

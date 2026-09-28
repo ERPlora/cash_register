@@ -145,5 +145,8 @@ export function denominationLabel(denomination: string): string {
   const decimals = typeof client.currencyDecimals === 'number' ? client.currencyDecimals : 2;
   const major = Number(denomination);
   if (!Number.isFinite(major)) return denomination;
-  return client.formatMoney(Math.round(major * 10 ** decimals));
+  // A whole face value reads like the note: «500 €», «1.000 SEK», «20 KWD» — its zero decimals made
+  // the label too long for its box (cash_register#114). A fractional one keeps the currency scale.
+  const whole = Number.isInteger(major);
+  return client.formatMoney(Math.round(major * 10 ** decimals), whole ? { maximumFractionDigits: 0 } : undefined);
 }
