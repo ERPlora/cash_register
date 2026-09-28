@@ -173,3 +173,38 @@ it('form fields paint their box in ios mode (fill="outline" + mode="md")', async
     expect(f.getAttribute('mode'), `${id}: fill without mode="md" never paints in ios mode`).toBe('md');
   }
 });
+
+// cash_register#106 — the opening float is typed in MAJOR units of the HUB's currency and stored in
+// its MINOR units (ADR-0123). The screen used a fixed ×100: in a yen hub «1000» was stored as
+// 100 000 yen, and in a Kuwaiti-dinar hub «10,5» as 1,050 fils instead of 10,500. The scale is
+// `erplora.currencyDecimals`, the same one the close and the dashboard already use.
+describe('erp-cashregister-open · opening float in the hub currency scale (cash_register#106)', () => {
+  async function openWith(decimals: number | undefined, typed: string) {
+    registros = [CAJONES[0]];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    if (decimals !== undefined) sdk.currencyDecimals = decimals;
+    const el = await montar();
+    teclear(el, 'ion-input[data-testid="cash-register-opening-balance"]', typed);
+    el.shadowRoot.querySelector<HTMLElement>('ion-button.open-session')!.click();
+    await new Promise((r) => setTimeout(r, 0));
+    const input = el.shadowRoot.querySelector('ion-input[data-testid="cash-register-opening-balance"]')!;
+    const open = comandos.find((c) => c.name === 'cash_register.session.open')!;
+    return { balance: open.payload.opening_balance, step: input.getAttribute('step') };
+  }
+
+  it('JPY (0 decimals): 1000 yen is stored as 1000, and the input steps by whole yen', async () => {
+    expect(await openWith(0, '1000')).toEqual({ balance: 1000, step: '1' });
+  });
+
+  it('EUR (2 decimals): «150,50» is stored as 15050 cents, and the input steps by cents', async () => {
+    expect(await openWith(2, '150,50')).toEqual({ balance: 15050, step: '0.01' });
+  });
+
+  it('KWD (3 decimals): «10,5» is stored as 10500 fils, and the input steps by fils', async () => {
+    expect(await openWith(3, '10,5')).toEqual({ balance: 10500, step: '0.001' });
+  });
+
+  it('a shell that does not inject the scale falls back to 2 decimals, never NaN', async () => {
+    expect(await openWith(undefined, '0.29')).toEqual({ balance: 29, step: '0.01' });
+  });
+});

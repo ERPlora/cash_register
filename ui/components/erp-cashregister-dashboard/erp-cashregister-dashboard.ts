@@ -6,7 +6,8 @@ import '@erplora/outfitkit/ok-data-table';
 import '@erplora/outfitkit/ok-detail-list';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction, OkDetailItem } from '@erplora/outfitkit';
-import { createListController, majorToMinor, minorToMajor } from '@erplora/module-sdk';
+import { createListController } from '@erplora/module-sdk';
+import { fromMinorUnits, toMinorUnits } from '../../lib/money';
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
@@ -21,20 +22,6 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
-
-/** Typed major units → MINOR units (money is INTEGER, ADR-0007/0123). «150,50» → 15050.
- *
- *  Two things this border has to get right, and both were bugs here:
- *  - the **decimal comma** (es-ES types «150,50»): without normalising it, `Number` gives `NaN`;
- *  - the **scale**, which belongs to the hub's currency — `majorToMinor` from the module-sdk with
- *    `erplora.currencyDecimals`, not a fixed ×100. In JPY the minor unit IS the yen, and a ×100
- *    here books 100 times too much. */
-function toMinorUnits(v: string | number): number {
-  // A shell too old to inject the scale would give `undefined` here, and `10 ** undefined` is NaN —
-  // silent corruption in an INTEGER column. Same fallback the SDK client uses: 2.
-  const decimals = erplora().currencyDecimals;
-  return majorToMinor(String(v ?? '').replace(',', '.'), typeof decimals === 'number' ? decimals : 2);
-}
 
 /** What the person typed in «Efectivo contado» → MINOR units, or `null` if it is not an amount
  *  (cash_register#83).
@@ -52,16 +39,6 @@ function parseCountedCash(raw: string): number | null {
   const n = Number(text.replace(',', '.'));
   if (!Number.isFinite(n) || n < 0) return null;
   return toMinorUnits(text);
-}
-
-/** MINOR units → the string the money `ion-input` takes back (cash_register#65). The inverse of
- *  `toMinorUnits`, and it has to round-trip through it exactly: 25130 → «251.30» → 25130. A plain
- *  dot on purpose — `toMinorUnits` accepts both separators, and building a locale-formatted string
- *  here (thousands separator, currency symbol) would come back as `NaN` and close the till on 0. */
-function fromMinorUnits(minor: number): string {
-  const decimals = erplora().currencyDecimals;
-  const scale = typeof decimals === 'number' ? decimals : 2;
-  return minorToMajor(minor, scale).toFixed(scale);
 }
 
 interface ErploraClientLike extends ListClient {

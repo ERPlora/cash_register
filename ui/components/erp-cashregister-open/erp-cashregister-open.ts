@@ -3,6 +3,7 @@ import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+import { amountStep, toMinorUnits } from '../../lib/money';
 
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
@@ -37,12 +38,6 @@ function rows<T>(r: unknown): T[] {
   if (Array.isArray(r)) return r as T[];
   if (r && typeof r === 'object' && Array.isArray((r as { rows?: T[] }).rows)) return (r as { rows: T[] }).rows;
   return [];
-}
-
-/** Euros tecleados → céntimos (el dinero es INTEGER, ADR-0007/0123). «150,50» → 15050. */
-function aCentimos(v: string): number {
-  const n = Number(String(v).replace(',', '.'));
-  return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
 export class ErpCashregisterOpen extends LitElement {
@@ -92,7 +87,8 @@ export class ErpCashregisterOpen extends LitElement {
       // `CS-YYMMDD-HHMM`, un TERCER formato distinto del que componía el dashboard.
       await erplora().command('cash_register.session.open', {
         register_id: this.registerId || null,
-        opening_balance: aCentimos(this.balance),
+        // In the hub currency's scale, not a fixed ×100 (cash_register#106): in JPY «1000» is 1000.
+        opening_balance: toMinorUnits(this.balance),
         opening_notes: this.notes,
       });
       // El comando emite `cash_register.session_opened`; el shell lo escucha (`resume_on` del bloque
@@ -127,7 +123,7 @@ export class ErpCashregisterOpen extends LitElement {
               </ion-select>`
             : nothing}
 
-          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step=${amountStep()}
             label=${t('ui.labelOpeningBalance')} label-placement="floating" fill="outline" mode="md"
             .value=${this.balance}
             @ionInput=${(e: CustomEvent) => { this.balance = (e.target as HTMLInputElement).value; }}></ion-input>

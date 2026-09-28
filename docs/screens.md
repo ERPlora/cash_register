@@ -30,8 +30,9 @@ Every action below is a row action on an **open** session; a closed session is r
 
 1. Press **Abrir sesión** (open session).
 2. Pick the drawer, if the hub has more than one configured. It is optional.
-3. Enter the **opening float** — the cash already in the drawer. The hub can be configured to demand
-   it.
+3. Enter the **opening float** — the cash already in the drawer, in the hub currency and with its
+   decimals («150,50» in euros, «1000» in yen). The hub can be configured to demand it. The same
+   applies on the opening screen that stands in front of the POS until the till is open.
 4. Add a note if you want, and confirm.
 
 The session number is generated for you as `S-YYMMDD-HHMMSS`. `cash_register.session_opened` is

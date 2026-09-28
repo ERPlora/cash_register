@@ -15,7 +15,8 @@ import { checkMoneyDisplay } from '@erplora/module-toolkit/money-display-guard';
 //   empty or over-stripped content must not stay green on that declaration (rv-combos-22). The
 //   other helpers of `lib/` are witnesses too: a shared money helper would land there first, so the
 //   scan must provably read them (rv-taxes-78).
-// * notDisplay — the one triaged in pm#289 (`fromMinorUnits`, the value of the money ion-input). It is
+// * notDisplay — the one triaged in pm#289 (`fromMinorUnits`, the value of the money ion-input) and
+//   the input's `step` (`amountStep`, cash_register#106), both in `lib/money.ts`. The first is
 //   also the witness on the detector's OUTPUT: if the scan were fed empty or cut content, it would
 //   come back as `stale_exception` (rv-taxes-78). Add an entry (`'file: exact code line'` → why)
 //   only with the reason it is not a screen amount.
@@ -35,11 +36,15 @@ it('money on screen goes through the shared formatter and OutfitKit by entry poi
         'lib/enums.ts': 'client.formatMoney(',
         'lib/movement-concept.ts': 'export function movementConcept(',
         'lib/shift-review.ts': 'export function summariseLiveOrders(',
+        'lib/money.ts': 'export function toMinorUnits(',
       },
       notDisplay: {
-        'components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts: return minorToMajor(minor, scale).toFixed(scale);':
+        'lib/money.ts: return minorToMajor(minor, scale).toFixed(scale);':
           'value of the money ion-input (cash_register#65): a plain-dot string that must round-trip ' +
           'through toMinorUnits; a locale-formatted amount would parse back as NaN. Uses the hub scale.',
+        'lib/money.ts: return (10 ** -scale).toFixed(scale);':
+          'the `step` attribute of the money ion-input (cash_register#106): one minor unit of the hub ' +
+          'currency as a plain-dot number («1», «0.01», «0.001»), never painted as an amount.',
       },
       outfitkitImporters: [
         'components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts',

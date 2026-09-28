@@ -113,6 +113,43 @@ describe('el CIERRE convierte euros→céntimos por la frontera con nombre (como
   });
 });
 
+// cash_register#106 — the dashboard is the OTHER door to open (and close) a till, next to the
+// opening screen in front of the POS. Both must use the hub currency's scale: with only the EUR
+// cases above, a fixed ×100 here stayed green (rv-cash_register-112).
+describe('opening and closing from the dashboard use the hub currency scale (cash_register#106)', () => {
+  const run = async (decimals: number, typed: string) => {
+    const comandos: { name: string; payload: Record<string, unknown> }[] = [];
+    const sdk = (globalThis as Record<string, unknown>).erplora as Record<string, unknown>;
+    sdk.currencyDecimals = decimals;
+    sdk.command = async (name: string, payload: Record<string, unknown>) => {
+      comandos.push({ name, payload });
+      return {};
+    };
+    const el = await montar();
+    const wc = el as unknown as {
+      openBalance: string; target: { id: string } | null; closeBalance: string;
+      openSession(e: Event): Promise<void>; closeSession(e: Event): Promise<void>;
+    };
+    wc.openBalance = typed;
+    await wc.openSession(new Event('submit'));
+    wc.target = { id: 's1' };
+    wc.closeBalance = typed;
+    await wc.closeSession(new Event('submit'));
+    return {
+      opening: comandos.find((c) => c.name === 'cash_register.session.open')?.payload.opening_balance,
+      closing: comandos.find((c) => c.name === 'cash_register.session.close')?.payload.closing_balance,
+    };
+  };
+
+  it('JPY (0 decimals): «1000» opens and closes with 1000 yen, not 100000', async () => {
+    expect(await run(0, '1000')).toEqual({ opening: 1000, closing: 1000 });
+  });
+
+  it('KWD (3 decimals): «10,5» opens and closes with 10500 fils, not 1050', async () => {
+    expect(await run(3, '10,5')).toEqual({ opening: 10500, closing: 10500 });
+  });
+});
+
 // The third border of the same contract (cash_register#10). Opening and closing already converted;
 // the MANUAL MOVEMENT did not — `Math.abs(Number(this.movAmount))` sent the typed euros straight to
 // `cash_register._insert_movement`, whose `amount` column is INTEGER minor units. A 12,34 € cash-in
