@@ -4756,6 +4756,23 @@ __decorateClass([
 ], ErpCashRegisterSessionDetail.prototype, "error", 2);
 define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
 
+// ui/lib/money.ts
+function currencyDecimals() {
+  const decimals = globalThis.erplora?.currencyDecimals;
+  return typeof decimals === "number" ? decimals : 2;
+}
+function toMinorUnits(v3) {
+  return majorToMinor(String(v3 ?? "").replace(",", "."), currencyDecimals());
+}
+function fromMinorUnits(minor) {
+  const scale = currencyDecimals();
+  return minorToMajor(minor, scale).toFixed(scale);
+}
+function amountStep() {
+  const scale = currencyDecimals();
+  return (10 ** -scale).toFixed(scale);
+}
+
 // ui/lib/shift-review.ts
 var MAX_LISTED_ORDERS = 6;
 function toRows(answer) {
@@ -4816,21 +4833,12 @@ async function readShiftReview(client) {
 
 // ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG3 = { es: es_default, en: en_default };
-function toMinorUnits(v3) {
-  const decimals = erplora3().currencyDecimals;
-  return majorToMinor(String(v3 ?? "").replace(",", "."), typeof decimals === "number" ? decimals : 2);
-}
 function parseCountedCash(raw) {
   const text2 = String(raw ?? "").trim();
   if (text2 === "") return null;
   const n6 = Number(text2.replace(",", "."));
   if (!Number.isFinite(n6) || n6 < 0) return null;
   return toMinorUnits(text2);
-}
-function fromMinorUnits(minor) {
-  const decimals = erplora3().currencyDecimals;
-  const scale = typeof decimals === "number" ? decimals : 2;
-  return minorToMajor(minor, scale).toFixed(scale);
 }
 var BILLS = ["500", "200", "100", "50", "20", "10", "5"];
 var COINS = ["2", "1", "0.50", "0.20", "0.10", "0.05", "0.02", "0.01"];
@@ -5529,10 +5537,6 @@ function rows(r6) {
   if (r6 && typeof r6 === "object" && Array.isArray(r6.rows)) return r6.rows;
   return [];
 }
-function aCentimos(v3) {
-  const n6 = Number(String(v3).replace(",", "."));
-  return Number.isFinite(n6) ? Math.round(n6 * 100) : 0;
-}
 var ErpCashregisterOpen = class extends i3 {
   constructor() {
     super(...arguments);
@@ -5576,7 +5580,8 @@ var ErpCashregisterOpen = class extends i3 {
     try {
       await erplora4().command("cash_register.session.open", {
         register_id: this.registerId || null,
-        opening_balance: aCentimos(this.balance),
+        // In the hub currency's scale, not a fixed ×100 (cash_register#106): in JPY «1000» is 1000.
+        opening_balance: toMinorUnits(this.balance),
         opening_notes: this.notes
       });
     } catch (e6) {
@@ -5603,7 +5608,7 @@ var ErpCashregisterOpen = class extends i3 {
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
 
-          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step="0.01"
+          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step=${amountStep()}
             label=${t5("ui.labelOpeningBalance")} label-placement="floating" fill="outline" mode="md"
             .value=${this.balance}
             @ionInput=${(e6) => {

@@ -82,10 +82,14 @@ path is: count the money, let the machine add it up.
 A count is `opening` or `closing`. The denominations themselves are stored, so an audit can see the
 composition of the drawer, not just its total.
 
-## Every amount is an integer number of cents
+## Every amount is an integer number of minor units
 
-The float, every movement, the expected balance, the counted balance and the difference are **cents**
-(ADR-0123). `10000` is 100,00 €. There are no decimal amounts anywhere in this module.
+The float, every movement, the expected balance, the counted balance and the difference are stored
+as **integer minor units of the hub currency** (ADR-0123): cents in euros (`10000` is 100,00 €), yen
+in yen (`1000` is ¥1,000, since the yen has no decimals), fils in Kuwaiti dinars (`10500` is 10,500
+KWD). There are no decimal amounts anywhere in this module. On screen you always type the amount as
+you would say it — «150,50» or «1000» — in the hub currency, and every screen that takes money (the
+opening screen in front of the POS included) converts it with the hub currency's own decimals.
 
 ## Sessions belong to a drawer, optionally
 

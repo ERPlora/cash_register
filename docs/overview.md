@@ -55,7 +55,7 @@ much money the drawer expects, and it is not a door a caller may knock on.
 
 ## Where its numbers come from
 
-- **All amounts are integer cents** (ADR-0123). An opening float of `10000` is 100,00 €.
+- **All amounts are integer minor units of the hub currency** (ADR-0123). In euros, an opening float of `10000` is 100,00 €; in yen, `1000` is ¥1,000.
 - **Expected balance** = opening float + the sum of every non-deleted movement of the session.
 - **Difference** = counted at closing − expected. Positive means there is more cash than there should
   be; negative means less.
