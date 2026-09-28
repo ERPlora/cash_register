@@ -4,10 +4,13 @@
 // the WASM handler, which multiplies it by the count and scales it with the hub currency's decimals
 // on the server — so the key is the same string on both sides, whatever the currency.
 //
-// A local, minimal table on purpose: the currencies of the markets ERPlora sells in plus the two
-// scales that are not 2 (JPY 0, KWD 3). A currency that is not here has NO breakdown — the count
-// screen asks for the total instead — because showing the euro's notes in another currency is how
-// the count added up wrong in the first place.
+// A local table on purpose: every currency the hub settings let a business pick (EUR, USD, GBP, CHF,
+// SEK, NOK, DKK, PLN, MXN, BRL — cash_register#113), the other currencies of the markets ERPlora
+// sells in (RON, CZK, HUF, COP, CLP, PEN) and the two scales that are not 2 (JPY and CLP 0, KWD 3).
+// Only what circulates today: no öre in SEK, no 1-centavo coin in BRL, no 5-céntimo coin in PEN.
+// ARS is left out on purpose: its notes change faster than a module release. A currency that is not
+// here has NO breakdown — the count screen asks for the total instead — because showing the euro's
+// notes in another currency is how the count added up wrong in the first place.
 //
 // Largest first (the order a drawer is counted in). A note and a coin never share a face value:
 // the screen keeps one count per key, so the $1 coin and the MX$20 coin are left out next to their
@@ -54,6 +57,42 @@ const TABLES: Record<string, DenominationTable> = {
   KWD: {
     bills: ['20', '10', '5', '1', '0.5', '0.25'],
     coins: ['0.1', '0.05', '0.02', '0.01', '0.005'],
+  },
+  SEK: {
+    bills: ['1000', '500', '200', '100', '50', '20'],
+    coins: ['10', '5', '2', '1'],
+  },
+  NOK: {
+    bills: ['1000', '500', '200', '100', '50'],
+    coins: ['20', '10', '5', '1'],
+  },
+  DKK: {
+    bills: ['1000', '500', '200', '100', '50'],
+    coins: ['20', '10', '5', '2', '1', '0.50'],
+  },
+  BRL: {
+    bills: ['200', '100', '50', '20', '10', '5', '2'],
+    coins: ['1', '0.50', '0.25', '0.10', '0.05'],
+  },
+  CZK: {
+    bills: ['5000', '2000', '1000', '500', '200', '100'],
+    coins: ['50', '20', '10', '5', '2', '1'],
+  },
+  HUF: {
+    bills: ['20000', '10000', '5000', '2000', '1000', '500'],
+    coins: ['200', '100', '50', '20', '10', '5'],
+  },
+  COP: {
+    bills: ['100000', '50000', '20000', '10000', '5000', '2000'],
+    coins: ['1000', '500', '200', '100', '50'],
+  },
+  CLP: {
+    bills: ['20000', '10000', '5000', '2000', '1000'],
+    coins: ['500', '100', '50', '10'],
+  },
+  PEN: {
+    bills: ['200', '100', '50', '20', '10'],
+    coins: ['5', '2', '1', '0.50', '0.20', '0.10'],
   },
 };
 

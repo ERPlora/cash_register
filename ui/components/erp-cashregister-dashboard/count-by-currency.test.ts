@@ -82,6 +82,13 @@ describe('the count card shows the notes and coins of the hub currency', () => {
     expect(denomIds(el)).toEqual(['10000', '5000', '2000', '1000', '500', '100', '50', '10', '5', '1']);
   });
 
+  it('SEK: a hub in kronor counts krona notes and coins instead of typing the total (cash_register#113)', async () => {
+    hub('SEK', 2);
+    const el = await countCard();
+    expect(denomIds(el)).toEqual(['1000', '500', '200', '100', '50', '20', '10', '5', '2', '1']);
+    expect(byId(el, 'cash-register-count-no-breakdown')).toBeNull();
+  });
+
   it('KWD: down to the 5-fils coin', async () => {
     hub('KWD', 3);
     const el = await countCard();
@@ -120,6 +127,18 @@ describe('the count adds up with the hub currency scale, on screen and in what i
     const { shown, sent } = await run('KWD', 3, { '0.25': '2', '0.005': '3' });
     expect(shown?.trim()).toBe('ui.totalCounted: 0.515 KWD');
     expect(sent?.denominations).toEqual({ bills: { '0.25': 2 }, coins: { '0.005': 3 } });
+  });
+
+  it('BRL: the R$2 note goes with the notes and the R$1 coin with the coins', async () => {
+    const { shown, sent } = await run('BRL', 2, { '2': '3', '1': '4', '0.25': '2' });
+    expect(shown?.trim()).toBe('ui.totalCounted: 10.50 BRL');
+    expect(sent?.denominations).toEqual({ bills: { '2': 3 }, coins: { '1': 4, '0.25': 2 } });
+  });
+
+  it('CLP (0 decimals): 2 × $20.000 + 3 × $10 is 40030 pesos', async () => {
+    const { shown, sent } = await run('CLP', 0, { '20000': '2', '10': '3' });
+    expect(shown?.trim()).toBe('ui.totalCounted: 40030 CLP');
+    expect(sent?.denominations).toEqual({ bills: { '20000': 2 }, coins: { '10': 3 } });
   });
 
   it('a count the server would ignore (blank, negative) adds nothing on screen either', async () => {

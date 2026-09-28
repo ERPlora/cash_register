@@ -8,7 +8,13 @@ import { countTotalMinor, denominationsFor } from './denominations';
 // ISO-4217 decimals of the currencies the table carries — what each face value must fit in.
 const ISO_DECIMALS: Record<string, number> = {
   EUR: 2, USD: 2, GBP: 2, CHF: 2, PLN: 2, RON: 2, MXN: 2, JPY: 0, KWD: 3,
+  SEK: 2, NOK: 2, DKK: 2, BRL: 2, CZK: 2, HUF: 2, COP: 2, CLP: 0, PEN: 2,
 };
+
+// The currencies a business can pick in the hub's own settings (hub apps/web SettingsPage.vue,
+// `CURRENCIES`). Every one of them must be countable note by note (cash_register#113): a hub in
+// Swedish kronor or Brazilian reais used to get «type the total» and add up the drawer by hand.
+const HUB_SETTINGS_CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'MXN', 'BRL'];
 
 describe('the denomination table follows the hub currency', () => {
   it('EUR keeps the euro drawer: 7 notes (500…5) and 8 coins (2…0,01)', () => {
@@ -28,6 +34,66 @@ describe('the denomination table follows the hub currency', () => {
     const kwd = denominationsFor('KWD')!;
     expect(kwd.bills).toEqual(['20', '10', '5', '1', '0.5', '0.25']);
     expect(kwd.coins).toEqual(['0.1', '0.05', '0.02', '0.01', '0.005']);
+  });
+
+  it('every currency the hub settings offer has a breakdown (cash_register#113)', () => {
+    for (const code of HUB_SETTINGS_CURRENCIES) {
+      expect(denominationsFor(code), `${code} has no breakdown`).not.toBeNull();
+    }
+  });
+
+  it('SEK counts krona notes and coins only: öre coins are gone since 2010', () => {
+    expect(denominationsFor('SEK')).toEqual({
+      bills: ['1000', '500', '200', '100', '50', '20'],
+      coins: ['10', '5', '2', '1'],
+    });
+  });
+
+  it('NOK has the 20-krone coin and no note below 50', () => {
+    expect(denominationsFor('NOK')).toEqual({
+      bills: ['1000', '500', '200', '100', '50'],
+      coins: ['20', '10', '5', '1'],
+    });
+  });
+
+  it('DKK keeps the 50-øre coin', () => {
+    expect(denominationsFor('DKK')).toEqual({
+      bills: ['1000', '500', '200', '100', '50'],
+      coins: ['20', '10', '5', '2', '1', '0.50'],
+    });
+  });
+
+  it('BRL has the R$2 note and the R$1 coin', () => {
+    expect(denominationsFor('BRL')).toEqual({
+      bills: ['200', '100', '50', '20', '10', '5', '2'],
+      coins: ['1', '0.50', '0.25', '0.10', '0.05'],
+    });
+  });
+
+  it('CZK and HUF count whole korunas and forints', () => {
+    expect(denominationsFor('CZK')).toEqual({
+      bills: ['5000', '2000', '1000', '500', '200', '100'],
+      coins: ['50', '20', '10', '5', '2', '1'],
+    });
+    expect(denominationsFor('HUF')).toEqual({
+      bills: ['20000', '10000', '5000', '2000', '1000', '500'],
+      coins: ['200', '100', '50', '20', '10', '5'],
+    });
+  });
+
+  it('COP, CLP and PEN count the pesos and soles that circulate today', () => {
+    expect(denominationsFor('COP')).toEqual({
+      bills: ['100000', '50000', '20000', '10000', '5000', '2000'],
+      coins: ['1000', '500', '200', '100', '50'],
+    });
+    expect(denominationsFor('CLP')).toEqual({
+      bills: ['20000', '10000', '5000', '2000', '1000'],
+      coins: ['500', '100', '50', '10'],
+    });
+    expect(denominationsFor('PEN')).toEqual({
+      bills: ['200', '100', '50', '20', '10'],
+      coins: ['5', '2', '1', '0.50', '0.20', '0.10'],
+    });
   });
 
   it('the code is matched as ISO-4217, whatever the case or spacing', () => {
@@ -68,6 +134,10 @@ describe('the count adds up in integer minor units with the hub scale', () => {
 
   it('JPY: 5 × ¥1000 + 3 × ¥1 is 5003 yen, not 500300', () => {
     expect(countTotalMinor({ '1000': '5', '1': '3' }, 0)).toBe(5003);
+  });
+
+  it('CLP has no decimals: 2 × $20.000 + 3 × $10 is 40030 pesos', () => {
+    expect(countTotalMinor({ '20000': '2', '10': '3' }, 0)).toBe(40030);
   });
 
   it('KWD: 2 × 0.25 + 3 × 0.005 is 515 fils', () => {
