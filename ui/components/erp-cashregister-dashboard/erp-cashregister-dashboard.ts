@@ -7,7 +7,9 @@ import '@erplora/outfitkit/ok-detail-list';
 import '../erp-cashregister-session-detail/erp-cashregister-session-detail';
 import type { DataTableColumn, DataTableAction, OkDetailItem } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
-import { currencyDecimals, fromMinorUnits, toMinorUnits } from '../../lib/money';
+// Every money field of the till reads what is typed or pasted through ONE gate: the toolkit's
+// `money-input` + the till's no-negative rule (pm#521).
+import { currencyDecimals, moneyFieldText, normaliseMoneyField, readMoneyField } from '../../lib/money';
 // The notes and coins of the count follow the hub currency (cash_register#111).
 import { countTotalMinor, denominationsFor, pieceCount, type DenominationTable } from '../../lib/denominations';
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
@@ -24,24 +26,6 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
-
-/** What the person typed in «Efectivo contado» → MINOR units, or `null` if it is not an amount
- *  (cash_register#83).
- *
- *  `majorToMinor` answers **0** for anything it cannot parse — the right safety net for a reader,
- *  the wrong one for this border: «abc» in the counted-cash field used to close the shift declaring
- *  0,00 €, i.e. a fabricated shortage of the entire drawer, with no error anywhere. So the border
- *  validates the STRING and refuses; the SDK keeps converting.
- *
- *  Same normalisation as `toMinorUnits` (es-ES types «129,90»), so what is validated is exactly
- *  what is sent. Negative is not a count: nobody can count minus five euros. */
-function parseCountedCash(raw: string): number | null {
-  const text = String(raw ?? '').trim();
-  if (text === '') return null;
-  const n = Number(text.replace(',', '.'));
-  if (!Number.isFinite(n) || n < 0) return null;
-  return toMinorUnits(text);
-}
 
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
@@ -430,7 +414,8 @@ export class ErpCashRegisterDashboard extends LitElement {
       // The panel may have moved on (another row, Cancel) while this was in flight — never write
       // one session's count into another session's close.
       if (last && this.panel === 'close' && this.target?.id === sessionId) {
-        this.closeBalance = fromMinorUnits(Number(last.total));
+        // Hub locale, ungrouped: the same gate reads it back to the same minor units (pm#521).
+        this.closeBalance = moneyFieldText(Number(last.total));
       }
     } catch (e) {
       // Not fatal: the close still works by typing the amount. But a mute catch is how a screen
@@ -448,9 +433,15 @@ export class ErpCashRegisterDashboard extends LitElement {
   // — Abrir sesión → cash_register.session.open —
   private async openSession(ev: Event) {
     ev.preventDefault();
+    this.formMsg = '';
+    // pm#521: «1.250,50» — how this very screen prints money — used to open the till with 0.
+    const opening = readMoneyField(this.openBalance);
+    if (!opening.ok) {
+      this.formError = opening.message;
+      return;
+    }
     this.saving = true;
     this.formError = '';
-    this.formMsg = '';
     try {
       // El NÚMERO DE TURNO no viaja: lo acuña el servidor (`S-YYMMDD-NNNN`, contador atómico por
       // hub y día — cash_register#49). Esta pantalla componía `S-YYMMDD-HHMMSS`, la de apertura del
@@ -458,7 +449,8 @@ export class ErpCashRegisterDashboard extends LitElement {
       // vivos para el mismo turno, según por dónde se abriera la caja.
       await erplora().command('cash_register.session.open', {
         register_id: this.openRegisterId || null,
-        opening_balance: toMinorUnits(this.openBalance),
+        // Empty is a float of 0: the column is NOT NULL and an empty drawer is a legitimate start.
+        opening_balance: opening.minor ?? 0,
         opening_notes: this.openNotes.trim(),
       });
       this.openRegisterId = '';
@@ -488,12 +480,16 @@ export class ErpCashRegisterDashboard extends LitElement {
     // button render as pale grey text on the panel's light surface — QA read it as «un texto
     // apagado», not a button — and it only covered ONE invalid case: «abc» sailed through and
     // reached an INTEGER money column as NaN.
-    const counted = parseCountedCash(this.closeBalance);
-    if (counted == null) {
+    // pm#521: «1.250» used to close the shift declaring 1,25 € — a fabricated shortage of the whole
+    // drawer. Now it asks which reading was meant; garbage and negatives say why; empty asks for
+    // the count.
+    const read = readMoneyField(this.closeBalance);
+    if (!read.ok || read.minor === null) {
       this.formMsg = '';
-      this.formError = erplora().t(CATALOG, 'ui.errCountedCashRequired');
+      this.formError = read.ok ? erplora().t(CATALOG, 'ui.errCountedCashRequired') : read.message;
       return;
     }
+    const counted = read.minor;
     const sessionId = this.target.id;
     // Revisión del turno (cash_register#68): si queda trabajo vivo, el PRIMER clic no cierra —
     // pregunta. El segundo cierra igual: Toast, Square y Lightspeed listan lo que queda abierto y
@@ -545,12 +541,13 @@ export class ErpCashRegisterDashboard extends LitElement {
   private async addMovement(ev: Event) {
     ev.preventDefault();
     if (!this.target || !this.movAmount) return;
-    // Same named border as opening and closing: typed major units → MINOR units. It used to send
-    // `Number(this.movAmount)` — the raw euros — into an INTEGER minor-units column, so a 12,34 €
-    // cash-in was booked as 0,12 €; and with a decimal comma `Number` gave `NaN`, which collapsed
-    // to 0 and the movement was rejected without ever reaching the server (#272, same class).
-    const amount = Math.abs(toMinorUnits(this.movAmount));
-    if (amount <= 0) { this.formError = erplora().t(CATALOG, 'ui.errInvalidAmount'); return; }
+    // Same gate as opening and closing: typed major units → MINOR units (pm#521). The amount is a
+    // magnitude — the direction is `movement_type` — so a pasted «-12» is refused, not silently
+    // turned into a +12 cash-in as the old `Math.abs` did.
+    const read = readMoneyField(this.movAmount);
+    if (!read.ok) { this.formMsg = ''; this.formError = read.message; return; }
+    const amount = read.minor ?? 0;
+    if (amount <= 0) { this.formMsg = ''; this.formError = erplora().t(CATALOG, 'ui.errInvalidAmount'); return; }
     this.saving = true;
     this.formError = '';
     this.formMsg = '';
@@ -602,7 +599,10 @@ export class ErpCashRegisterDashboard extends LitElement {
    *  its decimals, or the total typed by hand when there is no breakdown (`null` = not an amount). */
   private countTotalMinor(): number | null {
     const table = this.denominations();
-    if (!table) return parseCountedCash(this.countTotalInput);
+    if (!table) {
+      const read = readMoneyField(this.countTotalInput);
+      return read.ok ? read.minor : null;
+    }
     const counts: Record<string, string> = {};
     for (const k of [...table.bills, ...table.coins]) counts[k] = this.denomCounts[k] ?? '';
     return countTotalMinor(counts, currencyDecimals());
@@ -655,7 +655,7 @@ export class ErpCashRegisterDashboard extends LitElement {
         <ion-select data-testid="cash-register-open-register" fill="outline" mode="md" label=${t('ui.labelRegister')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openRegisterId} @ionChange=${(e: any) => (this.openRegisterId = e.target.value)}>
           ${this.registers.map((r) => html`<ion-select-option value=${r.id}>${r.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelOpeningBalance')} label-placement="floating" .value=${this.openBalance} @ionInput=${(e: any) => (this.openBalance = e.target.value)} @ionBlur=${() => (this.openBalance = normaliseMoneyField(this.openBalance))}></ion-input>
         <ion-input data-testid="cash-register-open-notes" fill="outline" mode="md" label=${t('ui.labelNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.openNotes} @ionInput=${(e: any) => (this.openNotes = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t('ui.opening') : t('ui.openSession')}</ion-button>
         <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
@@ -715,7 +715,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     if (expected == null) return [];
     // La misma frontera que usa el comando, así que la diferencia que se lee mientras se teclea es
     // la que el servidor va a guardar. Sin importe válido todavía: guion, nunca un cero inventado.
-    const counted = parseCountedCash(this.closeBalance);
+    const read = readMoneyField(this.closeBalance);
+    const counted = read.ok ? read.minor : null;
     return [
       { label: t('ui.labelExpectedInDrawer'), value: this.fmt(expected) },
       { label: t('ui.colDifference'), value: counted == null ? '—' : this.signedMoney(counted - expected) },
@@ -736,7 +737,7 @@ export class ErpCashRegisterDashboard extends LitElement {
       ${this.renderShiftReview()}
       ${reconcile.length ? html`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : nothing}
       <form data-testid="cash-register-close-form" class="form" @submit=${(e: Event) => this.closeSession(e)}>
-        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelCountedCash')} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e: any) => (this.closeBalance = e.target.value)} @ionBlur=${() => (this.closeBalance = normaliseMoneyField(this.closeBalance))}></ion-input>
         <ion-input data-testid="cash-register-close-notes" fill="outline" mode="md" label=${t('ui.labelClosingNotes')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.closeNotes} @ionInput=${(e: any) => (this.closeNotes = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-close-submit" type="submit" ?disabled=${this.saving}>${closeLabel}</ion-button>
         <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
@@ -759,7 +760,7 @@ export class ErpCashRegisterDashboard extends LitElement {
             (o) => html`<ion-select-option value=${o.value}>${o.label}</ion-select-option>`,
           )}
         </ion-select>
-        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)}></ion-input>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.labelAmount')} label-placement="floating" .value=${this.movAmount} @ionInput=${(e: any) => (this.movAmount = e.target.value)} @ionBlur=${() => (this.movAmount = normaliseMoneyField(this.movAmount))}></ion-input>
         <ion-input data-testid="cash-register-movement-concept" fill="outline" mode="md" label=${t('ui.labelConcept')} label-placement="floating" placeholder=${t('ui.optional')} .value=${this.movDescription} @ionInput=${(e: any) => (this.movDescription = e.target.value)}></ion-input>
         <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t('ui.saving') : t('ui.register')}</ion-button>
         <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t('ui.cancel')}</ion-button>
@@ -772,6 +773,9 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     const table = this.denominations();
     const total = this.countTotalMinor();
+    // A typed total that cannot be taken says why under the field (pm#521); empty just waits.
+    const typedTotal = table ? null : readMoneyField(this.countTotalInput);
+    const totalRefusal = typedTotal && !typedTotal.ok ? typedTotal.message : '';
     // La etiqueta es DINERO, así que se formatea como dinero (cash_register#50): era el literal
     // `${k} €`, y en un hub español convivían «0.50 €» con punto y «Total contado 141,50 €» con
     // coma en la misma tarjeta. The KEY is the face value in major units — the contract with the WASM
@@ -796,7 +800,8 @@ export class ErpCashRegisterDashboard extends LitElement {
               <p data-testid="cash-register-count-total" class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(total ?? 0)}</p>`
           : html`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora().t(CATALOG, 'ui.countNoBreakdown', { currency: erplora().currency })}</p>
               <div class="form">
-                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.countTotalInput')} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e: any) => (this.countTotalInput = e.target.value ?? '')}></ion-input>
+                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t('ui.countTotalInput')} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e: any) => (this.countTotalInput = e.target.value ?? '')} @ionBlur=${() => (this.countTotalInput = normaliseMoneyField(this.countTotalInput))}></ion-input>
+                ${totalRefusal ? html`<ok-inline-feedback data-testid="cash-register-count-total-error" tone="danger" icon="alert-circle-outline">${totalRefusal}</ok-inline-feedback>` : nothing}
               </div>`}
         <div class="form">
           <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving || total === null}>${this.saving ? t('ui.saving') : t('ui.registerCount')}</ion-button>

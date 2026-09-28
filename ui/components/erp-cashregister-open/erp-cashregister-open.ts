@@ -3,7 +3,8 @@ import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
-import { amountStep, toMinorUnits } from '../../lib/money';
+// The same money gate as the dashboard: the toolkit's `money-input` + no negatives (pm#521).
+import { normaliseMoneyField, readMoneyField } from '../../lib/money';
 
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
@@ -80,6 +81,12 @@ export class ErpCashregisterOpen extends LitElement {
       this.error = erplora().t(CATALOG, 'ui.labelRegister');
       return;
     }
+    // pm#521: «1.250,50» — how the hub prints money — used to open the till with 0.
+    const opening = readMoneyField(this.balance);
+    if (!opening.ok) {
+      this.error = opening.message;
+      return;
+    }
     this.saving = true;
     this.error = '';
     try {
@@ -88,7 +95,8 @@ export class ErpCashregisterOpen extends LitElement {
       await erplora().command('cash_register.session.open', {
         register_id: this.registerId || null,
         // In the hub currency's scale, not a fixed ×100 (cash_register#106): in JPY «1000» is 1000.
-        opening_balance: toMinorUnits(this.balance),
+        // Empty is a float of 0 — an empty drawer is a legitimate start.
+        opening_balance: opening.minor ?? 0,
         opening_notes: this.notes,
       });
       // El comando emite `cash_register.session_opened`; el shell lo escucha (`resume_on` del bloque
@@ -123,10 +131,13 @@ export class ErpCashregisterOpen extends LitElement {
               </ion-select>`
             : nothing}
 
-          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step=${amountStep()}
+          <!-- Text + decimal keypad, never type="number": a real browser DROPS a pasted «1.250,50»
+               in a number field and the till opened with 0 (pm#521). -->
+          <ion-input data-testid="cash-register-opening-balance" type="text" inputmode="decimal"
             label=${t('ui.labelOpeningBalance')} label-placement="floating" fill="outline" mode="md"
             .value=${this.balance}
-            @ionInput=${(e: CustomEvent) => { this.balance = (e.target as HTMLInputElement).value; }}></ion-input>
+            @ionInput=${(e: CustomEvent) => { this.balance = (e.target as HTMLInputElement).value; }}
+            @ionBlur=${() => { this.balance = normaliseMoneyField(this.balance); }}></ion-input>
 
           <ion-input data-testid="cash-register-opening-notes" label=${t('ui.labelNotes')} label-placement="floating" fill="outline" mode="md"
             placeholder=${t('ui.optional')} .value=${this.notes}

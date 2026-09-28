@@ -237,13 +237,19 @@ describe('la acción de cerrar no se queda muerta (cash_register#83)', () => {
 
   // `majorToMinor` devuelve 0 para lo que no sabe leer. Es la red correcta para una LECTURA y la
   // equivocada para esta frontera: «abc» cerraba el turno declarando 0,00 € contados —un faltante
-  // inventado del cajón entero— sin un solo error por ninguna parte.
-  it.each(['abc', '12,3,4', '- ', '-5'])('«%s» no es un recuento: no se cierra y se explica', async (tecleado) => {
+  // inventado del cajón entero— sin un solo error por ninguna parte. Since pm#521 the reason is the
+  // specific one (not an amount / negative), no longer the «enter the count» of an empty field.
+  it.each([
+    ['abc', 'ui.errNotAnAmount'],
+    ['12,3,4', 'ui.errNotAnAmount'],
+    ['- ', 'ui.errNotAnAmount'],
+    ['-5', 'ui.errNegativeAmount'],
+  ])('«%s» no es un recuento: no se cierra y se explica', async (tecleado, motivo) => {
     const el = await abrirCierre();
     el.closeBalance = tecleado;
     await el.closeSession(new Event('submit'));
 
-    expect(el.formError).toBe('ui.errCountedCashRequired');
+    expect(el.formError).toBe(motivo);
     expect(
       comandos.find((c) => c.name === 'cash_register.session.close'),
       'cerrar declarando 0,00 € por un dedo mal puesto es un descuadre fabricado por la pantalla',

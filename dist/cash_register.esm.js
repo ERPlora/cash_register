@@ -680,44 +680,44 @@ var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "a
 var s = Symbol();
 var o = /* @__PURE__ */ new WeakMap();
 var n = class {
-  constructor(t5, e6, o8) {
+  constructor(t6, e6, o8) {
     if (this._$cssResult$ = true, o8 !== s) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t5, this.t = e6;
+    this.cssText = t6, this.t = e6;
   }
   get styleSheet() {
-    let t5 = this.o;
+    let t6 = this.o;
     const s5 = this.t;
-    if (e && void 0 === t5) {
+    if (e && void 0 === t6) {
       const e6 = void 0 !== s5 && 1 === s5.length;
-      e6 && (t5 = o.get(s5)), void 0 === t5 && ((this.o = t5 = new CSSStyleSheet()).replaceSync(this.cssText), e6 && o.set(s5, t5));
+      e6 && (t6 = o.get(s5)), void 0 === t6 && ((this.o = t6 = new CSSStyleSheet()).replaceSync(this.cssText), e6 && o.set(s5, t6));
     }
-    return t5;
+    return t6;
   }
   toString() {
     return this.cssText;
   }
 };
-var r = (t5) => new n("string" == typeof t5 ? t5 : t5 + "", void 0, s);
-var i = (t5, ...e6) => {
-  const o8 = 1 === t5.length ? t5[0] : e6.reduce((e7, s5, o9) => e7 + ((t6) => {
-    if (true === t6._$cssResult$) return t6.cssText;
-    if ("number" == typeof t6) return t6;
-    throw Error("Value passed to 'css' function must be a 'css' function result: " + t6 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(s5) + t5[o9 + 1], t5[0]);
-  return new n(o8, t5, s);
+var r = (t6) => new n("string" == typeof t6 ? t6 : t6 + "", void 0, s);
+var i = (t6, ...e6) => {
+  const o8 = 1 === t6.length ? t6[0] : e6.reduce((e7, s5, o9) => e7 + ((t7) => {
+    if (true === t7._$cssResult$) return t7.cssText;
+    if ("number" == typeof t7) return t7;
+    throw Error("Value passed to 'css' function must be a 'css' function result: " + t7 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+  })(s5) + t6[o9 + 1], t6[0]);
+  return new n(o8, t6, s);
 };
 var S = (s5, o8) => {
-  if (e) s5.adoptedStyleSheets = o8.map((t5) => t5 instanceof CSSStyleSheet ? t5 : t5.styleSheet);
+  if (e) s5.adoptedStyleSheets = o8.map((t6) => t6 instanceof CSSStyleSheet ? t6 : t6.styleSheet);
   else for (const e6 of o8) {
     const o9 = document.createElement("style"), n6 = t.litNonce;
     void 0 !== n6 && o9.setAttribute("nonce", n6), o9.textContent = e6.cssText, s5.appendChild(o9);
   }
 };
-var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSSStyleSheet ? ((t6) => {
+var c = e || void 0 === t.CSSStyleSheet ? (t6) => t6 : (t6) => t6 instanceof CSSStyleSheet ? ((t7) => {
   let e6 = "";
-  for (const s5 of t6.cssRules) e6 += s5.cssText;
+  for (const s5 of t7.cssRules) e6 += s5.cssText;
   return r(e6);
-})(t5) : t5;
+})(t6) : t6;
 
 // @lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
@@ -726,169 +726,169 @@ l.customElements ??= customElements2;
 var p = l.trustedTypes;
 var d = p ? p.emptyScript : "";
 var u = l.reactiveElementPolyfillSupport;
-var f = (t5, s5) => t5;
-var b = { toAttribute(t5, s5) {
+var f = (t6, s5) => t6;
+var b = { toAttribute(t6, s5) {
   switch (s5) {
     case Boolean:
-      t5 = t5 ? d : null;
+      t6 = t6 ? d : null;
       break;
     case Object:
     case Array:
-      t5 = null == t5 ? t5 : JSON.stringify(t5);
+      t6 = null == t6 ? t6 : JSON.stringify(t6);
   }
-  return t5;
-}, fromAttribute(t5, s5) {
-  let i7 = t5;
+  return t6;
+}, fromAttribute(t6, s5) {
+  let i7 = t6;
   switch (s5) {
     case Boolean:
-      i7 = null !== t5;
+      i7 = null !== t6;
       break;
     case Number:
-      i7 = null === t5 ? null : Number(t5);
+      i7 = null === t6 ? null : Number(t6);
       break;
     case Object:
     case Array:
       try {
-        i7 = JSON.parse(t5);
-      } catch (t6) {
+        i7 = JSON.parse(t6);
+      } catch (t7) {
         i7 = null;
       }
   }
   return i7;
 } };
-var m = (t5, s5) => !h(t5, s5);
+var m = (t6, s5) => !h(t6, s5);
 var y = { attribute: true, type: String, converter: b, reflect: false, useDefault: false, hasChanged: m };
 Symbol.metadata ??= Symbol("metadata"), l.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
 var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
-  static addInitializer(t5) {
-    this._$Ei(), (this.l ??= []).push(t5);
+  static addInitializer(t6) {
+    this._$Ei(), (this.l ??= []).push(t6);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(t5, s5 = y) {
-    if (s5.state && (s5.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t5) && ((s5 = Object.create(s5)).wrapped = true), this.elementProperties.set(t5, s5), !s5.noAccessor) {
-      const i7 = Symbol(), e6 = this.getPropertyDescriptor(t5, i7, s5);
-      void 0 !== e6 && r2(this.prototype, t5, e6);
+  static createProperty(t6, s5 = y) {
+    if (s5.state && (s5.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t6) && ((s5 = Object.create(s5)).wrapped = true), this.elementProperties.set(t6, s5), !s5.noAccessor) {
+      const i7 = Symbol(), e6 = this.getPropertyDescriptor(t6, i7, s5);
+      void 0 !== e6 && r2(this.prototype, t6, e6);
     }
   }
-  static getPropertyDescriptor(t5, s5, i7) {
-    const { get: e6, set: h4 } = o2(this.prototype, t5) ?? { get() {
+  static getPropertyDescriptor(t6, s5, i7) {
+    const { get: e6, set: h4 } = o2(this.prototype, t6) ?? { get() {
       return this[s5];
-    }, set(t6) {
-      this[s5] = t6;
+    }, set(t7) {
+      this[s5] = t7;
     } };
     return { get: e6, set(s6) {
       const r6 = e6?.call(this);
-      h4?.call(this, s6), this.requestUpdate(t5, r6, i7);
+      h4?.call(this, s6), this.requestUpdate(t6, r6, i7);
     }, configurable: true, enumerable: true };
   }
-  static getPropertyOptions(t5) {
-    return this.elementProperties.get(t5) ?? y;
+  static getPropertyOptions(t6) {
+    return this.elementProperties.get(t6) ?? y;
   }
   static _$Ei() {
     if (this.hasOwnProperty(f("elementProperties"))) return;
-    const t5 = c2(this);
-    t5.finalize(), void 0 !== t5.l && (this.l = [...t5.l]), this.elementProperties = new Map(t5.elementProperties);
+    const t6 = c2(this);
+    t6.finalize(), void 0 !== t6.l && (this.l = [...t6.l]), this.elementProperties = new Map(t6.elementProperties);
   }
   static finalize() {
     if (this.hasOwnProperty(f("finalized"))) return;
     if (this.finalized = true, this._$Ei(), this.hasOwnProperty(f("properties"))) {
-      const t6 = this.properties, s5 = [...n2(t6), ...a(t6)];
-      for (const i7 of s5) this.createProperty(i7, t6[i7]);
+      const t7 = this.properties, s5 = [...n2(t7), ...a(t7)];
+      for (const i7 of s5) this.createProperty(i7, t7[i7]);
     }
-    const t5 = this[Symbol.metadata];
-    if (null !== t5) {
-      const s5 = litPropertyMetadata.get(t5);
-      if (void 0 !== s5) for (const [t6, i7] of s5) this.elementProperties.set(t6, i7);
+    const t6 = this[Symbol.metadata];
+    if (null !== t6) {
+      const s5 = litPropertyMetadata.get(t6);
+      if (void 0 !== s5) for (const [t7, i7] of s5) this.elementProperties.set(t7, i7);
     }
     this._$Eh = /* @__PURE__ */ new Map();
-    for (const [t6, s5] of this.elementProperties) {
-      const i7 = this._$Eu(t6, s5);
-      void 0 !== i7 && this._$Eh.set(i7, t6);
+    for (const [t7, s5] of this.elementProperties) {
+      const i7 = this._$Eu(t7, s5);
+      void 0 !== i7 && this._$Eh.set(i7, t7);
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
-  static finalizeStyles(t5) {
+  static finalizeStyles(t6) {
     const s5 = [];
-    if (Array.isArray(t5)) {
-      const e6 = new Set(t5.flat(1 / 0).reverse());
-      for (const t6 of e6) s5.unshift(c(t6));
-    } else void 0 !== t5 && s5.push(c(t5));
+    if (Array.isArray(t6)) {
+      const e6 = new Set(t6.flat(1 / 0).reverse());
+      for (const t7 of e6) s5.unshift(c(t7));
+    } else void 0 !== t6 && s5.push(c(t6));
     return s5;
   }
-  static _$Eu(t5, s5) {
+  static _$Eu(t6, s5) {
     const i7 = s5.attribute;
-    return false === i7 ? void 0 : "string" == typeof i7 ? i7 : "string" == typeof t5 ? t5.toLowerCase() : void 0;
+    return false === i7 ? void 0 : "string" == typeof i7 ? i7 : "string" == typeof t6 ? t6.toLowerCase() : void 0;
   }
   constructor() {
     super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
   }
   _$Ev() {
-    this._$ES = new Promise((t5) => this.enableUpdating = t5), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), this.constructor.l?.forEach((t5) => t5(this));
+    this._$ES = new Promise((t6) => this.enableUpdating = t6), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), this.constructor.l?.forEach((t6) => t6(this));
   }
-  addController(t5) {
-    (this._$EO ??= /* @__PURE__ */ new Set()).add(t5), void 0 !== this.renderRoot && this.isConnected && t5.hostConnected?.();
+  addController(t6) {
+    (this._$EO ??= /* @__PURE__ */ new Set()).add(t6), void 0 !== this.renderRoot && this.isConnected && t6.hostConnected?.();
   }
-  removeController(t5) {
-    this._$EO?.delete(t5);
+  removeController(t6) {
+    this._$EO?.delete(t6);
   }
   _$E_() {
-    const t5 = /* @__PURE__ */ new Map(), s5 = this.constructor.elementProperties;
-    for (const i7 of s5.keys()) this.hasOwnProperty(i7) && (t5.set(i7, this[i7]), delete this[i7]);
-    t5.size > 0 && (this._$Ep = t5);
+    const t6 = /* @__PURE__ */ new Map(), s5 = this.constructor.elementProperties;
+    for (const i7 of s5.keys()) this.hasOwnProperty(i7) && (t6.set(i7, this[i7]), delete this[i7]);
+    t6.size > 0 && (this._$Ep = t6);
   }
   createRenderRoot() {
-    const t5 = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return S(t5, this.constructor.elementStyles), t5;
+    const t6 = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
+    return S(t6, this.constructor.elementStyles), t6;
   }
   connectedCallback() {
-    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), this._$EO?.forEach((t5) => t5.hostConnected?.());
+    this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), this._$EO?.forEach((t6) => t6.hostConnected?.());
   }
-  enableUpdating(t5) {
+  enableUpdating(t6) {
   }
   disconnectedCallback() {
-    this._$EO?.forEach((t5) => t5.hostDisconnected?.());
+    this._$EO?.forEach((t6) => t6.hostDisconnected?.());
   }
-  attributeChangedCallback(t5, s5, i7) {
-    this._$AK(t5, i7);
+  attributeChangedCallback(t6, s5, i7) {
+    this._$AK(t6, i7);
   }
-  _$ET(t5, s5) {
-    const i7 = this.constructor.elementProperties.get(t5), e6 = this.constructor._$Eu(t5, i7);
+  _$ET(t6, s5) {
+    const i7 = this.constructor.elementProperties.get(t6), e6 = this.constructor._$Eu(t6, i7);
     if (void 0 !== e6 && true === i7.reflect) {
       const h4 = (void 0 !== i7.converter?.toAttribute ? i7.converter : b).toAttribute(s5, i7.type);
-      this._$Em = t5, null == h4 ? this.removeAttribute(e6) : this.setAttribute(e6, h4), this._$Em = null;
+      this._$Em = t6, null == h4 ? this.removeAttribute(e6) : this.setAttribute(e6, h4), this._$Em = null;
     }
   }
-  _$AK(t5, s5) {
-    const i7 = this.constructor, e6 = i7._$Eh.get(t5);
+  _$AK(t6, s5) {
+    const i7 = this.constructor, e6 = i7._$Eh.get(t6);
     if (void 0 !== e6 && this._$Em !== e6) {
-      const t6 = i7.getPropertyOptions(e6), h4 = "function" == typeof t6.converter ? { fromAttribute: t6.converter } : void 0 !== t6.converter?.fromAttribute ? t6.converter : b;
+      const t7 = i7.getPropertyOptions(e6), h4 = "function" == typeof t7.converter ? { fromAttribute: t7.converter } : void 0 !== t7.converter?.fromAttribute ? t7.converter : b;
       this._$Em = e6;
-      const r6 = h4.fromAttribute(s5, t6.type);
+      const r6 = h4.fromAttribute(s5, t7.type);
       this[e6] = r6 ?? this._$Ej?.get(e6) ?? r6, this._$Em = null;
     }
   }
-  requestUpdate(t5, s5, i7, e6 = false, h4) {
-    if (void 0 !== t5) {
+  requestUpdate(t6, s5, i7, e6 = false, h4) {
+    if (void 0 !== t6) {
       const r6 = this.constructor;
-      if (false === e6 && (h4 = this[t5]), i7 ??= r6.getPropertyOptions(t5), !((i7.hasChanged ?? m)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t5) && !this.hasAttribute(r6._$Eu(t5, i7)))) return;
-      this.C(t5, s5, i7);
+      if (false === e6 && (h4 = this[t6]), i7 ??= r6.getPropertyOptions(t6), !((i7.hasChanged ?? m)(h4, s5) || i7.useDefault && i7.reflect && h4 === this._$Ej?.get(t6) && !this.hasAttribute(r6._$Eu(t6, i7)))) return;
+      this.C(t6, s5, i7);
     }
     false === this.isUpdatePending && (this._$ES = this._$EP());
   }
-  C(t5, s5, { useDefault: i7, reflect: e6, wrapped: h4 }, r6) {
-    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t5) && (this._$Ej.set(t5, r6 ?? s5 ?? this[t5]), true !== h4 || void 0 !== r6) || (this._$AL.has(t5) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t5, s5)), true === e6 && this._$Em !== t5 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t5));
+  C(t6, s5, { useDefault: i7, reflect: e6, wrapped: h4 }, r6) {
+    i7 && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(t6) && (this._$Ej.set(t6, r6 ?? s5 ?? this[t6]), true !== h4 || void 0 !== r6) || (this._$AL.has(t6) || (this.hasUpdated || i7 || (s5 = void 0), this._$AL.set(t6, s5)), true === e6 && this._$Em !== t6 && (this._$Eq ??= /* @__PURE__ */ new Set()).add(t6));
   }
   async _$EP() {
     this.isUpdatePending = true;
     try {
       await this._$ES;
-    } catch (t6) {
-      Promise.reject(t6);
+    } catch (t7) {
+      Promise.reject(t7);
     }
-    const t5 = this.scheduleUpdate();
-    return null != t5 && await t5, !this.isUpdatePending;
+    const t6 = this.scheduleUpdate();
+    return null != t6 && await t6, !this.isUpdatePending;
   }
   scheduleUpdate() {
     return this.performUpdate();
@@ -897,28 +897,28 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
     if (!this.isUpdatePending) return;
     if (!this.hasUpdated) {
       if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
-        for (const [t7, s6] of this._$Ep) this[t7] = s6;
+        for (const [t8, s6] of this._$Ep) this[t8] = s6;
         this._$Ep = void 0;
       }
-      const t6 = this.constructor.elementProperties;
-      if (t6.size > 0) for (const [s6, i7] of t6) {
-        const { wrapped: t7 } = i7, e6 = this[s6];
-        true !== t7 || this._$AL.has(s6) || void 0 === e6 || this.C(s6, void 0, i7, e6);
+      const t7 = this.constructor.elementProperties;
+      if (t7.size > 0) for (const [s6, i7] of t7) {
+        const { wrapped: t8 } = i7, e6 = this[s6];
+        true !== t8 || this._$AL.has(s6) || void 0 === e6 || this.C(s6, void 0, i7, e6);
       }
     }
-    let t5 = false;
+    let t6 = false;
     const s5 = this._$AL;
     try {
-      t5 = this.shouldUpdate(s5), t5 ? (this.willUpdate(s5), this._$EO?.forEach((t6) => t6.hostUpdate?.()), this.update(s5)) : this._$EM();
+      t6 = this.shouldUpdate(s5), t6 ? (this.willUpdate(s5), this._$EO?.forEach((t7) => t7.hostUpdate?.()), this.update(s5)) : this._$EM();
     } catch (s6) {
-      throw t5 = false, this._$EM(), s6;
+      throw t6 = false, this._$EM(), s6;
     }
-    t5 && this._$AE(s5);
+    t6 && this._$AE(s5);
   }
-  willUpdate(t5) {
+  willUpdate(t6) {
   }
-  _$AE(t5) {
-    this._$EO?.forEach((t6) => t6.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t5)), this.updated(t5);
+  _$AE(t6) {
+    this._$EO?.forEach((t7) => t7.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t6)), this.updated(t6);
   }
   _$EM() {
     this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = false;
@@ -929,33 +929,33 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
   getUpdateComplete() {
     return this._$ES;
   }
-  shouldUpdate(t5) {
+  shouldUpdate(t6) {
     return true;
   }
-  update(t5) {
-    this._$Eq &&= this._$Eq.forEach((t6) => this._$ET(t6, this[t6])), this._$EM();
+  update(t6) {
+    this._$Eq &&= this._$Eq.forEach((t7) => this._$ET(t7, this[t7])), this._$EM();
   }
-  updated(t5) {
+  updated(t6) {
   }
-  firstUpdated(t5) {
+  firstUpdated(t6) {
   }
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
 // lit-html/lit-html.js
 var t2 = globalThis;
-var i2 = (t5) => t5;
+var i2 = (t6) => t6;
 var s2 = t2.trustedTypes;
-var e2 = s2 ? s2.createPolicy("lit-html", { createHTML: (t5) => t5 }) : void 0;
+var e2 = s2 ? s2.createPolicy("lit-html", { createHTML: (t6) => t6 }) : void 0;
 var h2 = "$lit$";
 var o3 = `lit$${Math.random().toFixed(9).slice(2)}$`;
 var n3 = "?" + o3;
 var r3 = `<${n3}>`;
 var l2 = document;
 var c3 = () => l2.createComment("");
-var a2 = (t5) => null === t5 || "object" != typeof t5 && "function" != typeof t5;
+var a2 = (t6) => null === t6 || "object" != typeof t6 && "function" != typeof t6;
 var u2 = Array.isArray;
-var d2 = (t5) => u2(t5) || "function" == typeof t5?.[Symbol.iterator];
+var d2 = (t6) => u2(t6) || "function" == typeof t6?.[Symbol.iterator];
 var f2 = "[ 	\n\f\r]";
 var v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g;
 var _ = /-->/g;
@@ -965,7 +965,7 @@ var p2 = RegExp(`>|${f2}(?:([^\\s"'>=/]+)(${f2}*=${f2}*(?:[^
 var g2 = /'/g;
 var $ = /"/g;
 var y2 = /^(?:script|style|textarea|title)$/i;
-var x = (t5) => (i7, ...s5) => ({ _$litType$: t5, strings: i7, values: s5 });
+var x = (t6) => (i7, ...s5) => ({ _$litType$: t6, strings: i7, values: s5 });
 var b2 = x(1);
 var w = x(2);
 var T = x(3);
@@ -973,68 +973,68 @@ var E = Symbol.for("lit-noChange");
 var A = Symbol.for("lit-nothing");
 var C = /* @__PURE__ */ new WeakMap();
 var P = l2.createTreeWalker(l2, 129);
-function V(t5, i7) {
-  if (!u2(t5) || !t5.hasOwnProperty("raw")) throw Error("invalid template strings array");
+function V(t6, i7) {
+  if (!u2(t6) || !t6.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return void 0 !== e2 ? e2.createHTML(i7) : i7;
 }
-var N = (t5, i7) => {
-  const s5 = t5.length - 1, e6 = [];
+var N = (t6, i7) => {
+  const s5 = t6.length - 1, e6 = [];
   let n6, l3 = 2 === i7 ? "<svg>" : 3 === i7 ? "<math>" : "", c5 = v;
   for (let i8 = 0; i8 < s5; i8++) {
-    const s6 = t5[i8];
+    const s6 = t6[i8];
     let a3, u5, d3 = -1, f3 = 0;
     for (; f3 < s6.length && (c5.lastIndex = f3, u5 = c5.exec(s6), null !== u5); ) f3 = c5.lastIndex, c5 === v ? "!--" === u5[1] ? c5 = _ : void 0 !== u5[1] ? c5 = m2 : void 0 !== u5[2] ? (y2.test(u5[2]) && (n6 = RegExp("</" + u5[2], "g")), c5 = p2) : void 0 !== u5[3] && (c5 = p2) : c5 === p2 ? ">" === u5[0] ? (c5 = n6 ?? v, d3 = -1) : void 0 === u5[1] ? d3 = -2 : (d3 = c5.lastIndex - u5[2].length, a3 = u5[1], c5 = void 0 === u5[3] ? p2 : '"' === u5[3] ? $ : g2) : c5 === $ || c5 === g2 ? c5 = p2 : c5 === _ || c5 === m2 ? c5 = v : (c5 = p2, n6 = void 0);
-    const x2 = c5 === p2 && t5[i8 + 1].startsWith("/>") ? " " : "";
+    const x2 = c5 === p2 && t6[i8 + 1].startsWith("/>") ? " " : "";
     l3 += c5 === v ? s6 + r3 : d3 >= 0 ? (e6.push(a3), s6.slice(0, d3) + h2 + s6.slice(d3) + o3 + x2) : s6 + o3 + (-2 === d3 ? i8 : x2);
   }
-  return [V(t5, l3 + (t5[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e6];
+  return [V(t6, l3 + (t6[s5] || "<?>") + (2 === i7 ? "</svg>" : 3 === i7 ? "</math>" : "")), e6];
 };
 var S2 = class _S {
-  constructor({ strings: t5, _$litType$: i7 }, e6) {
+  constructor({ strings: t6, _$litType$: i7 }, e6) {
     let r6;
     this.parts = [];
     let l3 = 0, a3 = 0;
-    const u5 = t5.length - 1, d3 = this.parts, [f3, v3] = N(t5, i7);
+    const u5 = t6.length - 1, d3 = this.parts, [f3, v3] = N(t6, i7);
     if (this.el = _S.createElement(f3, e6), P.currentNode = this.el.content, 2 === i7 || 3 === i7) {
-      const t6 = this.el.content.firstChild;
-      t6.replaceWith(...t6.childNodes);
+      const t7 = this.el.content.firstChild;
+      t7.replaceWith(...t7.childNodes);
     }
     for (; null !== (r6 = P.nextNode()) && d3.length < u5; ) {
       if (1 === r6.nodeType) {
-        if (r6.hasAttributes()) for (const t6 of r6.getAttributeNames()) if (t6.endsWith(h2)) {
-          const i8 = v3[a3++], s5 = r6.getAttribute(t6).split(o3), e7 = /([.?@])?(.*)/.exec(i8);
-          d3.push({ type: 1, index: l3, name: e7[2], strings: s5, ctor: "." === e7[1] ? I : "?" === e7[1] ? L : "@" === e7[1] ? z : H }), r6.removeAttribute(t6);
-        } else t6.startsWith(o3) && (d3.push({ type: 6, index: l3 }), r6.removeAttribute(t6));
+        if (r6.hasAttributes()) for (const t7 of r6.getAttributeNames()) if (t7.endsWith(h2)) {
+          const i8 = v3[a3++], s5 = r6.getAttribute(t7).split(o3), e7 = /([.?@])?(.*)/.exec(i8);
+          d3.push({ type: 1, index: l3, name: e7[2], strings: s5, ctor: "." === e7[1] ? I : "?" === e7[1] ? L : "@" === e7[1] ? z : H }), r6.removeAttribute(t7);
+        } else t7.startsWith(o3) && (d3.push({ type: 6, index: l3 }), r6.removeAttribute(t7));
         if (y2.test(r6.tagName)) {
-          const t6 = r6.textContent.split(o3), i8 = t6.length - 1;
+          const t7 = r6.textContent.split(o3), i8 = t7.length - 1;
           if (i8 > 0) {
             r6.textContent = s2 ? s2.emptyScript : "";
-            for (let s5 = 0; s5 < i8; s5++) r6.append(t6[s5], c3()), P.nextNode(), d3.push({ type: 2, index: ++l3 });
-            r6.append(t6[i8], c3());
+            for (let s5 = 0; s5 < i8; s5++) r6.append(t7[s5], c3()), P.nextNode(), d3.push({ type: 2, index: ++l3 });
+            r6.append(t7[i8], c3());
           }
         }
       } else if (8 === r6.nodeType) if (r6.data === n3) d3.push({ type: 2, index: l3 });
       else {
-        let t6 = -1;
-        for (; -1 !== (t6 = r6.data.indexOf(o3, t6 + 1)); ) d3.push({ type: 7, index: l3 }), t6 += o3.length - 1;
+        let t7 = -1;
+        for (; -1 !== (t7 = r6.data.indexOf(o3, t7 + 1)); ) d3.push({ type: 7, index: l3 }), t7 += o3.length - 1;
       }
       l3++;
     }
   }
-  static createElement(t5, i7) {
+  static createElement(t6, i7) {
     const s5 = l2.createElement("template");
-    return s5.innerHTML = t5, s5;
+    return s5.innerHTML = t6, s5;
   }
 };
-function M(t5, i7, s5 = t5, e6) {
+function M(t6, i7, s5 = t6, e6) {
   if (i7 === E) return i7;
   let h4 = void 0 !== e6 ? s5._$Co?.[e6] : s5._$Cl;
   const o8 = a2(i7) ? void 0 : i7._$litDirective$;
-  return h4?.constructor !== o8 && (h4?._$AO?.(false), void 0 === o8 ? h4 = void 0 : (h4 = new o8(t5), h4._$AT(t5, s5, e6)), void 0 !== e6 ? (s5._$Co ??= [])[e6] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t5, h4._$AS(t5, i7.values), h4, e6)), i7;
+  return h4?.constructor !== o8 && (h4?._$AO?.(false), void 0 === o8 ? h4 = void 0 : (h4 = new o8(t6), h4._$AT(t6, s5, e6)), void 0 !== e6 ? (s5._$Co ??= [])[e6] = h4 : s5._$Cl = h4), void 0 !== h4 && (i7 = M(t6, h4._$AS(t6, i7.values), h4, e6)), i7;
 }
 var R = class {
-  constructor(t5, i7) {
-    this._$AV = [], this._$AN = void 0, this._$AD = t5, this._$AM = i7;
+  constructor(t6, i7) {
+    this._$AV = [], this._$AN = void 0, this._$AD = t6, this._$AM = i7;
   }
   get parentNode() {
     return this._$AM.parentNode;
@@ -1042,35 +1042,35 @@ var R = class {
   get _$AU() {
     return this._$AM._$AU;
   }
-  u(t5) {
-    const { el: { content: i7 }, parts: s5 } = this._$AD, e6 = (t5?.creationScope ?? l2).importNode(i7, true);
+  u(t6) {
+    const { el: { content: i7 }, parts: s5 } = this._$AD, e6 = (t6?.creationScope ?? l2).importNode(i7, true);
     P.currentNode = e6;
     let h4 = P.nextNode(), o8 = 0, n6 = 0, r6 = s5[0];
     for (; void 0 !== r6; ) {
       if (o8 === r6.index) {
         let i8;
-        2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t5) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t5) : 6 === r6.type && (i8 = new Z(h4, this, t5)), this._$AV.push(i8), r6 = s5[++n6];
+        2 === r6.type ? i8 = new k(h4, h4.nextSibling, this, t6) : 1 === r6.type ? i8 = new r6.ctor(h4, r6.name, r6.strings, this, t6) : 6 === r6.type && (i8 = new Z(h4, this, t6)), this._$AV.push(i8), r6 = s5[++n6];
       }
       o8 !== r6?.index && (h4 = P.nextNode(), o8++);
     }
     return P.currentNode = l2, e6;
   }
-  p(t5) {
+  p(t6) {
     let i7 = 0;
-    for (const s5 of this._$AV) void 0 !== s5 && (void 0 !== s5.strings ? (s5._$AI(t5, s5, i7), i7 += s5.strings.length - 2) : s5._$AI(t5[i7])), i7++;
+    for (const s5 of this._$AV) void 0 !== s5 && (void 0 !== s5.strings ? (s5._$AI(t6, s5, i7), i7 += s5.strings.length - 2) : s5._$AI(t6[i7])), i7++;
   }
 };
 var k = class _k {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
-  constructor(t5, i7, s5, e6) {
-    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t5, this._$AB = i7, this._$AM = s5, this.options = e6, this._$Cv = e6?.isConnected ?? true;
+  constructor(t6, i7, s5, e6) {
+    this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t6, this._$AB = i7, this._$AM = s5, this.options = e6, this._$Cv = e6?.isConnected ?? true;
   }
   get parentNode() {
-    let t5 = this._$AA.parentNode;
+    let t6 = this._$AA.parentNode;
     const i7 = this._$AM;
-    return void 0 !== i7 && 11 === t5?.nodeType && (t5 = i7.parentNode), t5;
+    return void 0 !== i7 && 11 === t6?.nodeType && (t6 = i7.parentNode), t6;
   }
   get startNode() {
     return this._$AA;
@@ -1078,45 +1078,45 @@ var k = class _k {
   get endNode() {
     return this._$AB;
   }
-  _$AI(t5, i7 = this) {
-    t5 = M(this, t5, i7), a2(t5) ? t5 === A || null == t5 || "" === t5 ? (this._$AH !== A && this._$AR(), this._$AH = A) : t5 !== this._$AH && t5 !== E && this._(t5) : void 0 !== t5._$litType$ ? this.$(t5) : void 0 !== t5.nodeType ? this.T(t5) : d2(t5) ? this.k(t5) : this._(t5);
+  _$AI(t6, i7 = this) {
+    t6 = M(this, t6, i7), a2(t6) ? t6 === A || null == t6 || "" === t6 ? (this._$AH !== A && this._$AR(), this._$AH = A) : t6 !== this._$AH && t6 !== E && this._(t6) : void 0 !== t6._$litType$ ? this.$(t6) : void 0 !== t6.nodeType ? this.T(t6) : d2(t6) ? this.k(t6) : this._(t6);
   }
-  O(t5) {
-    return this._$AA.parentNode.insertBefore(t5, this._$AB);
+  O(t6) {
+    return this._$AA.parentNode.insertBefore(t6, this._$AB);
   }
-  T(t5) {
-    this._$AH !== t5 && (this._$AR(), this._$AH = this.O(t5));
+  T(t6) {
+    this._$AH !== t6 && (this._$AR(), this._$AH = this.O(t6));
   }
-  _(t5) {
-    this._$AH !== A && a2(this._$AH) ? this._$AA.nextSibling.data = t5 : this.T(l2.createTextNode(t5)), this._$AH = t5;
+  _(t6) {
+    this._$AH !== A && a2(this._$AH) ? this._$AA.nextSibling.data = t6 : this.T(l2.createTextNode(t6)), this._$AH = t6;
   }
-  $(t5) {
-    const { values: i7, _$litType$: s5 } = t5, e6 = "number" == typeof s5 ? this._$AC(t5) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
+  $(t6) {
+    const { values: i7, _$litType$: s5 } = t6, e6 = "number" == typeof s5 ? this._$AC(t6) : (void 0 === s5.el && (s5.el = S2.createElement(V(s5.h, s5.h[0]), this.options)), s5);
     if (this._$AH?._$AD === e6) this._$AH.p(i7);
     else {
-      const t6 = new R(e6, this), s6 = t6.u(this.options);
-      t6.p(i7), this.T(s6), this._$AH = t6;
+      const t7 = new R(e6, this), s6 = t7.u(this.options);
+      t7.p(i7), this.T(s6), this._$AH = t7;
     }
   }
-  _$AC(t5) {
-    let i7 = C.get(t5.strings);
-    return void 0 === i7 && C.set(t5.strings, i7 = new S2(t5)), i7;
+  _$AC(t6) {
+    let i7 = C.get(t6.strings);
+    return void 0 === i7 && C.set(t6.strings, i7 = new S2(t6)), i7;
   }
-  k(t5) {
+  k(t6) {
     u2(this._$AH) || (this._$AH = [], this._$AR());
     const i7 = this._$AH;
     let s5, e6 = 0;
-    for (const h4 of t5) e6 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e6], s5._$AI(h4), e6++;
+    for (const h4 of t6) e6 === i7.length ? i7.push(s5 = new _k(this.O(c3()), this.O(c3()), this, this.options)) : s5 = i7[e6], s5._$AI(h4), e6++;
     e6 < i7.length && (this._$AR(s5 && s5._$AB.nextSibling, e6), i7.length = e6);
   }
-  _$AR(t5 = this._$AA.nextSibling, s5) {
-    for (this._$AP?.(false, true, s5); t5 !== this._$AB; ) {
-      const s6 = i2(t5).nextSibling;
-      i2(t5).remove(), t5 = s6;
+  _$AR(t6 = this._$AA.nextSibling, s5) {
+    for (this._$AP?.(false, true, s5); t6 !== this._$AB; ) {
+      const s6 = i2(t6).nextSibling;
+      i2(t6).remove(), t6 = s6;
     }
   }
-  setConnected(t5) {
-    void 0 === this._$AM && (this._$Cv = t5, this._$AP?.(t5));
+  setConnected(t6) {
+    void 0 === this._$AM && (this._$Cv = t6, this._$AP?.(t6));
   }
 };
 var H = class {
@@ -1126,75 +1126,75 @@ var H = class {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(t5, i7, s5, e6, h4) {
-    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t5, this.name = i7, this._$AM = e6, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
+  constructor(t6, i7, s5, e6, h4) {
+    this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t6, this.name = i7, this._$AM = e6, this.options = h4, s5.length > 2 || "" !== s5[0] || "" !== s5[1] ? (this._$AH = Array(s5.length - 1).fill(new String()), this.strings = s5) : this._$AH = A;
   }
-  _$AI(t5, i7 = this, s5, e6) {
+  _$AI(t6, i7 = this, s5, e6) {
     const h4 = this.strings;
     let o8 = false;
-    if (void 0 === h4) t5 = M(this, t5, i7, 0), o8 = !a2(t5) || t5 !== this._$AH && t5 !== E, o8 && (this._$AH = t5);
+    if (void 0 === h4) t6 = M(this, t6, i7, 0), o8 = !a2(t6) || t6 !== this._$AH && t6 !== E, o8 && (this._$AH = t6);
     else {
-      const e7 = t5;
+      const e7 = t6;
       let n6, r6;
-      for (t5 = h4[0], n6 = 0; n6 < h4.length - 1; n6++) r6 = M(this, e7[s5 + n6], i7, n6), r6 === E && (r6 = this._$AH[n6]), o8 ||= !a2(r6) || r6 !== this._$AH[n6], r6 === A ? t5 = A : t5 !== A && (t5 += (r6 ?? "") + h4[n6 + 1]), this._$AH[n6] = r6;
+      for (t6 = h4[0], n6 = 0; n6 < h4.length - 1; n6++) r6 = M(this, e7[s5 + n6], i7, n6), r6 === E && (r6 = this._$AH[n6]), o8 ||= !a2(r6) || r6 !== this._$AH[n6], r6 === A ? t6 = A : t6 !== A && (t6 += (r6 ?? "") + h4[n6 + 1]), this._$AH[n6] = r6;
     }
-    o8 && !e6 && this.j(t5);
+    o8 && !e6 && this.j(t6);
   }
-  j(t5) {
-    t5 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t5 ?? "");
+  j(t6) {
+    t6 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t6 ?? "");
   }
 };
 var I = class extends H {
   constructor() {
     super(...arguments), this.type = 3;
   }
-  j(t5) {
-    this.element[this.name] = t5 === A ? void 0 : t5;
+  j(t6) {
+    this.element[this.name] = t6 === A ? void 0 : t6;
   }
 };
 var L = class extends H {
   constructor() {
     super(...arguments), this.type = 4;
   }
-  j(t5) {
-    this.element.toggleAttribute(this.name, !!t5 && t5 !== A);
+  j(t6) {
+    this.element.toggleAttribute(this.name, !!t6 && t6 !== A);
   }
 };
 var z = class extends H {
-  constructor(t5, i7, s5, e6, h4) {
-    super(t5, i7, s5, e6, h4), this.type = 5;
+  constructor(t6, i7, s5, e6, h4) {
+    super(t6, i7, s5, e6, h4), this.type = 5;
   }
-  _$AI(t5, i7 = this) {
-    if ((t5 = M(this, t5, i7, 0) ?? A) === E) return;
-    const s5 = this._$AH, e6 = t5 === A && s5 !== A || t5.capture !== s5.capture || t5.once !== s5.once || t5.passive !== s5.passive, h4 = t5 !== A && (s5 === A || e6);
-    e6 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t5), this._$AH = t5;
+  _$AI(t6, i7 = this) {
+    if ((t6 = M(this, t6, i7, 0) ?? A) === E) return;
+    const s5 = this._$AH, e6 = t6 === A && s5 !== A || t6.capture !== s5.capture || t6.once !== s5.once || t6.passive !== s5.passive, h4 = t6 !== A && (s5 === A || e6);
+    e6 && this.element.removeEventListener(this.name, this, s5), h4 && this.element.addEventListener(this.name, this, t6), this._$AH = t6;
   }
-  handleEvent(t5) {
-    "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t5) : this._$AH.handleEvent(t5);
+  handleEvent(t6) {
+    "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t6) : this._$AH.handleEvent(t6);
   }
 };
 var Z = class {
-  constructor(t5, i7, s5) {
-    this.element = t5, this.type = 6, this._$AN = void 0, this._$AM = i7, this.options = s5;
+  constructor(t6, i7, s5) {
+    this.element = t6, this.type = 6, this._$AN = void 0, this._$AM = i7, this.options = s5;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AI(t5) {
-    M(this, t5);
+  _$AI(t6) {
+    M(this, t6);
   }
 };
 var j = { M: h2, P: o3, A: n3, C: 1, L: N, R, D: d2, V: M, I: k, H, N: L, U: z, B: I, F: Z };
 var B = t2.litHtmlPolyfillSupport;
 B?.(S2, k), (t2.litHtmlVersions ??= []).push("3.3.3");
-var D = (t5, i7, s5) => {
+var D = (t6, i7, s5) => {
   const e6 = s5?.renderBefore ?? i7;
   let h4 = e6._$litPart$;
   if (void 0 === h4) {
-    const t6 = s5?.renderBefore ?? null;
-    e6._$litPart$ = h4 = new k(i7.insertBefore(c3(), t6), t6, void 0, s5 ?? {});
+    const t7 = s5?.renderBefore ?? null;
+    e6._$litPart$ = h4 = new k(i7.insertBefore(c3(), t7), t7, void 0, s5 ?? {});
   }
-  return h4._$AI(t5), h4;
+  return h4._$AI(t6), h4;
 };
 
 // lit-element/lit-element.js
@@ -1204,12 +1204,12 @@ var i3 = class extends g {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
   createRenderRoot() {
-    const t5 = super.createRenderRoot();
-    return this.renderOptions.renderBefore ??= t5.firstChild, t5;
+    const t6 = super.createRenderRoot();
+    return this.renderOptions.renderBefore ??= t6.firstChild, t6;
   }
-  update(t5) {
+  update(t6) {
     const r6 = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t5), this._$Do = D(r6, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t6), this._$Do = D(r6, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(true);
@@ -1228,32 +1228,32 @@ o4?.({ LitElement: i3 });
 
 // @lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
-var r4 = (t5 = o5, e6, r6) => {
+var r4 = (t6 = o5, e6, r6) => {
   const { kind: n6, metadata: i7 } = r6;
   let s5 = globalThis.litPropertyMetadata.get(i7);
-  if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n6 && ((t5 = Object.create(t5)).wrapped = true), s5.set(r6.name, t5), "accessor" === n6) {
+  if (void 0 === s5 && globalThis.litPropertyMetadata.set(i7, s5 = /* @__PURE__ */ new Map()), "setter" === n6 && ((t6 = Object.create(t6)).wrapped = true), s5.set(r6.name, t6), "accessor" === n6) {
     const { name: o8 } = r6;
     return { set(r7) {
       const n7 = e6.get.call(this);
-      e6.set.call(this, r7), this.requestUpdate(o8, n7, t5, true, r7);
+      e6.set.call(this, r7), this.requestUpdate(o8, n7, t6, true, r7);
     }, init(e7) {
-      return void 0 !== e7 && this.C(o8, void 0, t5, e7), e7;
+      return void 0 !== e7 && this.C(o8, void 0, t6, e7), e7;
     } };
   }
   if ("setter" === n6) {
     const { name: o8 } = r6;
     return function(r7) {
       const n7 = this[o8];
-      e6.call(this, r7), this.requestUpdate(o8, n7, t5, true, r7);
+      e6.call(this, r7), this.requestUpdate(o8, n7, t6, true, r7);
     };
   }
   throw Error("Unsupported decorator location: " + n6);
 };
-function n4(t5) {
-  return (e6, o8) => "object" == typeof o8 ? r4(t5, e6, o8) : ((t6, e7, o9) => {
+function n4(t6) {
+  return (e6, o8) => "object" == typeof o8 ? r4(t6, e6, o8) : ((t7, e7, o9) => {
     const r6 = e7.hasOwnProperty(o9);
-    return e7.constructor.createProperty(o9, t6), r6 ? Object.getOwnPropertyDescriptor(e7, o9) : void 0;
-  })(t5, e6, o8);
+    return e7.constructor.createProperty(o9, t7), r6 ? Object.getOwnPropertyDescriptor(e7, o9) : void 0;
+  })(t6, e6, o8);
 }
 
 // @lit/reactive-element/node/decorators/state.js
@@ -1638,20 +1638,20 @@ define("ok-inline-feedback", OkInlineFeedback);
 
 // lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
-var e4 = (t5) => (...e6) => ({ _$litDirective$: t5, values: e6 });
+var e4 = (t6) => (...e6) => ({ _$litDirective$: t6, values: e6 });
 var i4 = class {
-  constructor(t5) {
+  constructor(t6) {
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AT(t5, e6, i7) {
-    this._$Ct = t5, this._$AM = e6, this._$Ci = i7;
+  _$AT(t6, e6, i7) {
+    this._$Ct = t6, this._$AM = e6, this._$Ci = i7;
   }
-  _$AS(t5, e6) {
-    return this.update(t5, e6);
+  _$AS(t6, e6) {
+    return this.update(t6, e6);
   }
-  update(t5, e6) {
+  update(t6, e6) {
     return this.render(...e6);
   }
 };
@@ -1666,52 +1666,52 @@ var v2 = (o8, n6, e6) => {
     const i7 = l3.insertBefore(s4(), d3), n7 = l3.insertBefore(s4(), d3);
     e6 = new t4(i7, n7, o8, o8.options);
   } else {
-    const t5 = e6._$AB.nextSibling, n7 = e6._$AM, c5 = n7 !== o8;
+    const t6 = e6._$AB.nextSibling, n7 = e6._$AM, c5 = n7 !== o8;
     if (c5) {
-      let t6;
-      e6._$AQ?.(o8), e6._$AM = o8, void 0 !== e6._$AP && (t6 = o8._$AU) !== n7._$AU && e6._$AP(t6);
+      let t7;
+      e6._$AQ?.(o8), e6._$AM = o8, void 0 !== e6._$AP && (t7 = o8._$AU) !== n7._$AU && e6._$AP(t7);
     }
-    if (t5 !== d3 || c5) {
+    if (t6 !== d3 || c5) {
       let o9 = e6._$AA;
-      for (; o9 !== t5; ) {
-        const t6 = i5(o9).nextSibling;
-        i5(l3).insertBefore(o9, d3), o9 = t6;
+      for (; o9 !== t6; ) {
+        const t7 = i5(o9).nextSibling;
+        i5(l3).insertBefore(o9, d3), o9 = t7;
       }
     }
   }
   return e6;
 };
-var u3 = (o8, t5, i7 = o8) => (o8._$AI(t5, i7), o8);
+var u3 = (o8, t6, i7 = o8) => (o8._$AI(t6, i7), o8);
 var m3 = {};
-var p3 = (o8, t5 = m3) => o8._$AH = t5;
+var p3 = (o8, t6 = m3) => o8._$AH = t6;
 var M2 = (o8) => o8._$AH;
 var h3 = (o8) => {
   o8._$AR(), o8._$AA.remove();
 };
 
 // lit-html/directives/repeat.js
-var u4 = (e6, s5, t5) => {
+var u4 = (e6, s5, t6) => {
   const r6 = /* @__PURE__ */ new Map();
-  for (let l3 = s5; l3 <= t5; l3++) r6.set(e6[l3], l3);
+  for (let l3 = s5; l3 <= t6; l3++) r6.set(e6[l3], l3);
   return r6;
 };
 var c4 = e4(class extends i4 {
   constructor(e6) {
     if (super(e6), e6.type !== t3.CHILD) throw Error("repeat() can only be used in text expressions");
   }
-  dt(e6, s5, t5) {
+  dt(e6, s5, t6) {
     let r6;
-    void 0 === t5 ? t5 = s5 : void 0 !== s5 && (r6 = s5);
+    void 0 === t6 ? t6 = s5 : void 0 !== s5 && (r6 = s5);
     const l3 = [], o8 = [];
     let i7 = 0;
-    for (const s6 of e6) l3[i7] = r6 ? r6(s6, i7) : i7, o8[i7] = t5(s6, i7), i7++;
+    for (const s6 of e6) l3[i7] = r6 ? r6(s6, i7) : i7, o8[i7] = t6(s6, i7), i7++;
     return { values: o8, keys: l3 };
   }
-  render(e6, s5, t5) {
-    return this.dt(e6, s5, t5).values;
+  render(e6, s5, t6) {
+    return this.dt(e6, s5, t6).values;
   }
-  update(s5, [t5, r6, c5]) {
-    const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t5, r6, c5);
+  update(s5, [t6, r6, c5]) {
+    const d3 = M2(s5), { values: p4, keys: a3 } = this.dt(t6, r6, c5);
     if (!Array.isArray(d3)) return this.ut = a3, p4;
     const h4 = this.ut ??= [], v3 = [];
     let m4, y3, x2 = 0, j2 = d3.length - 1, k2 = 0, w2 = p4.length - 1;
@@ -1722,11 +1722,11 @@ var c4 = e4(class extends i4 {
     else if (h4[x2] === a3[w2]) v3[w2] = u3(d3[x2], p4[w2]), v2(s5, v3[w2 + 1], d3[x2]), x2++, w2--;
     else if (h4[j2] === a3[k2]) v3[k2] = u3(d3[j2], p4[k2]), v2(s5, d3[x2], d3[j2]), j2--, k2++;
     else if (void 0 === m4 && (m4 = u4(a3, k2, w2), y3 = u4(h4, x2, j2)), m4.has(h4[x2])) if (m4.has(h4[j2])) {
-      const e6 = y3.get(a3[k2]), t6 = void 0 !== e6 ? d3[e6] : null;
-      if (null === t6) {
+      const e6 = y3.get(a3[k2]), t7 = void 0 !== e6 ? d3[e6] : null;
+      if (null === t7) {
         const e7 = v2(s5, d3[x2]);
         u3(e7, p4[k2]), v3[k2] = e7;
-      } else v3[k2] = u3(t6, p4[k2]), v2(s5, d3[x2], t6), d3[e6] = null;
+      } else v3[k2] = u3(t7, p4[k2]), v2(s5, d3[x2], t7), d3[e6] = null;
       k2++;
     } else h3(d3[j2]), j2--;
     else h3(d3[x2]), x2++;
@@ -1746,25 +1746,25 @@ var c4 = e4(class extends i4 {
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
-  constructor(t5) {
-    if (super(t5), t5.type !== t3.ATTRIBUTE || "style" !== t5.name || t5.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
+  constructor(t6) {
+    if (super(t6), t6.type !== t3.ATTRIBUTE || "style" !== t6.name || t6.strings?.length > 2) throw Error("The `styleMap` directive must be used in the `style` attribute and must be the only part in the attribute.");
   }
-  render(t5) {
-    return Object.keys(t5).reduce((e6, r6) => {
-      const s5 = t5[r6];
+  render(t6) {
+    return Object.keys(t6).reduce((e6, r6) => {
+      const s5 = t6[r6];
       return null == s5 ? e6 : e6 + `${r6 = r6.includes("-") ? r6 : r6.replace(/(?:^(webkit|moz|ms|o)|)(?=[A-Z])/g, "-$&").toLowerCase()}:${s5};`;
     }, "");
   }
   update(e6, [r6]) {
     const { style: s5 } = e6.element;
     if (void 0 === this.ft) return this.ft = new Set(Object.keys(r6)), this.render(r6);
-    for (const t5 of this.ft) null == r6[t5] && (this.ft.delete(t5), t5.includes("-") ? s5.removeProperty(t5) : s5[t5] = null);
-    for (const t5 in r6) {
-      const e7 = r6[t5];
+    for (const t6 of this.ft) null == r6[t6] && (this.ft.delete(t6), t6.includes("-") ? s5.removeProperty(t6) : s5[t6] = null);
+    for (const t6 in r6) {
+      const e7 = r6[t6];
       if (null != e7) {
-        this.ft.add(t5);
+        this.ft.add(t6);
         const r7 = "string" == typeof e7 && e7.endsWith(i6);
-        t5.includes("-") || r7 ? s5.setProperty(t5, r7 ? e7.slice(0, -11) : e7, r7 ? n5 : "") : s5[t5] = e7;
+        t6.includes("-") || r7 ? s5.setProperty(t6, r7 ? e7.slice(0, -11) : e7, r7 ? n5 : "") : s5[t6] = e7;
       }
     }
     return E;
@@ -2746,10 +2746,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           }
           if (f3.from || f3.to) {
             const raw = this.rawValue(col, row);
-            const t5 = raw == null ? NaN : new Date(raw).getTime();
+            const t6 = raw == null ? NaN : new Date(raw).getTime();
             const from = f3.from ? new Date(f3.from).getTime() : -Infinity;
             const to = f3.to ? new Date(f3.to).getTime() + 864e5 - 1 : Infinity;
-            return !Number.isNaN(t5) && t5 >= from && t5 <= to;
+            return !Number.isNaN(t6) && t6 >= from && t6 <= to;
           }
           return true;
         })
@@ -2985,16 +2985,16 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
       `;
     }
     if (type === "range" || type === "daterange") {
-      const t5 = type === "daterange" ? "date" : "number";
+      const t6 = type === "daterange" ? "date" : "number";
       const onEdge = type === "daterange" ? this.onDateRangeInput.bind(this) : this.onRangeInput.bind(this);
       return b2`
         <div class="fblock">
           <span class="flabel">${col.header}</span>
           <div class="frange">
-            <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
+            <ion-input type=${t6} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
               .value=${f3?.from ?? ""}
               @ionInput=${(e6) => onEdge(col, "from", e6)}></ion-input>
-            <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
+            <ion-input type=${t6} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
               .value=${f3?.to ?? ""}
               @ionInput=${(e6) => onEdge(col, "to", e6)}></ion-input>
           </div>
@@ -3026,8 +3026,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   // `inlineFilters`. Look: «Todos los Estados» (placeholder) / «01/10/25 → 18/10/25».
   renderInlineFilters() {
     const cols = this.filterColumns.filter((c5) => {
-      const t5 = c5.filterType ?? "text";
-      return t5 === "select" || t5 === "multiselect" || t5 === "date" || t5 === "daterange";
+      const t6 = c5.filterType ?? "text";
+      return t6 === "select" || t6 === "multiselect" || t6 === "date" || t6 === "daterange";
     });
     if (!cols.length) return A;
     return b2`${cols.map((c5) => this.renderInlineFilter(c5))}`;
@@ -3899,9 +3899,9 @@ function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
 var ListController = class {
-  constructor(client, queryName, onChange = () => {
+  constructor(client2, queryName, onChange = () => {
   }, opts = {}) {
-    this.client = client;
+    this.client = client2;
     this.queryName = queryName;
     this.onChange = onChange;
     this.rows = [];
@@ -3921,7 +3921,7 @@ var ListController = class {
     };
     this.moneyFilters = new Set(opts.moneyFilters ?? []);
     this.quantityFilters = new Set(opts.quantityFilters ?? []);
-    if (this.moneyFilters.size > 0 && typeof client.currencyDecimals !== "number") {
+    if (this.moneyFilters.size > 0 && typeof client2.currencyDecimals !== "number") {
       throw new ErploraError(
         "list_money_filters_need_currency_decimals",
         "moneyFilters needs a list client that exposes currencyDecimals"
@@ -4044,9 +4044,9 @@ function scaleFilterValue(value, scale) {
   }
   return scaleFilterEdge(value, scale);
 }
-function createListController(client, queryName, onChange = () => {
+function createListController(client2, queryName, onChange = () => {
 }, opts = {}) {
-  return new ListController(client, queryName, onChange, opts);
+  return new ListController(client2, queryName, onChange, opts);
 }
 var ErploraError = class extends Error {
   constructor(code, message, permission, fields) {
@@ -4060,9 +4060,6 @@ var ErploraError = class extends Error {
 function majorToMinor(amount, decimals) {
   const n6 = Number(amount);
   return Number.isFinite(n6) ? Math.round(n6 * 10 ** decimals) : 0;
-}
-function minorToMajor(amount, decimals) {
-  return (amount ?? 0) / 10 ** decimals;
 }
 
 // locales/es.json
@@ -4197,6 +4194,9 @@ var es_default = {
     errRefundNoOpenSession: "La devoluci\xF3n no ha podido anotarse en la caja: no hay ninguna sesi\xF3n abierta, as\xED que no hay d\xF3nde apuntar el dinero que ha salido del caj\xF3n. Abre la caja y reg\xEDstralo como salida de efectivo.",
     errCloseSession: "No se pudo cerrar la sesi\xF3n",
     errInvalidAmount: "Importe inv\xE1lido",
+    errNotAnAmount: "Esto no es un importe. Escribe una cifra, por ejemplo 12,50.",
+    errAmbiguousAmount: "Este importe se puede leer de dos maneras: \xAB{typed}\xBB tanto puede ser {grouped} como {decimal}. Escribe los decimales para que no haya duda.",
+    errNegativeAmount: "Un importe de caja no puede ser negativo. Para sacar dinero del caj\xF3n, registra un movimiento de \xABSalida\xBB.",
     errAddMovement: "No se pudo registrar el movimiento",
     errAddCount: "No se pudo registrar el arqueo",
     settingsTitle: "Ajustes de caja",
@@ -4403,6 +4403,9 @@ var en_default = {
     errRefundNoOpenSession: "The refund could not be recorded in the till: no cash session is open, so there is nowhere to book the money that left the drawer. Open the till and record it as a cash withdrawal.",
     errCloseSession: "Could not close the session",
     errInvalidAmount: "Invalid amount",
+    errNotAnAmount: "This is not an amount. Type a figure, for example 12.50.",
+    errAmbiguousAmount: "This amount can be read in two ways: \xAB{typed}\xBB could be {grouped} or {decimal}. Write the decimals so there is no doubt.",
+    errNegativeAmount: "An amount in the till cannot be negative. To take cash out of the drawer, record an \xABOut\xBB movement.",
     errAddMovement: "Could not record the movement",
     errAddCount: "Could not record the count",
     settingsTitle: "Cash register settings",
@@ -4529,11 +4532,11 @@ function formatDateTime(value) {
   }
 }
 function denominationLabel(denomination) {
-  const client = erplora();
-  const decimals = typeof client.currencyDecimals === "number" ? client.currencyDecimals : 2;
+  const client2 = erplora();
+  const decimals = typeof client2.currencyDecimals === "number" ? client2.currencyDecimals : 2;
   const major = Number(denomination);
   if (!Number.isFinite(major)) return denomination;
-  return client.formatMoney(Math.round(major * 10 ** decimals));
+  return client2.formatMoney(Math.round(major * 10 ** decimals));
 }
 
 // ui/lib/movement-concept.ts
@@ -4543,14 +4546,14 @@ var DOCUMENT_KEY = {
   sale: "ui.conceptSale"
 };
 var VOID_PREFIX = "[VOID] ";
-function movementConcept(row, doc, t5) {
+function movementConcept(row, doc, t6) {
   const description = row.description == null ? "" : String(row.description);
   const saleRef = row.sale_reference == null ? "" : String(row.sale_reference);
   const type = String(row.movement_type ?? "");
   if (!saleRef || type !== "sale" && type !== "refund") return description;
-  const document3 = doc ? t5(DOCUMENT_KEY[doc.kind], { number: doc.number }) : t5("ui.conceptSaleUnnumbered");
+  const document3 = doc ? t6(DOCUMENT_KEY[doc.kind], { number: doc.number }) : t6("ui.conceptSaleUnnumbered");
   if (type === "sale") return document3;
-  return t5(description.startsWith(VOID_PREFIX) ? "ui.conceptVoidOf" : "ui.conceptRefundOf", { document: document3 });
+  return t6(description.startsWith(VOID_PREFIX) ? "ui.conceptVoidOf" : "ui.conceptRefundOf", { document: document3 });
 }
 function firstRow(rows2) {
   const row = Array.isArray(rows2) ? rows2[0] : rows2;
@@ -4658,56 +4661,56 @@ var ErpCashRegisterSessionDetail = class extends i3 {
     return n6 == null ? "\u2014" : erplora2().formatMoney(Number(n6));
   }
   get summaryItems() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t6 = (k2) => erplora2().t(CATALOG2, k2);
     const s5 = this.summary;
     const row = this.session;
     const closed = (row?.status ?? s5?.status) === "closed";
     return [
-      { label: t5("ui.colStatus"), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s5?.status) || "\u2014" },
-      { label: t5("ui.detailMovements"), value: s5 ? String(s5.movement_count) : "\u2014" },
-      { label: t5("ui.labelOpeningBalance"), value: this.fmt(s5?.opening_balance ?? row?.opening_balance) },
-      { label: t5("ui.detailSales"), value: this.fmt(s5?.total_sales) },
+      { label: t6("ui.colStatus"), value: enumLabel(SESSION_STATUS_KEY, row?.status ?? s5?.status) || "\u2014" },
+      { label: t6("ui.detailMovements"), value: s5 ? String(s5.movement_count) : "\u2014" },
+      { label: t6("ui.labelOpeningBalance"), value: this.fmt(s5?.opening_balance ?? row?.opening_balance) },
+      { label: t6("ui.detailSales"), value: this.fmt(s5?.total_sales) },
       // Per tender, like an X/Z report (cash_register#91): cash is what the drawer holds. Absent
       // when the server withholds the split (blind count on an open session): no figure of our own.
       ...s5?.cash_sales == null ? [] : [
-        { label: t5("ui.detailCashSales"), value: this.fmt(s5.cash_sales) },
-        { label: t5("ui.detailCardSales"), value: this.fmt(s5.card_sales) },
-        ...Number(s5.other_sales) > 0 ? [{ label: t5("ui.detailOtherSales"), value: this.fmt(s5.other_sales) }] : []
+        { label: t6("ui.detailCashSales"), value: this.fmt(s5.cash_sales) },
+        { label: t6("ui.detailCardSales"), value: this.fmt(s5.card_sales) },
+        ...Number(s5.other_sales) > 0 ? [{ label: t6("ui.detailOtherSales"), value: this.fmt(s5.other_sales) }] : []
       ],
-      { label: t5("ui.detailRefunds"), value: this.fmt(s5?.total_refunds) },
-      { label: t5("ui.detailCashIn"), value: this.fmt(s5?.total_cash_in) },
-      { label: t5("ui.detailCashOut"), value: this.fmt(s5?.total_cash_out) },
-      { label: t5("ui.detailGifts"), value: this.fmt(s5?.total_gifts) },
+      { label: t6("ui.detailRefunds"), value: this.fmt(s5?.total_refunds) },
+      { label: t6("ui.detailCashIn"), value: this.fmt(s5?.total_cash_in) },
+      { label: t6("ui.detailCashOut"), value: this.fmt(s5?.total_cash_out) },
+      { label: t6("ui.detailGifts"), value: this.fmt(s5?.total_gifts) },
       // Expected: what the row froze at closing when closed (the audited number), the live figure
       // otherwise — NULL («—») for an open session in a blind-count hub unless the person holds
       // `view_expected_totals` (cash_register#84: this detail was the door left open by #24).
-      { label: t5("ui.colExpected"), value: this.fmt(closed ? row?.expected_balance ?? s5?.expected_cash : s5?.expected_cash) },
-      { label: t5("ui.detailCounted"), value: closed ? this.fmt(row?.closing_balance) : "\u2014" },
-      { label: t5("ui.colDifference"), value: closed ? this.fmt(row?.difference) : "\u2014" }
+      { label: t6("ui.colExpected"), value: this.fmt(closed ? row?.expected_balance ?? s5?.expected_cash : s5?.expected_cash) },
+      { label: t6("ui.detailCounted"), value: closed ? this.fmt(row?.closing_balance) : "\u2014" },
+      { label: t6("ui.colDifference"), value: closed ? this.fmt(row?.difference) : "\u2014" }
     ];
   }
   get movementColumns() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t6 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "created_at", header: t5("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.created_at) },
-      { key: "movement_type", header: t5("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
-      { key: "amount", header: t5("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
-      { key: "payment_method", header: t5("ui.colMethod"), sortable: true, format: (r6) => paymentMethodLabel(r6.payment_method) },
+      { key: "created_at", header: t6("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.created_at) },
+      { key: "movement_type", header: t6("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
+      { key: "amount", header: t6("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
+      { key: "payment_method", header: t6("ui.colMethod"), sortable: true, format: (r6) => paymentMethodLabel(r6.payment_method) },
       {
         key: "description",
-        header: t5("ui.labelConcept"),
+        header: t6("ui.labelConcept"),
         sortable: true,
         format: (r6) => movementConcept(r6, this.saleDocuments.get(String(r6.sale_reference ?? "")), (k2, p4) => erplora2().t(CATALOG2, k2, p4))
       }
     ];
   }
   get countColumns() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t6 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "counted_at", header: t5("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.counted_at) },
-      { key: "count_type", header: t5("ui.labelCountType"), sortable: true, format: (r6) => enumLabel(COUNT_TYPE_KEY, r6.count_type) },
-      { key: "total", header: t5("ui.totalCounted"), align: "right", sortable: true, format: (r6) => this.fmt(r6.total) },
-      { key: "notes", header: t5("ui.labelNotes") }
+      { key: "counted_at", header: t6("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.counted_at) },
+      { key: "count_type", header: t6("ui.labelCountType"), sortable: true, format: (r6) => enumLabel(COUNT_TYPE_KEY, r6.count_type) },
+      { key: "total", header: t6("ui.totalCounted"), align: "right", sortable: true, format: (r6) => this.fmt(r6.total) },
+      { key: "notes", header: t6("ui.labelNotes") }
     ];
   }
   /**
@@ -4737,14 +4740,14 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   }
   render() {
     if (!this.session) return A;
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t6 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`
-      <h3>${t5("ui.detailTitle")} · ${this.session.session_number}</h3>
+      <h3>${t6("ui.detailTitle")} · ${this.session.session_number}</h3>
       ${this.error ? b2`<ok-inline-feedback data-testid="cash-register-session-error" tone="danger" icon="alert-circle-outline">${this.error}</ok-inline-feedback>` : A}
       <ok-detail-list data-testid="cash-register-session-summary" columns="2" dense .items=${this.summaryItems}></ok-detail-list>
-      <h4>${t5("ui.detailMovements")}</h4>
+      <h4>${t6("ui.detailMovements")}</h4>
       ${this.renderMovements()}
-      <h4>${t5("ui.detailCounts")}</h4>
+      <h4>${t6("ui.detailCounts")}</h4>
       ${this.renderCounts()}
     `;
   }
@@ -4760,21 +4763,187 @@ __decorateClass([
 ], ErpCashRegisterSessionDetail.prototype, "error", 2);
 define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
 
+// @erplora/module-toolkit/src/money-input.mjs
+var SPACING = "\\s'\\u2019\\u02bc";
+var GROUP_SEP = new RegExp(`[.,${SPACING}]`);
+var MINUS = /[-\u2212]/;
+var SIGN = /[-+\u2212]/;
+var SIGNS = /[-+\u2212]/g;
+var BRACKET = /[()]/;
+var CURRENCY_SIGNS = /\p{Sc}/gu;
+var AFFIX_FILLER = new RegExp(`^[${SPACING}\\p{Cf}.,+\\-\\u2212]*$`, "u");
+var NOT_AN_AMOUNT = Object.freeze({ ok: false, code: "not_an_amount" });
+function checkDecimals(decimals) {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 4) {
+    throw new RangeError(`money_input_decimals_invalid: ${String(decimals)}`);
+  }
+}
+function currencyWords(currency, locale) {
+  if (currency === void 0) return [];
+  if (typeof currency !== "string" || !/^[A-Za-z]{3}$/.test(currency)) {
+    throw new RangeError(`money_input_currency_invalid: ${String(currency)}`);
+  }
+  const words = /* @__PURE__ */ new Set([currency.toLowerCase()]);
+  for (const lang of [locale || "en", "en"]) {
+    for (const currencyDisplay of ["symbol", "narrowSymbol"]) {
+      const part = new Intl.NumberFormat(lang, { style: "currency", currency, currencyDisplay }).formatToParts(1).find((p4) => p4.type === "currency");
+      if (part) words.add(part.value.toLowerCase());
+    }
+  }
+  return [...words].sort((a3, b3) => b3.length - a3.length);
+}
+function isCurrencyOnly(affixes, words) {
+  let rest = affixes.toLowerCase();
+  if (!words.length) rest = rest.replace(CURRENCY_SIGNS, " ");
+  for (const word of words) rest = rest.split(word).join(" ");
+  return AFFIX_FILLER.test(rest);
+}
+function isGrouping(intPart) {
+  const groups = intPart.split(GROUP_SEP);
+  if (groups.length < 2) return false;
+  const [first, ...rest] = groups;
+  const last = rest.pop();
+  return /^[1-9]\d{0,2}$/.test(first) && rest.every((g3) => /^\d{2,3}$/.test(g3)) && /^\d{3}$/.test(last);
+}
+function digitsToMinor(intDigits2, fracDigits, decimals) {
+  const padded = fracDigits.padEnd(decimals + 1, "0");
+  const kept = (intDigits2 || "0") + padded.slice(0, decimals);
+  let minor = Number(kept);
+  if (Number(padded[decimals]) >= 5) minor += 1;
+  return Number.isSafeInteger(minor) ? minor : null;
+}
+function signed(minor, negative) {
+  return negative && minor !== 0 ? -minor : minor;
+}
+function splitCore(core, decimals) {
+  const dots = (core.match(/\./g) ?? []).length;
+  const commas = (core.match(/,/g) ?? []).length;
+  if (dots && commas) {
+    const dec = core.lastIndexOf(".") > core.lastIndexOf(",") ? "." : ",";
+    if ((dec === "." ? dots : commas) !== 1) return null;
+    const at2 = core.lastIndexOf(dec);
+    return { intPart: core.slice(0, at2), frac: core.slice(at2 + 1) };
+  }
+  if (dots + commas !== 1) return { intPart: core, frac: "" };
+  const at = Math.max(core.lastIndexOf("."), core.lastIndexOf(","));
+  const intPart = core.slice(0, at);
+  const tail = core.slice(at + 1);
+  if (tail.length === 3 && isGrouping(core)) {
+    if (decimals === 0) return { intPart: core, frac: "" };
+    if (decimals !== 3) return { ambiguous: { intPart, tail } };
+  }
+  return { intPart, frac: tail };
+}
+function intDigits(intPart) {
+  if (!GROUP_SEP.test(intPart)) return /^\d*$/.test(intPart) ? intPart : null;
+  return isGrouping(intPart) ? intPart.replace(/\D/g, "") : null;
+}
+function parseMoneyInput(typed, decimals, options = {}) {
+  checkDecimals(decimals);
+  const words = currencyWords(options.currency, options.locale);
+  if (typeof typed === "number") return parseNumber(typed, decimals);
+  const raw = String(typed ?? "").trim();
+  if (!raw) return { ok: true, minor: null };
+  const firstDigit = raw.search(/\d/);
+  if (firstDigit < 0) return NOT_AN_AMOUNT;
+  const start = firstDigit > 0 && /[.,]/.test(raw[firstDigit - 1]) ? firstDigit - 1 : firstDigit;
+  const end = raw.search(/\d\D*$/) + 1;
+  const prefix = raw.slice(0, start);
+  const suffix = raw.slice(end);
+  const core = raw.slice(start, end);
+  const signs = prefix.match(SIGNS) ?? [];
+  if (signs.length > 1 || SIGN.test(suffix) || BRACKET.test(prefix + suffix)) return NOT_AN_AMOUNT;
+  if (!isCurrencyOnly(`${prefix} ${suffix}`, words)) return NOT_AN_AMOUNT;
+  const negative = signs.length === 1 && MINUS.test(signs[0]);
+  const split = splitCore(core, decimals);
+  if (!split) return NOT_AN_AMOUNT;
+  if ("ambiguous" in split) {
+    const { intPart, tail } = split.ambiguous;
+    const digits = intPart.replace(/\D/g, "");
+    const grouped = digitsToMinor(digits + tail, "", decimals);
+    const decimal = digitsToMinor(digits, tail, decimals);
+    if (grouped === null || decimal === null) return NOT_AN_AMOUNT;
+    return {
+      ok: false,
+      code: "ambiguous_amount",
+      readings: { grouped: signed(grouped, negative), decimal: signed(decimal, negative) }
+    };
+  }
+  const whole = intDigits(split.intPart);
+  if (whole === null || split.frac && !/^\d+$/.test(split.frac)) return NOT_AN_AMOUNT;
+  const minor = digitsToMinor(whole, split.frac, decimals);
+  return minor === null ? NOT_AN_AMOUNT : { ok: true, minor: signed(minor, negative) };
+}
+function parseNumber(n6, decimals) {
+  const m4 = /^(\d+)(?:\.(\d+))?$/.exec(String(Math.abs(n6)));
+  if (!m4) return NOT_AN_AMOUNT;
+  const minor = digitsToMinor(m4[1], m4[2] ?? "", decimals);
+  return minor === null ? NOT_AN_AMOUNT : { ok: true, minor: signed(minor, n6 < 0) };
+}
+function formatMoneyInput(minor, decimals, locale) {
+  checkDecimals(decimals);
+  if (minor == null) return "";
+  return new Intl.NumberFormat(locale || "en", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    useGrouping: false,
+    numberingSystem: "latn"
+  }).format(minor / 10 ** decimals);
+}
+function normaliseMoneyInput(typed, decimals, locale, currency) {
+  const parsed = parseMoneyInput(typed, decimals, { currency, locale });
+  return parsed.ok && parsed.minor !== null ? formatMoneyInput(parsed.minor, decimals, locale) : typed;
+}
+
 // ui/lib/money.ts
+var CATALOG3 = { es: es_default, en: en_default };
+function client() {
+  return globalThis.erplora ?? {};
+}
 function currencyDecimals() {
-  const decimals = globalThis.erplora?.currencyDecimals;
+  const decimals = client().currencyDecimals;
   return typeof decimals === "number" ? decimals : 2;
 }
-function toMinorUnits(v3) {
-  return majorToMinor(String(v3 ?? "").replace(",", "."), currencyDecimals());
+function hubCurrency() {
+  const currency = client().currency;
+  return typeof currency === "string" && currency ? currency : void 0;
 }
-function fromMinorUnits(minor) {
-  const scale = currencyDecimals();
-  return minorToMajor(minor, scale).toFixed(scale);
+function hubLocale() {
+  const locale = client().locale;
+  return typeof locale === "string" && locale ? locale : void 0;
 }
-function amountStep() {
-  const scale = currencyDecimals();
-  return (10 ** -scale).toFixed(scale);
+function t5(key, params) {
+  const c5 = client();
+  return c5.t ? c5.t(CATALOG3, key, params) : key;
+}
+function readMoneyField(typed) {
+  const decimals = currencyDecimals();
+  const locale = hubLocale();
+  const read = parseMoneyInput(typed, decimals, { currency: hubCurrency(), locale });
+  if (read.ok) {
+    if (read.minor !== null && read.minor < 0) {
+      return { ok: false, code: "negative_amount", message: t5("ui.errNegativeAmount") };
+    }
+    return read;
+  }
+  if (read.code === "ambiguous_amount") {
+    return {
+      ok: false,
+      code: "ambiguous_amount",
+      message: t5("ui.errAmbiguousAmount", {
+        typed: String(typed ?? "").trim(),
+        grouped: formatMoneyInput(read.readings.grouped, decimals, locale),
+        decimal: formatMoneyInput(read.readings.decimal, decimals, locale)
+      })
+    };
+  }
+  return { ok: false, code: "not_an_amount", message: t5("ui.errNotAnAmount") };
+}
+function normaliseMoneyField(typed) {
+  return normaliseMoneyInput(String(typed ?? ""), currencyDecimals(), hubLocale(), hubCurrency());
+}
+function moneyFieldText(minor) {
+  return formatMoneyInput(minor, currencyDecimals(), hubLocale());
 }
 
 // ui/lib/denominations.ts
@@ -4869,7 +5038,7 @@ function summarisePrintQueue(answer) {
 function hasPendingWork(review) {
   return review.liveOrders > 0 || review.pendingPrintJobs > 0;
 }
-async function readShiftReview(client) {
+async function readShiftReview(client2) {
   const attempt = async (read) => {
     if (typeof read !== "function") return { answer: void 0, failed: true };
     try {
@@ -4879,8 +5048,8 @@ async function readShiftReview(client) {
     }
   };
   const [kitchen, print] = await Promise.all([
-    attempt(client.queryOptional && (() => client.queryOptional("kitchen.orders.display"))),
-    attempt(client.query && (() => client.query("hub.print.coverage")))
+    attempt(client2.queryOptional && (() => client2.queryOptional("kitchen.orders.display"))),
+    attempt(client2.query && (() => client2.query("hub.print.coverage")))
   ]);
   return {
     ...summariseLiveOrders(kitchen.answer),
@@ -4890,14 +5059,7 @@ async function readShiftReview(client) {
 }
 
 // ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
-var CATALOG3 = { es: es_default, en: en_default };
-function parseCountedCash(raw) {
-  const text2 = String(raw ?? "").trim();
-  if (text2 === "") return null;
-  const n6 = Number(text2.replace(",", "."));
-  if (!Number.isFinite(n6) || n6 < 0) return null;
-  return toMinorUnits(text2);
-}
+var CATALOG4 = { es: es_default, en: en_default };
 function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -4916,8 +5078,8 @@ var DOMAIN_MESSAGES = {
 function domainMessage(e6, fallbackKey) {
   const code = e6?.code;
   const key = typeof code === "string" ? DOMAIN_MESSAGES[code] : void 0;
-  if (key) return erplora3().t(CATALOG3, key);
-  return e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, fallbackKey);
+  if (key) return erplora3().t(CATALOG4, key);
+  return e6 instanceof Error ? e6.message : erplora3().t(CATALOG4, fallbackKey);
 }
 var ErpCashRegisterDashboard = class extends i3 {
   constructor() {
@@ -4996,12 +5158,12 @@ var ErpCashRegisterDashboard = class extends i3 {
   // Getter (no campo): se re-evalúa en cada render, así los textos cambian con el idioma activo
   // (ADR-0055). `connectedCallback` re-renderiza al recibir `erplora:locale-changed`.
   get columns() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
-      { key: "session_number", header: t5("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
+      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
       {
         key: "status",
-        header: t5("ui.colStatus"),
+        header: t6("ui.colStatus"),
         sortable: true,
         filterable: true,
         // Dominio CERRADO: el estado se ELIGE, no se teclea (Odoo, Square y Business Central lo
@@ -5013,21 +5175,21 @@ var ErpCashRegisterDashboard = class extends i3 {
         options: enumOptions(SESSION_STATUS_KEY),
         format: (r6) => enumLabel(SESSION_STATUS_KEY, r6.status)
       },
-      { key: "opening_balance", header: t5("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
-      { key: "expected_balance", header: t5("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
-      { key: "closing_balance", header: t5("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
-      { key: "difference", header: t5("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
+      { key: "opening_balance", header: t6("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
+      { key: "expected_balance", header: t6("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
+      { key: "closing_balance", header: t6("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
+      { key: "difference", header: t6("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
     ];
   }
   get rowActions() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
       // Solo icono (ADR-0133): el `label` viaja como title + aria-label del botón, no como texto.
       // `detail` (cash_register#2) works on ANY session — a closed one is read-only, not invisible.
-      { id: "detail", label: t5("ui.actionDetail"), icon: "document-text-outline" },
-      { id: "movement", label: t5("ui.actionMovement"), icon: "swap-vertical-outline" },
-      { id: "count", label: t5("ui.actionCount"), icon: "calculator-outline" },
-      { id: "close", label: t5("ui.actionClose"), icon: "lock-closed-outline", color: "danger" }
+      { id: "detail", label: t6("ui.actionDetail"), icon: "document-text-outline" },
+      { id: "movement", label: t6("ui.actionMovement"), icon: "swap-vertical-outline" },
+      { id: "count", label: t6("ui.actionCount"), icon: "calculator-outline" },
+      { id: "close", label: t6("ui.actionClose"), icon: "lock-closed-outline", color: "danger" }
     ];
   }
   async connectedCallback() {
@@ -5099,7 +5261,7 @@ var ErpCashRegisterDashboard = class extends i3 {
   openPanel(panel, session) {
     if (panel !== "detail" && session.status !== "open") {
       this.formMsg = "";
-      this.formError = erplora3().t(CATALOG3, "ui.errSessionNotOpen", { session: session.session_number });
+      this.formError = erplora3().t(CATALOG4, "ui.errSessionNotOpen", { session: session.session_number });
       return;
     }
     this.target = session;
@@ -5185,7 +5347,7 @@ var ErpCashRegisterDashboard = class extends i3 {
       const rows2 = Array.isArray(page?.rows) ? page.rows : [];
       const last = rows2.find((c5) => c5?.count_type === "closing");
       if (last && this.panel === "close" && this.target?.id === sessionId) {
-        this.closeBalance = fromMinorUnits(Number(last.total));
+        this.closeBalance = moneyFieldText(Number(last.total));
       }
     } catch (e6) {
       this.formError = domainMessage(e6, "ui.errLoadDetail");
@@ -5199,20 +5361,26 @@ var ErpCashRegisterDashboard = class extends i3 {
   // — Abrir sesión → cash_register.session.open —
   async openSession(ev) {
     ev.preventDefault();
+    this.formMsg = "";
+    const opening = readMoneyField(this.openBalance);
+    if (!opening.ok) {
+      this.formError = opening.message;
+      return;
+    }
     this.saving = true;
     this.formError = "";
-    this.formMsg = "";
     try {
       await erplora3().command("cash_register.session.open", {
         register_id: this.openRegisterId || null,
-        opening_balance: toMinorUnits(this.openBalance),
+        // Empty is a float of 0: the column is NOT NULL and an empty drawer is a legitimate start.
+        opening_balance: opening.minor ?? 0,
         opening_notes: this.openNotes.trim()
       });
       this.openRegisterId = "";
       this.openBalance = "0";
       this.openNotes = "";
       this.resetPanel();
-      this.formMsg = erplora3().t(CATALOG3, "ui.msgSessionOpened");
+      this.formMsg = erplora3().t(CATALOG4, "ui.msgSessionOpened");
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
     } catch (e6) {
       this.formError = domainMessage(e6, "ui.errOpenSession");
@@ -5227,12 +5395,13 @@ var ErpCashRegisterDashboard = class extends i3 {
   async closeSession(ev) {
     ev.preventDefault();
     if (!this.target) return;
-    const counted = parseCountedCash(this.closeBalance);
-    if (counted == null) {
+    const read = readMoneyField(this.closeBalance);
+    if (!read.ok || read.minor === null) {
       this.formMsg = "";
-      this.formError = erplora3().t(CATALOG3, "ui.errCountedCashRequired");
+      this.formError = read.ok ? erplora3().t(CATALOG4, "ui.errCountedCashRequired") : read.message;
       return;
     }
+    const counted = read.minor;
     const sessionId = this.target.id;
     if (this.shiftReview && hasPendingWork(this.shiftReview) && !this.closeAcknowledged) {
       this.closeAcknowledged = true;
@@ -5257,12 +5426,12 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.resetPanel();
       await Promise.all([this.ctrl.load(), this.loadCurrentSession()]);
       const row = (this.ctrl.rows ?? []).find((r6) => String(r6.id) === String(sessionId));
-      this.formMsg = row ? erplora3().t(CATALOG3, "ui.msgSessionClosedDetail", {
+      this.formMsg = row ? erplora3().t(CATALOG4, "ui.msgSessionClosedDetail", {
         session: row.session_number,
         expected: this.fmt(row.expected_balance),
         counted: this.fmt(row.closing_balance),
         difference: this.fmt(row.difference)
-      }) : erplora3().t(CATALOG3, "ui.msgSessionClosed");
+      }) : erplora3().t(CATALOG4, "ui.msgSessionClosed");
     } catch (e6) {
       this.formError = domainMessage(e6, "ui.errCloseSession");
     } finally {
@@ -5277,9 +5446,16 @@ var ErpCashRegisterDashboard = class extends i3 {
   async addMovement(ev) {
     ev.preventDefault();
     if (!this.target || !this.movAmount) return;
-    const amount = Math.abs(toMinorUnits(this.movAmount));
+    const read = readMoneyField(this.movAmount);
+    if (!read.ok) {
+      this.formMsg = "";
+      this.formError = read.message;
+      return;
+    }
+    const amount = read.minor ?? 0;
     if (amount <= 0) {
-      this.formError = erplora3().t(CATALOG3, "ui.errInvalidAmount");
+      this.formMsg = "";
+      this.formError = erplora3().t(CATALOG4, "ui.errInvalidAmount");
       return;
     }
     this.saving = true;
@@ -5294,7 +5470,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         sale_reference: "",
         description: this.movDescription.trim()
       });
-      const msg = erplora3().t(CATALOG3, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
+      const msg = erplora3().t(CATALOG4, this.movType === "in" ? "ui.msgMovementIn" : "ui.msgMovementOut", {
         amount: erplora3().formatMoney(amount)
         // minor units in, hub currency out
       });
@@ -5330,7 +5506,10 @@ var ErpCashRegisterDashboard = class extends i3 {
    *  its decimals, or the total typed by hand when there is no breakdown (`null` = not an amount). */
   countTotalMinor() {
     const table = this.denominations();
-    if (!table) return parseCountedCash(this.countTotalInput);
+    if (!table) {
+      const read = readMoneyField(this.countTotalInput);
+      return read.ok ? read.minor : null;
+    }
     const counts = {};
     for (const k2 of [...table.bills, ...table.coins]) counts[k2] = this.denomCounts[k2] ?? "";
     return countTotalMinor(counts, currencyDecimals());
@@ -5359,25 +5538,25 @@ var ErpCashRegisterDashboard = class extends i3 {
       this.countNotes = "";
       this.resetPanel();
       if (wasClosingCount) this.openPanel("close", session);
-      this.formMsg = erplora3().t(CATALOG3, "ui.msgCountAdded", { total: erplora3().formatMoney(total) });
+      this.formMsg = erplora3().t(CATALOG4, "ui.msgCountAdded", { total: erplora3().formatMoney(total) });
     } catch (e6) {
-      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errAddCount");
+      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG4, "ui.errAddCount");
     } finally {
       this.saving = false;
     }
   }
   renderOpenPanel() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return b2`<section class="panel">
-      <h3>${t5("ui.openSessionTitle")}</h3>
+      <h3>${t6("ui.openSessionTitle")}</h3>
       <form data-testid="cash-register-open-form" class="form" @submit=${(e6) => this.openSession(e6)}>
-        <ion-select data-testid="cash-register-open-register" fill="outline" mode="md" label=${t5("ui.labelRegister")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
+        <ion-select data-testid="cash-register-open-register" fill="outline" mode="md" label=${t6("ui.labelRegister")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.openRegisterId} @ionChange=${(e6) => this.openRegisterId = e6.target.value}>
           ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
         </ion-select>
-        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-open-notes" fill="outline" mode="md" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
-        <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t5("ui.opening") : t5("ui.openSession")}</ion-button>
-        <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+        <ion-input data-testid="cash-register-open-balance" fill="outline" mode="md" type="text" inputmode="decimal" label=${t6("ui.labelOpeningBalance")} label-placement="floating" .value=${this.openBalance} @ionInput=${(e6) => this.openBalance = e6.target.value} @ionBlur=${() => this.openBalance = normaliseMoneyField(this.openBalance)}></ion-input>
+        <ion-input data-testid="cash-register-open-notes" fill="outline" mode="md" label=${t6("ui.labelNotes")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.openNotes} @ionInput=${(e6) => this.openNotes = e6.target.value}></ion-input>
+        <ion-button data-testid="cash-register-open-submit" type="submit" ?disabled=${this.saving}>${this.saving ? t6("ui.opening") : t6("ui.openSession")}</ion-button>
+        <ion-button data-testid="cash-register-open-cancel" fill="outline" @click=${() => this.resetPanel()}>${t6("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
@@ -5386,25 +5565,25 @@ var ErpCashRegisterDashboard = class extends i3 {
    *  Sin nada pendiente NO pinta nada — el criterio es que un turno limpio no gane ni un paso ni
    *  una línea de ruido. */
   renderShiftReview() {
-    const t5 = (k2, p4) => erplora3().t(CATALOG3, k2, p4);
+    const t6 = (k2, p4) => erplora3().t(CATALOG4, k2, p4);
     if (this.shiftReviewLoading) {
-      return b2`<p data-testid="cash-register-close-review-checking" class="review-checking">${t5("ui.shiftReviewChecking")}</p>`;
+      return b2`<p data-testid="cash-register-close-review-checking" class="review-checking">${t6("ui.shiftReviewChecking")}</p>`;
     }
     const review = this.shiftReview;
     if (!review) return A;
     if (!hasPendingWork(review)) {
-      return review.incomplete ? b2`<ok-inline-feedback data-testid="cash-register-close-review-unavailable" class="review-box" tone="neutral" icon="help-circle-outline">${t5("ui.shiftReviewUnavailable")}</ok-inline-feedback>` : A;
+      return review.incomplete ? b2`<ok-inline-feedback data-testid="cash-register-close-review-unavailable" class="review-box" tone="neutral" icon="help-circle-outline">${t6("ui.shiftReviewUnavailable")}</ok-inline-feedback>` : A;
     }
-    return b2`<ok-inline-feedback data-testid="cash-register-close-review" class="review-box" tone="warning" icon="alert-circle-outline" heading=${t5("ui.shiftReviewTitle")}>
+    return b2`<ok-inline-feedback data-testid="cash-register-close-review" class="review-box" tone="warning" icon="alert-circle-outline" heading=${t6("ui.shiftReviewTitle")}>
       <ul class="review">
         ${review.liveOrders > 0 ? b2`<li>
-              ${t5("ui.shiftReviewOrders", { count: review.liveOrders })}
+              ${t6("ui.shiftReviewOrders", { count: review.liveOrders })}
               <span class="review-list">${review.orderLabels.join(" \xB7 ")}</span>
             </li>` : A}
-        ${review.pendingPrintJobs > 0 ? b2`<li>${t5("ui.shiftReviewPrints", { count: review.pendingPrintJobs, stations: review.printRoles.join(" \xB7 ") })}</li>` : A}
-        ${review.incomplete ? b2`<li>${t5("ui.shiftReviewUnavailable")}</li>` : A}
+        ${review.pendingPrintJobs > 0 ? b2`<li>${t6("ui.shiftReviewPrints", { count: review.pendingPrintJobs, stations: review.printRoles.join(" \xB7 ") })}</li>` : A}
+        ${review.incomplete ? b2`<li>${t6("ui.shiftReviewUnavailable")}</li>` : A}
       </ul>
-      ${this.closeAcknowledged ? b2`<p data-testid="cash-register-close-review-confirm" class="review-confirm">${t5("ui.shiftReviewConfirm")}</p>` : A}
+      ${this.closeAcknowledged ? b2`<p data-testid="cash-register-close-review-confirm" class="review-confirm">${t6("ui.shiftReviewConfirm")}</p>` : A}
     </ok-inline-feedback>`;
   }
   /** Céntimos → dinero CON SIGNO explícito: «+5,10 €» sobra, «-4,90 €» falta (0 no lleva signo).
@@ -5417,39 +5596,40 @@ var ErpCashRegisterDashboard = class extends i3 {
   /** Esperado + diferencia en vivo, o nada. Vacío cuando el servidor no dio el número (arqueo
    *  ciego, otro turno, lectura fallida): la diferencia REVELA el esperado, así que se va con él. */
   get closeReconcileItems() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     const expected = this.expectedForClose;
     if (expected == null) return [];
-    const counted = parseCountedCash(this.closeBalance);
+    const read = readMoneyField(this.closeBalance);
+    const counted = read.ok ? read.minor : null;
     return [
-      { label: t5("ui.labelExpectedInDrawer"), value: this.fmt(expected) },
-      { label: t5("ui.colDifference"), value: counted == null ? "\u2014" : this.signedMoney(counted - expected) }
+      { label: t6("ui.labelExpectedInDrawer"), value: this.fmt(expected) },
+      { label: t6("ui.colDifference"), value: counted == null ? "\u2014" : this.signedMoney(counted - expected) }
     ];
   }
   renderClosePanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     const reconcile = this.closeReconcileItems;
-    const closeLabel = this.saving ? t5("ui.closing") : this.closeAcknowledged ? t5("ui.closeAnyway") : t5("ui.closeSession");
+    const closeLabel = this.saving ? t6("ui.closing") : this.closeAcknowledged ? t6("ui.closeAnyway") : t6("ui.closeSession");
     return b2`<section class="panel">
-      <h3>${t5("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
+      <h3>${t6("ui.closeSessionTitle")} · ${this.target.session_number}</h3>
       ${this.renderShiftReview()}
       ${reconcile.length ? b2`<ok-detail-list data-testid="cash-register-close-expected" columns="2" dense .items=${reconcile}></ok-detail-list>` : A}
       <form data-testid="cash-register-close-form" class="form" @submit=${(e6) => this.closeSession(e6)}>
-        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-close-notes" fill="outline" mode="md" label=${t5("ui.labelClosingNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
+        <ion-input data-testid="cash-register-close-counted" fill="outline" mode="md" type="text" inputmode="decimal" label=${t6("ui.labelCountedCash")} label-placement="floating" .value=${this.closeBalance} @ionInput=${(e6) => this.closeBalance = e6.target.value} @ionBlur=${() => this.closeBalance = normaliseMoneyField(this.closeBalance)}></ion-input>
+        <ion-input data-testid="cash-register-close-notes" fill="outline" mode="md" label=${t6("ui.labelClosingNotes")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.closeNotes} @ionInput=${(e6) => this.closeNotes = e6.target.value}></ion-input>
         <ion-button data-testid="cash-register-close-submit" type="submit" ?disabled=${this.saving}>${closeLabel}</ion-button>
-        <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+        <ion-button data-testid="cash-register-close-cancel" fill="outline" @click=${() => this.resetPanel()}>${t6("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderMovementPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return b2`<section class="panel">
-      <h3>${t5("ui.movementTitle")} · ${this.target.session_number}</h3>
+      <h3>${t6("ui.movementTitle")} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-movement-form" class="form" @submit=${(e6) => this.addMovement(e6)}>
-        <ion-select data-testid="cash-register-movement-type" fill="outline" mode="md" label=${t5("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
+        <ion-select data-testid="cash-register-movement-type" fill="outline" mode="md" label=${t6("ui.labelType")} label-placement="floating" .value=${this.movType} @ionChange=${(e6) => this.movType = e6.target.value}>
           ${/* Mismo catálogo que las tablas (cash_register#50): el desplegable ya decía
         «Entrada»/«Salida» mientras la columna TIPO imprimía `in`/`out`, dos fuentes para el
         mismo enum. El formulario ofrece el dominio OPERATIVO —lo que una persona mete o
@@ -5459,63 +5639,66 @@ var ErpCashRegisterDashboard = class extends i3 {
       (o8) => b2`<ion-select-option value=${o8.value}>${o8.label}</ion-select-option>`
     )}
         </ion-select>
-        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value}></ion-input>
-        <ion-input data-testid="cash-register-movement-concept" fill="outline" mode="md" label=${t5("ui.labelConcept")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
-        <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t5("ui.saving") : t5("ui.register")}</ion-button>
-        <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+        <ion-input data-testid="cash-register-movement-amount" fill="outline" mode="md" type="text" inputmode="decimal" label=${t6("ui.labelAmount")} label-placement="floating" .value=${this.movAmount} @ionInput=${(e6) => this.movAmount = e6.target.value} @ionBlur=${() => this.movAmount = normaliseMoneyField(this.movAmount)}></ion-input>
+        <ion-input data-testid="cash-register-movement-concept" fill="outline" mode="md" label=${t6("ui.labelConcept")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.movDescription} @ionInput=${(e6) => this.movDescription = e6.target.value}></ion-input>
+        <ion-button data-testid="cash-register-movement-submit" type="submit" ?disabled=${this.saving || !this.movAmount}>${this.saving ? t6("ui.saving") : t6("ui.register")}</ion-button>
+        <ion-button data-testid="cash-register-movement-cancel" fill="outline" @click=${() => this.resetPanel()}>${t6("ui.cancel")}</ion-button>
       </form>
     </section>`;
   }
   renderCountPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     const table = this.denominations();
     const total = this.countTotalMinor();
+    const typedTotal = table ? null : readMoneyField(this.countTotalInput);
+    const totalRefusal = typedTotal && !typedTotal.ok ? typedTotal.message : "";
     const denomInput = (k2) => b2`<ion-input data-testid=${`cash-register-count-denom-${k2}`} fill="outline" mode="md" type="number" label=${denominationLabel(k2)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k2] ?? ""} @ionInput=${(e6) => this.denomCounts = { ...this.denomCounts, [k2]: e6.target.value }}></ion-input>`;
     return b2`<section class="panel">
-      <h3>${t5("ui.countTitle")} · ${this.target.session_number}</h3>
+      <h3>${t6("ui.countTitle")} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-count-form" @submit=${(e6) => this.addCount(e6)}>
         <div class="form">
-          <ion-select data-testid="cash-register-count-type" fill="outline" mode="md" label=${t5("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
-            <ion-select-option value="opening">${t5("ui.countOpening")}</ion-select-option>
-            <ion-select-option value="closing">${t5("ui.countClosing")}</ion-select-option>
+          <ion-select data-testid="cash-register-count-type" fill="outline" mode="md" label=${t6("ui.labelCountType")} label-placement="floating" .value=${this.countType} @ionChange=${(e6) => this.countType = e6.target.value}>
+            <ion-select-option value="opening">${t6("ui.countOpening")}</ion-select-option>
+            <ion-select-option value="closing">${t6("ui.countClosing")}</ion-select-option>
           </ion-select>
-          <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t5("ui.labelNotes")} label-placement="floating" placeholder=${t5("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
+          <ion-input data-testid="cash-register-count-notes" fill="outline" mode="md" label=${t6("ui.labelNotes")} label-placement="floating" placeholder=${t6("ui.optional")} .value=${this.countNotes} @ionInput=${(e6) => this.countNotes = e6.target.value}></ion-input>
         </div>
-        ${table ? b2`<h3>${t5("ui.bills")}</h3>
+        ${table ? b2`<h3>${t6("ui.bills")}</h3>
               <div class="denoms">${table.bills.map(denomInput)}</div>
-              <h3>${t5("ui.coins")}</h3>
+              <h3>${t6("ui.coins")}</h3>
               <div class="denoms">${table.coins.map(denomInput)}</div>
-              <p data-testid="cash-register-count-total" class="total">${t5("ui.totalCounted")}: ${erplora3().formatMoney(total ?? 0)}</p>` : b2`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora3().t(CATALOG3, "ui.countNoBreakdown", { currency: erplora3().currency })}</p>
+              <p data-testid="cash-register-count-total" class="total">${t6("ui.totalCounted")}: ${erplora3().formatMoney(total ?? 0)}</p>` : b2`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora3().t(CATALOG4, "ui.countNoBreakdown", { currency: erplora3().currency })}</p>
               <div class="form">
-                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t5("ui.countTotalInput")} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e6) => this.countTotalInput = e6.target.value ?? ""}></ion-input>
+                <ion-input data-testid="cash-register-count-total-input" fill="outline" mode="md" type="text" inputmode="decimal" label=${t6("ui.countTotalInput")} label-placement="floating" .value=${this.countTotalInput} @ionInput=${(e6) => this.countTotalInput = e6.target.value ?? ""} @ionBlur=${() => this.countTotalInput = normaliseMoneyField(this.countTotalInput)}></ion-input>
+                ${totalRefusal ? b2`<ok-inline-feedback data-testid="cash-register-count-total-error" tone="danger" icon="alert-circle-outline">${totalRefusal}</ok-inline-feedback>` : A}
               </div>`}
         <div class="form">
-          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving || total === null}>${this.saving ? t5("ui.saving") : t5("ui.registerCount")}</ion-button>
-          <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.cancel")}</ion-button>
+          <ion-button data-testid="cash-register-count-submit" type="submit" ?disabled=${this.saving || total === null}>${this.saving ? t6("ui.saving") : t6("ui.registerCount")}</ion-button>
+          <ion-button data-testid="cash-register-count-cancel" fill="outline" @click=${() => this.resetPanel()}>${t6("ui.cancel")}</ion-button>
         </div>
       </form>
     </section>`;
   }
   renderDetailPanel() {
     if (!this.target) return A;
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return b2`<section class="panel">
       <erp-cashregister-session-detail .session=${this.target}></erp-cashregister-session-detail>
-      <div class="form"><ion-button data-testid="cash-register-detail-back" fill="outline" @click=${() => this.resetPanel()}>${t5("ui.back")}</ion-button></div>
+      <div class="form"><ion-button data-testid="cash-register-detail-back" fill="outline" @click=${() => this.resetPanel()}>${t6("ui.back")}</ion-button></div>
     </section>`;
   }
   render() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return b2`<div>
         <header>
-          <h2>${t5("ui.title")}</h2>
-          <ion-button data-testid="cash-register-new-session" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t5("ui.errSessionAlreadyOpen") : ""} @click=${() => {
+          <h2>${t6("ui.title")}</h2>
+          <ion-button data-testid="cash-register-new-session" ?disabled=${this.hasOpenSession} title=${this.hasOpenSession ? t6("ui.errSessionAlreadyOpen") : ""} @click=${() => {
       this.panel = this.panel === "open" ? null : "open";
       this.target = null;
       this.formError = "";
       this.formMsg = "";
-    }}>${t5("ui.openSession")}</ion-button>
+    }}>${t6("ui.openSession")}</ion-button>
         </header>
         ${this.panel === "open" ? this.renderOpenPanel() : A}
         ${this.panel === "close" ? this.renderClosePanel() : A}
@@ -5527,7 +5710,7 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t6("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t6("ui.loading") : t6("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -5606,7 +5789,7 @@ __decorateClass([
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
 // ui/components/erp-cashregister-open/erp-cashregister-open.ts
-var CATALOG4 = { es: es_default, en: en_default };
+var CATALOG5 = { es: es_default, en: en_default };
 function erplora4() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -5652,7 +5835,12 @@ var ErpCashregisterOpen = class extends i3 {
   }
   async openSession() {
     if (this.registers.length > 1 && !this.registerId) {
-      this.error = erplora4().t(CATALOG4, "ui.labelRegister");
+      this.error = erplora4().t(CATALOG5, "ui.labelRegister");
+      return;
+    }
+    const opening = readMoneyField(this.balance);
+    if (!opening.ok) {
+      this.error = opening.message;
       return;
     }
     this.saving = true;
@@ -5661,26 +5849,27 @@ var ErpCashregisterOpen = class extends i3 {
       await erplora4().command("cash_register.session.open", {
         register_id: this.registerId || null,
         // In the hub currency's scale, not a fixed ×100 (cash_register#106): in JPY «1000» is 1000.
-        opening_balance: toMinorUnits(this.balance),
+        // Empty is a float of 0 — an empty drawer is a legitimate start.
+        opening_balance: opening.minor ?? 0,
         opening_notes: this.notes
       });
     } catch (e6) {
       const code = e6?.code;
-      this.error = code === "cash_register.session_already_open" ? erplora4().t(CATALOG4, "ui.errSessionAlreadyOpen") : e6 instanceof Error ? e6.message : erplora4().t(CATALOG4, "ui.errOpenSession");
+      this.error = code === "cash_register.session_already_open" ? erplora4().t(CATALOG5, "ui.errSessionAlreadyOpen") : e6 instanceof Error ? e6.message : erplora4().t(CATALOG5, "ui.errOpenSession");
     } finally {
       this.saving = false;
     }
   }
   render() {
-    const t5 = (k2) => erplora4().t(CATALOG4, k2);
+    const t6 = (k2) => erplora4().t(CATALOG5, k2);
     return b2`
       <div class="card">
         <ion-icon class="ico" name="cash-outline"></ion-icon>
-        <h2>${t5("ui.openSessionTitle")}</h2>
-        <p class="sub">${t5("ui.subOpenToContinue")}</p>
+        <h2>${t6("ui.openSessionTitle")}</h2>
+        <p class="sub">${t6("ui.subOpenToContinue")}</p>
 
         <div class="form">
-          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" label=${t5("ui.labelRegister")} label-placement="floating" fill="outline" mode="md"
+          ${this.registers.length > 1 ? b2`<ion-select data-testid="cash-register-opening-register" label=${t6("ui.labelRegister")} label-placement="floating" fill="outline" mode="md"
                 .value=${this.registerId}
                 @ionChange=${(e6) => {
       this.registerId = e6.target.value;
@@ -5688,22 +5877,27 @@ var ErpCashregisterOpen = class extends i3 {
                 ${this.registers.map((r6) => b2`<ion-select-option value=${r6.id}>${r6.name}</ion-select-option>`)}
               </ion-select>` : A}
 
-          <ion-input data-testid="cash-register-opening-balance" type="number" min="0" step=${amountStep()}
-            label=${t5("ui.labelOpeningBalance")} label-placement="floating" fill="outline" mode="md"
+          <!-- Text + decimal keypad, never type="number": a real browser DROPS a pasted «1.250,50»
+               in a number field and the till opened with 0 (pm#521). -->
+          <ion-input data-testid="cash-register-opening-balance" type="text" inputmode="decimal"
+            label=${t6("ui.labelOpeningBalance")} label-placement="floating" fill="outline" mode="md"
             .value=${this.balance}
             @ionInput=${(e6) => {
       this.balance = e6.target.value;
+    }}
+            @ionBlur=${() => {
+      this.balance = normaliseMoneyField(this.balance);
     }}></ion-input>
 
-          <ion-input data-testid="cash-register-opening-notes" label=${t5("ui.labelNotes")} label-placement="floating" fill="outline" mode="md"
-            placeholder=${t5("ui.optional")} .value=${this.notes}
+          <ion-input data-testid="cash-register-opening-notes" label=${t6("ui.labelNotes")} label-placement="floating" fill="outline" mode="md"
+            placeholder=${t6("ui.optional")} .value=${this.notes}
             @ionInput=${(e6) => {
       this.notes = e6.target.value;
     }}></ion-input>
 
           <ion-button data-testid="cash-register-opening-submit" class="open-session" expand="block" ?disabled=${this.saving}
             @click=${() => void this.openSession()}>
-            ${this.saving ? t5("ui.opening") : t5("ui.openSession")}
+            ${this.saving ? t6("ui.opening") : t6("ui.openSession")}
           </ion-button>
 
           ${this.error ? b2`<p data-testid="cash-register-opening-error" class="error">${this.error}</p>` : A}
