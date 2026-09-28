@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
@@ -112,7 +113,10 @@ export class ErpCashRegisterDashboard extends LitElement {
       --background-hover: var(--ion-color-danger-tint, #cb1a27);
       --color: var(--ion-color-danger-contrast, #fff);
     }
-    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(5.5rem, 1fr)); gap:.75rem; margin:.5rem 0; }
+    /* Each box is as wide as the longest label of the table needs (--denom-chars, set in render), never
+       narrower than the 5.5rem that keeps the euro drawer in three columns on a phone: a fixed 5.5rem cut
+       «1.000,00 SEK» and «20,000 KWD» on every viewport (cash_register#114). */
+    .denoms { display:grid; grid-template-columns:repeat(auto-fill, minmax(max(5.5rem, calc(var(--denom-chars, 0) * 1ch + 2rem)), 1fr)); gap:.75rem; margin:.5rem 0; }
     /* The painted (md) box pads 16px a side; in a 5.5rem cell that truncates «500,00 €» before anything is
        typed. Ionic sets the padding on .sc-ion-input-md-h.input-fill-outline (two classes), so the override
        needs the same class to win. No backticks in here: this comment lives inside the css tagged template. */
@@ -782,6 +786,10 @@ export class ErpCashRegisterDashboard extends LitElement {
     // handler, which scales it with the hub currency (cash_register#111); only what the person reads
     // is formatted.
     const denomInput = (k: string) => html`<ion-input data-testid=${`cash-register-count-denom-${k}`} fill="outline" mode="md" type="number" label=${denominationLabel(k)} label-placement="floating" min="0" step="1" .value=${this.denomCounts[k] ?? ''} @ionInput=${(e: any) => (this.denomCounts = { ...this.denomCounts, [k]: e.target.value })}></ion-input>`;
+    // The longest label of the table sizes every box, so both grids keep one column width.
+    const denomChars = table ? Math.max(...[...table.bills, ...table.coins].map((k) => [...denominationLabel(k)].length)) : 0;
+    // styleMap writes through the CSSOM, which a strict style-src CSP does not block (a style attribute it would).
+    const gridWidth = styleMap({ '--denom-chars': String(denomChars) });
     return html`<section class="panel">
       <h3>${t('ui.countTitle')} · ${this.target.session_number}</h3>
       <form data-testid="cash-register-count-form" @submit=${(e: Event) => this.addCount(e)}>
@@ -794,9 +802,9 @@ export class ErpCashRegisterDashboard extends LitElement {
         </div>
         ${table
           ? html`<h3>${t('ui.bills')}</h3>
-              <div class="denoms">${table.bills.map(denomInput)}</div>
+              <div class="denoms" style=${gridWidth}>${table.bills.map(denomInput)}</div>
               <h3>${t('ui.coins')}</h3>
-              <div class="denoms">${table.coins.map(denomInput)}</div>
+              <div class="denoms" style=${gridWidth}>${table.coins.map(denomInput)}</div>
               <p data-testid="cash-register-count-total" class="total">${t('ui.totalCounted')}: ${erplora().formatMoney(total ?? 0)}</p>`
           : html`<p data-testid="cash-register-count-no-breakdown" class="hint">${erplora().t(CATALOG, 'ui.countNoBreakdown', { currency: erplora().currency })}</p>
               <div class="form">
