@@ -127,6 +127,15 @@ describe('the count adds up with the hub currency scale, on screen and in what i
     expect(shown?.trim()).toBe('ui.totalCounted: 5.00 EUR');
     expect(sent?.denominations).toEqual({ bills: { '5': 1 }, coins: {} });
   });
+
+  it('a fractional count («2.5» notes) is the whole pieces the server stores, on screen too', async () => {
+    // The handler truncates each count to whole pieces; the screen and the confirmation must quote
+    // that same total, not 2.5 × 10 € = 25 € for a count stored as 20 €.
+    const { el, shown, sent } = await run('EUR', 2, { '10': '2.5' });
+    expect(shown?.trim()).toBe('ui.totalCounted: 20.00 EUR');
+    expect(sent?.denominations).toEqual({ bills: { '10': 2 }, coins: {} });
+    expect(el.formMsg).toContain('20.00 EUR');
+  });
 });
 
 describe('a currency without a denomination table: no breakdown, the total is typed', () => {

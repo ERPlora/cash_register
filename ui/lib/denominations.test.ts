@@ -77,4 +77,9 @@ describe('the count adds up in integer minor units with the hub scale', () => {
   it('blank, negative or non-numeric counts add nothing', () => {
     expect(countTotalMinor({ '10': '', '5': 'abc', '1': '-2', '2': '1' }, 2)).toBe(200);
   });
+
+  it('a fractional count is whole pieces, as the server truncates it', () => {
+    expect(countTotalMinor({ '1': '2.5' }, 2)).toBe(200);
+    expect(countTotalMinor({ '1000': '1.9' }, 0)).toBe(1000);
+  });
 });
