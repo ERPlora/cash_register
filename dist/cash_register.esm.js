@@ -3895,6 +3895,11 @@ function toMicro(quantity) {
 }
 
 // @erplora/module-sdk/src/index.ts
+function dataTableShowsLoadError() {
+  const registry = globalThis.customElements;
+  const table = registry?.get("ok-data-table");
+  return !!table && "error" in table.prototype;
+}
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -3947,17 +3952,22 @@ var ListController = class {
   get pageCount() {
     return Math.max(1, Math.ceil(this.total / this.state.pageSize));
   }
-  /** (Re)carga la página actual desde el servidor. */
+  /**
+   * (Re)loads the current page from the server. On a phone, after «Load more» (hub#2365), the
+   * current page is everything shown so far: a refresh brings back pages 0..page in one request.
+   */
   async load() {
     const s5 = this.state;
     const mySeq = ++this.seq;
+    const paging = mobilePagingOf(this);
+    const window2 = nextListWindow(paging, s5);
     this.loading = true;
     this.error = "";
     this.onChange();
     try {
       const page = await this.client.queryPage(this.queryName, {
-        limit: s5.pageSize,
-        offset: s5.page * s5.pageSize,
+        limit: window2.limit,
+        offset: window2.offset,
         search: s5.search,
         sort: s5.sort,
         dir: s5.dir,
@@ -3965,13 +3975,19 @@ var ListController = class {
         params: s5.context
       });
       if (mySeq !== this.seq) return;
-      this.rows = page.rows ?? [];
+      const rows2 = page.rows ?? [];
+      this.rows = window2.append ? [...this.rows, ...rows2] : rows2;
       this.total = page.total ?? this.rows.length;
+      if (window2.growsTo !== void 0) {
+        s5.page = window2.growsTo;
+        keepAccumulating(paging, () => void this.load());
+      }
     } catch (e6) {
       if (mySeq !== this.seq) return;
       this.rows = [];
       this.total = 0;
-      this.error = e6 instanceof Error ? e6.message : "Error cargando datos";
+      const reason = e6 instanceof Error ? e6.message.trim() : "";
+      this.error = reason || listLoadFailedMessage(activeLocale());
     } finally {
       if (mySeq === this.seq) {
         this.loading = false;
@@ -3979,8 +3995,19 @@ var ListController = class {
       }
     }
   }
+  /**
+   * Goes to `page`. On a phone `<ok-data-table>` has no pager, only «Load more», which asks for
+   * `page + 1`: that one is ADDED under the rows already shown (hub#2365). Any other jump replaces.
+   */
   setPage(page) {
-    this.state.page = Math.max(0, page);
+    const next = Math.max(0, page);
+    const paging = mobilePagingOf(this);
+    if (next === this.state.page + 1 && phoneViewport()?.matches) {
+      paging.growNext = true;
+    } else {
+      stopAccumulating(paging);
+      this.state.page = next;
+    }
     void this.load();
   }
   setSort(sort, dir) {
@@ -4030,6 +4057,53 @@ var ListController = class {
     void this.load();
   }
 };
+var PHONE_MEDIA = "(max-width: 640px)";
+function phoneViewport() {
+  const matchMedia = globalThis.matchMedia;
+  return typeof matchMedia === "function" ? matchMedia(PHONE_MEDIA) : null;
+}
+var mobilePaging = /* @__PURE__ */ new WeakMap();
+function mobilePagingOf(ctrl) {
+  let paging = mobilePaging.get(ctrl);
+  if (!paging) {
+    paging = { accumulated: false, growNext: false };
+    mobilePaging.set(ctrl, paging);
+  }
+  return paging;
+}
+function nextListWindow(paging, s5) {
+  const size = s5.pageSize;
+  const grow = paging.growNext;
+  paging.growNext = false;
+  if (grow) {
+    const target = s5.page + 1;
+    if (paging.accumulated || s5.page === 0) {
+      return { offset: target * size, limit: size, append: true, growsTo: target };
+    }
+    return { offset: 0, limit: (target + 1) * size, append: false, growsTo: target };
+  }
+  if (s5.page === 0) stopAccumulating(paging);
+  if (paging.accumulated) return { offset: 0, limit: (s5.page + 1) * size, append: false };
+  return { offset: s5.page * size, limit: size, append: false };
+}
+function keepAccumulating(paging, reload) {
+  paging.accumulated = true;
+  if (paging.unwatch) return;
+  const viewport = phoneViewport();
+  if (!viewport?.addEventListener) return;
+  const onChange = (e6) => {
+    if (e6.matches) return;
+    stopAccumulating(paging);
+    reload();
+  };
+  viewport.addEventListener("change", onChange);
+  paging.unwatch = () => viewport.removeEventListener?.("change", onChange);
+}
+function stopAccumulating(paging) {
+  paging.accumulated = false;
+  paging.unwatch?.();
+  paging.unwatch = void 0;
+}
 function scaleFilterEdge(edge, scale) {
   const text2 = typeof edge === "string" ? edge.trim().replace(",", ".") : edge;
   if (text2 === "" || text2 === null || text2 === void 0) return "";
@@ -4044,6 +4118,11 @@ function scaleFilterValue(value, scale) {
   }
   return scaleFilterEdge(value, scale);
 }
+var LIST_LOAD_FAILED_EN = "The hub did not return the data.";
+var LIST_LOAD_FAILED_ES = "El hub no ha devuelto los datos.";
+function listLoadFailedMessage(locale) {
+  return locale.toLowerCase().startsWith("en") ? LIST_LOAD_FAILED_EN : LIST_LOAD_FAILED_ES;
+}
 function createListController(client2, queryName, onChange = () => {
 }, opts = {}) {
   return new ListController(client2, queryName, onChange, opts);
@@ -4057,6 +4136,13 @@ var ErploraError = class extends Error {
     this.name = "ErploraError";
   }
 };
+function activeLocale() {
+  try {
+    return localStorage.getItem("erplora.locale") || "es";
+  } catch {
+    return "es";
+  }
+}
 function majorToMinor(amount, decimals) {
   const n6 = Number(amount);
   return Number.isFinite(n6) ? Math.round(n6 * 10 ** decimals) : 0;
@@ -4633,16 +4719,7 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   async load() {
     const session = this.session;
     if (!session) return;
-    this.error = "";
     this.summary = null;
-    try {
-      const sdk = erplora2();
-      const canSeeExpected = typeof sdk.hasPermission === "function" && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
-      const rows2 = canSeeExpected ? await sdk.query("cash_register.session.summary.expected", { session_id: session.id }) : await sdk.query("cash_register.session.summary", { session_id: session.id });
-      this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
-    } catch (e6) {
-      this.error = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errLoadDetail");
-    }
     this.movements = createListController(erplora2(), "cash_register.movements.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "created_at",
@@ -4655,8 +4732,23 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       dir: "asc",
       context: { session_id: session.id }
     });
-    await Promise.all([this.movements.load(), this.counts.load()]);
+    await Promise.all([this.loadSummary(), this.movements.load(), this.counts.load()]);
     this.requestUpdate();
+  }
+  /** The figures of the session. Also what a list's Retry asks again (pm#533): the same outage that
+   *  emptied the list left the summary with its «could not load». */
+  async loadSummary() {
+    const session = this.session;
+    if (!session) return;
+    this.error = "";
+    try {
+      const sdk = erplora2();
+      const canSeeExpected = typeof sdk.hasPermission === "function" && sdk.hasPermission(VIEW_EXPECTED_TOTALS);
+      const rows2 = canSeeExpected ? await sdk.query("cash_register.session.summary.expected", { session_id: session.id }) : await sdk.query("cash_register.session.summary", { session_id: session.id });
+      this.summary = Array.isArray(rows2) && rows2.length ? rows2[0] : null;
+    } catch (e6) {
+      this.error = e6 instanceof Error ? e6.message : erplora2().t(CATALOG2, "ui.errLoadDetail");
+    }
   }
   fmt(n6) {
     return n6 == null ? "\u2014" : erplora2().formatMoney(Number(n6));
@@ -4724,7 +4816,8 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   renderMovements() {
     const ctrl = this.movements;
     if (!ctrl) return A;
-    return b2`<ok-data-table testid="cash-register-session-movements-table" .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return b2`${ctrl.error && !dataTableShowsLoadError() ? b2`<ok-inline-feedback data-testid="cash-register-session-movements-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : A}
+      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ""} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : erplora2().t(CATALOG2, "ui.noMovements")}
       @pageChange=${(e6) => ctrl.setPage(e6.detail)}
@@ -4733,7 +4826,8 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   renderCounts() {
     const ctrl = this.counts;
     if (!ctrl) return A;
-    return b2`<ok-data-table testid="cash-register-session-counts-table" .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return b2`${ctrl.error && !dataTableShowsLoadError() ? b2`<ok-inline-feedback data-testid="cash-register-session-counts-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : A}
+      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ""} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora2().t(CATALOG2, "ui.loading") : erplora2().t(CATALOG2, "ui.noCounts")}
       @pageChange=${(e6) => ctrl.setPage(e6.detail)}
@@ -5749,10 +5843,10 @@ var ErpCashRegisterDashboard = class extends i3 {
         ${this.panel === "detail" ? this.renderDetailPanel() : A}
         ${this.formMsg ? b2`<p data-testid="cash-register-form-msg" class="ok">${this.formMsg}</p>` : A}
         ${this.formError ? b2`<ok-inline-feedback data-testid="cash-register-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
-        ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
+        ${this.ctrl?.error && !dataTableShowsLoadError() ? b2`<ok-inline-feedback data-testid="cash-register-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <!-- The «detail» button is not the only door: rowClickable makes the whole row open the
              same panel (outfitkit#67) — on ANY session: a closed one is read-only, not invisible. -->
-        <ok-data-table testid="cash-register-table" .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t6("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t6("ui.loading") : t6("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
+        <ok-data-table testid="cash-register-table" .error=${this.ctrl?.error ?? ""} @retry=${() => Promise.all([this.ctrl?.load(), this.loadRegisters(), this.loadCurrentSession()])} .serverSide=${true} .columns=${this.columns} .views=${true} .cardTitle=${(r6) => String(r6.session_number ?? "\u2014")} .cardIcon=${() => "cash-outline"} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t6("ui.searchPlaceholder")} .emptyMessage=${this.ctrl?.loading ? t6("ui.loading") : t6("ui.noSessions")} .actions=${this.rowActions} .rowClickable=${true} @rowAction=${(e6) => this.onRowAction(e6)} @rowClick=${(e6) => this.openPanel("detail", e6.detail.row)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}></ok-data-table>
       </div>`;
   }
 };
