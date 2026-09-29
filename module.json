@@ -362,9 +362,7 @@
       "options": {
         "label": "Expected cash in drawer",
         "icon": "cash-outline",
-        "format": "currency",
-        "currency": "EUR",
-        "locale": "es-ES"
+        "format": "currency"
       }
     },
     "cash_register.recent_sessions": {
@@ -396,9 +394,7 @@
       },
       "options": {
         "valueFormat": "currency",
-        "valueDivisor": 100,
-        "currency": "EUR",
-        "locale": "es-ES"
+        "valueDivisor": 100
       }
     }
   },

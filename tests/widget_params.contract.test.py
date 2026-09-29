@@ -91,7 +91,9 @@ if recent.get("f_status") != "closed":
 # Money travels in minor units (ADR-0007). The shell divides a `kpi` currency by 100 itself, but a
 # `bar-list` hands the raw number to ok-bar-list unless the widget declares `valueDivisor`: a drawer
 # 5,00 € short would read «-500 €». Once the filter above started returning rows, that was the
-# next thing the manager saw.
+# next thing the manager saw. Since hub#2387 the shell scales a money bar-list by the minor unit of
+# the HUB currency and ignores `valueDivisor`, but hubs still on an older shell (euros only) read
+# it, so it stays; the panel itself pins no currency (cash_register#121), hence the EUR default.
 MINOR_UNITS = {"EUR": 100}
 for wid, w in sorted(widgets.items()):
     opts = w.get("options") or {}
