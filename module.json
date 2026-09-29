@@ -383,7 +383,7 @@
         "cash_register.session_closed"
       ],
       "params": {
-        "status": "closed",
+        "f_status": "closed",
         "sort": "closed_at",
         "dir": "desc",
         "limit": 8
@@ -393,7 +393,8 @@
         "value": "difference"
       },
       "options": {
-        "valueFormat": "currency"
+        "valueFormat": "currency",
+        "valueDivisor": 100
       }
     }
   },
