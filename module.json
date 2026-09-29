@@ -396,6 +396,7 @@
       },
       "options": {
         "valueFormat": "currency",
+        "valueDivisor": 100,
         "currency": "EUR",
         "locale": "es-ES"
       }

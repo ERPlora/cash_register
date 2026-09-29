@@ -88,6 +88,21 @@ if recent.get("f_status") != "closed":
         f"cash_register.recent_sessions: must ask for f_status=closed, asks {recent}"
     )
 
+# Money travels in minor units (ADR-0007). The shell divides a `kpi` currency by 100 itself, but a
+# `bar-list` hands the raw number to ok-bar-list unless the widget declares `valueDivisor`: a drawer
+# 5,00 € short would read «-500 €». Once the filter above started returning rows, that was the
+# next thing the manager saw.
+MINOR_UNITS = {"EUR": 100}
+for wid, w in sorted(widgets.items()):
+    opts = w.get("options") or {}
+    if w.get("kind") == "bar-list" and opts.get("valueFormat") == "currency":
+        scale = MINOR_UNITS.get(opts.get("currency", "EUR"))
+        if opts.get("valueDivisor") != scale:
+            errors.append(
+                f"{wid}: a currency bar-list must declare valueDivisor={scale} "
+                f"(amounts are minor units), declares {opts.get('valueDivisor')}"
+            )
+
 for e in errors:
     print("FAIL:", e)
 print(
