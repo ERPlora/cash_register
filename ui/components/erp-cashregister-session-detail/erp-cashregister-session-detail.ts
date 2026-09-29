@@ -5,7 +5,7 @@ import '@erplora/outfitkit/ok-detail-list';
 import '@erplora/outfitkit/ok-data-table';
 import '@erplora/outfitkit/ok-inline-feedback';
 import type { DataTableColumn, OkDetailItem } from '@erplora/outfitkit';
-import { createListController } from '@erplora/module-sdk';
+import { createListController, dataTableShowsLoadError } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
@@ -142,8 +142,25 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   async load(): Promise<void> {
     const session = this.session;
     if (!session) return;
-    this.error = '';
     this.summary = null;
+    // Both lists are server-side pages scoped by the session (`:session_id` is a context param of the
+    // base SQL, not a filter). A new session → new controllers (state and page reset).
+    this.movements = createListController<Movement>(erplora(), 'cash_register.movements.list', () => this.requestUpdate(), {
+      pageSize: 50, sort: 'created_at', dir: 'desc', context: { session_id: session.id },
+    });
+    this.counts = createListController<Count>(erplora(), 'cash_register.counts.list', () => this.requestUpdate(), {
+      pageSize: 50, sort: 'id', dir: 'asc', context: { session_id: session.id },
+    });
+    await Promise.all([this.loadSummary(), this.movements.load(), this.counts.load()]);
+    this.requestUpdate();
+  }
+
+  /** The figures of the session. Also what a list's Retry asks again (pm#533): the same outage that
+   *  emptied the list left the summary with its «could not load». */
+  private async loadSummary(): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    this.error = '';
     try {
       // cash_register#84: `session.summary` (view_session) gags the live expected of an OPEN session
       // when the hub counts blind — the cashier about to count must not read it here either. A
@@ -160,16 +177,6 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     } catch (e) {
       this.error = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errLoadDetail');
     }
-    // Both lists are server-side pages scoped by the session (`:session_id` is a context param of the
-    // base SQL, not a filter). A new session → new controllers (state and page reset).
-    this.movements = createListController<Movement>(erplora(), 'cash_register.movements.list', () => this.requestUpdate(), {
-      pageSize: 50, sort: 'created_at', dir: 'desc', context: { session_id: session.id },
-    });
-    this.counts = createListController<Count>(erplora(), 'cash_register.counts.list', () => this.requestUpdate(), {
-      pageSize: 50, sort: 'id', dir: 'asc', context: { session_id: session.id },
-    });
-    await Promise.all([this.movements.load(), this.counts.load()]);
-    this.requestUpdate();
   }
 
   private fmt(n: number | null | undefined): string {
@@ -238,7 +245,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private renderMovements() {
     const ctrl = this.movements;
     if (!ctrl) return nothing;
-    return html`<ok-data-table testid="cash-register-session-movements-table" .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-movements-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
+      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noMovements')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
@@ -248,7 +256,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private renderCounts() {
     const ctrl = this.counts;
     if (!ctrl) return nothing;
-    return html`<ok-data-table testid="cash-register-session-counts-table" .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+    return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-counts-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
+      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noCounts')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}

@@ -125,7 +125,7 @@ const COVERED: Record<
   // spec can read what the shift actually added up to — so its two tables are named apart.
   'components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts': {
     prefix: 'cash-register-session-',
-    contract: ['cash-register-session-error', 'cash-register-session-summary'],
+    contract: ['cash-register-session-counts-load-error', 'cash-register-session-error', 'cash-register-session-movements-load-error', 'cash-register-session-summary'],
     tables: ['cash-register-session-counts-table', 'cash-register-session-movements-table'],
   },
 };
