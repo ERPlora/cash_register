@@ -4552,7 +4552,7 @@ function majorToMinor(amount, decimals) {
   return Number.isFinite(n6) ? Math.round(n6 * 10 ** decimals) : 0;
 }
 
-// @erplora/module-cash_register/locales/es.json
+// locales/es.json
 var es_default = {
   name: "Caja",
   description: "Abre y cierra la caja, registra entradas y salidas de efectivo y cuadra el caj\xF3n al cerrar.",
@@ -4764,7 +4764,7 @@ var es_default = {
   }
 };
 
-// @erplora/module-cash_register/locales/en.json
+// locales/en.json
 var en_default = {
   name: "Cash Register",
   navigation: {
@@ -4964,7 +4964,7 @@ var en_default = {
   }
 };
 
-// @erplora/module-cash_register/ui/lib/enums.ts
+// ui/lib/enums.ts
 var CATALOG = { es: es_default, en: en_default };
 function erplora() {
   const c5 = globalThis.erplora;
@@ -5032,7 +5032,7 @@ function denominationLabel(denomination) {
   return client2.formatMoney(Math.round(major * 10 ** decimals), whole ? { maximumFractionDigits: 0 } : void 0);
 }
 
-// @erplora/module-cash_register/ui/lib/movement-concept.ts
+// ui/lib/movement-concept.ts
 var DOCUMENT_KEY = {
   invoice: "ui.conceptInvoice",
   receipt: "ui.conceptReceipt",
@@ -5068,7 +5068,7 @@ async function resolveSaleDocument(sdk, saleId) {
   return null;
 }
 
-// @erplora/module-cash_register/ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
+// ui/components/erp-cashregister-session-detail/erp-cashregister-session-detail.ts
 var CATALOG2 = { es: es_default, en: en_default };
 var VIEW_EXPECTED_TOTALS = "cash_register.view_expected_totals";
 function erplora2() {
@@ -5396,7 +5396,7 @@ function normaliseMoneyInput(typed, decimals, locale, currency) {
   return parsed.ok && parsed.minor !== null ? formatMoneyInput(parsed.minor, decimals, locale) : typed;
 }
 
-// @erplora/module-cash_register/ui/lib/money.ts
+// ui/lib/money.ts
 var CATALOG3 = { es: es_default, en: en_default };
 function client() {
   return globalThis.erplora ?? {};
@@ -5447,7 +5447,7 @@ function moneyFieldText(minor) {
   return formatMoneyInput(minor, currencyDecimals(), hubLocale());
 }
 
-// @erplora/module-cash_register/ui/lib/denominations.ts
+// ui/lib/denominations.ts
 var TABLES = {
   EUR: {
     bills: ["500", "200", "100", "50", "20", "10", "5"],
@@ -5537,7 +5537,7 @@ function countTotalMinor(counts, decimals) {
   return total;
 }
 
-// @erplora/module-cash_register/ui/lib/shift-review.ts
+// ui/lib/shift-review.ts
 var MAX_LISTED_ORDERS = 6;
 function toRows(answer) {
   if (Array.isArray(answer)) return answer;
@@ -5595,7 +5595,7 @@ async function readShiftReview(client2) {
   };
 }
 
-// @erplora/module-cash_register/ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
+// ui/components/erp-cashregister-dashboard/erp-cashregister-dashboard.ts
 var CATALOG4 = { es: es_default, en: en_default };
 function erplora3() {
   const c5 = globalThis.erplora;
@@ -6330,7 +6330,7 @@ __decorateClass([
 ], ErpCashRegisterDashboard.prototype, "hasOpenSession", 2);
 define("erp-cashregister-dashboard", ErpCashRegisterDashboard);
 
-// @erplora/module-cash_register/ui/components/erp-cashregister-open/erp-cashregister-open.ts
+// ui/components/erp-cashregister-open/erp-cashregister-open.ts
 var CATALOG5 = { es: es_default, en: en_default };
 function erplora4() {
   const c5 = globalThis.erplora;
