@@ -214,10 +214,18 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     ];
   }
 
+  /**
+   * Floor of the WHEN column in both lists. On a tablet the tracks share the width evenly: at
+   * 820 px the five movement columns got 138 px each while «10/01/2026, 01:34 AM» measures 142 px,
+   * so the English time lost its «AM» behind an ellipsis (cash_register#129). 9.5rem (152 px)
+   * holds the widest date and time the hub paints; the other columns keep the table's own floor.
+   */
+  private static readonly WHEN_WIDTH = 'minmax(9.5rem,1fr)';
+
   private get movementColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'created_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.created_at) },
+      { key: 'created_at', header: t('ui.colWhen'), sortable: true, width: ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r) => formatDateTime(r.created_at) },
       { key: 'movement_type', header: t('ui.labelType'), sortable: true, format: (r) => enumLabel(MOVEMENT_TYPE_KEY, r.movement_type) },
       { key: 'amount', header: t('ui.labelAmount'), align: 'right', sortable: true, format: (r) => this.fmt(r.amount as number) },
       { key: 'payment_method', header: t('ui.colMethod'), sortable: true, format: (r) => paymentMethodLabel(r.payment_method) },
@@ -229,7 +237,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private get countColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'counted_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.counted_at) },
+      { key: 'counted_at', header: t('ui.colWhen'), sortable: true, width: ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r) => formatDateTime(r.counted_at) },
       { key: 'count_type', header: t('ui.labelCountType'), sortable: true, format: (r) => enumLabel(COUNT_TYPE_KEY, r.count_type) },
       { key: 'total', header: t('ui.totalCounted'), align: 'right', sortable: true, format: (r) => this.fmt(r.total as number) },
       { key: 'notes', header: t('ui.labelNotes') },
