@@ -242,12 +242,16 @@ export class ErpCashRegisterSessionDetail extends LitElement {
    * from that one attribute (outfitkit#143), so a spec that asks for a movement row and a spec
    * that asks for a count row have to be asking two different questions. A shared namespace would
    * answer both with whichever table rendered first.
+   *
+   * Both turn into cards on a phone (`views`, like the sessions list of the dashboard): as a table
+   * the WHEN column was cut to the date and the time — what tells one count from another — was lost
+   * behind a sideways scroll (cash_register#129). The card is titled by that date and time.
    */
   private renderMovements() {
     const ctrl = this.movements;
     if (!ctrl) return nothing;
     return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-movements-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
-      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => formatDateTime(r.created_at)} .cardIcon=${() => 'swap-vertical-outline'} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noMovements')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
@@ -258,7 +262,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     const ctrl = this.counts;
     if (!ctrl) return nothing;
     return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-counts-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
-      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => formatDateTime(r.counted_at)} .cardIcon=${() => 'calculator-outline'} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noCounts')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
