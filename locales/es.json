@@ -61,6 +61,7 @@
     "noSessions": "Sin sesiones de caja.",
     "searchPlaceholder": "Buscar sesión…",
     "colSession": "Sesión",
+    "colOpenedAt": "Fecha de apertura",
     "colStatus": "Estado",
     "statusOpen": "Abierta",
     "statusClosed": "Cerrada",

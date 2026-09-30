@@ -16,7 +16,7 @@ import { countTotalMinor, denominationsFor, pieceCount, type DenominationTable }
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
-import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions } from '../../lib/enums';
+import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions, formatDateTime } from '../../lib/enums';
 // La revisión del turno (cash_register#68): qué queda a medias cuando se cierra el cajón. Vive en
 // su propio fichero porque es lógica pura —contar comandas vivas y trabajos encolados— y la
 // pantalla solo la pinta.
@@ -212,6 +212,8 @@ export class ErpCashRegisterDashboard extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text' },
+      // cash_register#127: the list's default order (newest first) needs a header to show it on.
+      { key: 'opened_at', header: t('ui.colOpenedAt'), sortable: true, format: (r) => formatDateTime(r.opened_at) },
       {
         key: 'status',
         header: t('ui.colStatus'),
@@ -254,8 +256,10 @@ export class ErpCashRegisterDashboard extends LitElement {
     window.addEventListener('erplora:locale-changed', this.onLocaleChange);
     this.ctrl = createListController<Session>(erplora(), 'cash_register.sessions.list', () => this.requestUpdate(), {
       pageSize: 50,
-      sort: 'id',
-      dir: 'asc',
+      // cash_register#127: newest shift first (Square, Toast, Lightspeed, Odoo). `id` is a UUID, so
+      // sorting by it scattered today's open shift among the closed ones.
+      sort: 'opened_at',
+      dir: 'desc',
       // cash_register#103, #107, pm#501: the three balances and the difference are INTEGER in the
       // minor unit and the columns paint them as money of the hub, so the person types the major
       // unit («100», «-5» for a short drawer). The SDK scales each edge with the hub's currency

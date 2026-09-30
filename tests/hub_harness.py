@@ -270,9 +270,10 @@ def open_session(hub: Hub, opening: int) -> str:
     since cash_register#49 — never sent.
 
     Reads the id off `new_ids[0]` of the command's OWN response, never off `sessions.list` — the
-    list's `default_sort` is `id` (a UUID, sorted lexically), not creation order, and this hub is
-    shared across every test in the battery run: picking "the last row" would silently grab
-    whichever session happens to sort last, not the one just opened."""
+    list is newest first by `opened_at` (cash_register#127), but this hub is shared across every
+    test in the battery run and two opens can share an instant on a coarse clock: picking "the
+    first row" would grab whichever session happens to sort there, not necessarily the one just
+    opened."""
     out = hub.run(
         "cash_register.session.open",
         {"register_id": None, "opening_balance": opening, "opening_notes": ""},
