@@ -85,12 +85,13 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     el.remove();
   });
 
-  it('fits its seven columns on a tablet (820 px) without sliding under the actions', async () => {
-    // Measured on the hub:stable bench at 820 px: the table is 788 px wide, the collapsed actions
+  it('fits its seven columns on a tablet without sliding under the actions', async () => {
+    // Measured on the hub:stable bench: at 820 px the table is 788 px wide, the collapsed actions
     // track takes 44 px and the eight tracks add 88 px of gaps and padding, so the data columns
-    // have 656 px. With the new column at a 10rem floor the row needed 868 px: the grid scrolled
-    // and «Diferencia» slid under the pinned actions. The number keeps the 7rem that holds
-    // «S-260930-0003» (109 px); the rest must fit what is left.
+    // have 656 px; at 1024 px (landscape, side menu open) they have 752 - 32 - 88 = 632 px. With the
+    // new column at a 10rem floor the row needed 868 px at 820: the grid scrolled and «Diferencia»
+    // slid under the pinned actions. The number keeps the 7rem that holds «S-260930-0003» (109 px);
+    // the rest must fit what is left.
     await import('../components/erp-cashregister-dashboard/erp-cashregister-dashboard');
     const el = document.createElement('erp-cashregister-dashboard') as HTMLElement & { updateComplete: Promise<unknown> };
     document.body.appendChild(el);
@@ -104,7 +105,7 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
       return Number(m![1]) * 16;
     };
     expect(cols).toHaveLength(7);
-    expect(cols.reduce((sum, c) => sum + floorPx(c), 0)).toBeLessThanOrEqual(656);
+    expect(cols.reduce((sum, c) => sum + floorPx(c), 0)).toBeLessThanOrEqual(632);
     expect(floorPx(cols.find((c) => c.key === 'session_number')!)).toBeGreaterThanOrEqual(112);
     el.remove();
   });
