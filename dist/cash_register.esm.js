@@ -4212,7 +4212,7 @@ var es_default = {
     noSessions: "Sin sesiones de caja.",
     searchPlaceholder: "Buscar sesi\xF3n\u2026",
     colSession: "Sesi\xF3n",
-    colOpenedAt: "Fecha de apertura",
+    colOpenedAt: "Abierta el",
     colStatus: "Estado",
     statusOpen: "Abierta",
     statusClosed: "Cerrada",
@@ -4424,7 +4424,7 @@ var en_default = {
     noSessions: "No cash sessions.",
     searchPlaceholder: "Search session\u2026",
     colSession: "Session",
-    colOpenedAt: "Opened at",
+    colOpenedAt: "Opened",
     colStatus: "Status",
     statusOpen: "Open",
     statusClosed: "Closed",
@@ -5299,9 +5299,11 @@ var ErpCashRegisterDashboard = class extends i3 {
   get columns() {
     const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
-      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
-      // cash_register#127: the list's default order (newest first) needs a header to show it on.
-      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, format: (r6) => formatDateTime(r6.opened_at) },
+      // cash_register#127: the number and the opening date keep a floor that holds «S-260930-0003» and
+      // «30/09/2026, 23:43» on a tablet; without it seven columns share 820 px and both get cut.
+      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text", width: "minmax(8.5rem,1fr)" },
+      // The list's default order (newest first) needs a header to show it on.
+      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, width: "minmax(10rem,1fr)", format: (r6) => formatDateTime(r6.opened_at) },
       {
         key: "status",
         header: t6("ui.colStatus"),

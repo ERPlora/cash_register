@@ -85,11 +85,31 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     el.remove();
   });
 
+  it('keeps the session number and the opening date whole on a tablet (820 px)', async () => {
+    // With the new column the grid shared its width among seven columns and cut both the number
+    // («S-260930-0…») and the date on the 820 px bench — the number was whole before. Each gets a
+    // floor that holds «S-260930-0003» and «30/09/2026, 23:43» with the cell padding.
+    await import('../components/erp-cashregister-dashboard/erp-cashregister-dashboard');
+    const el = document.createElement('erp-cashregister-dashboard') as HTMLElement & { updateComplete: Promise<unknown> };
+    document.body.appendChild(el);
+    await settle(el);
+    type Col = { key: string; width?: string };
+    const cols = (el.shadowRoot?.querySelector('ok-data-table[testid="cash-register-table"]') as unknown as { columns: Col[] }).columns;
+    const floorRem = (key: string) => {
+      const m = /^minmax\((\d+(?:\.\d+)?)rem,\s*1fr\)$/.exec(cols.find((c) => c.key === key)?.width ?? '');
+      return m ? Number(m[1]) : 0;
+    };
+    expect(floorRem('session_number')).toBeGreaterThanOrEqual(8.5);
+    expect(floorRem('opened_at')).toBeGreaterThanOrEqual(10);
+    el.remove();
+  });
+
   it('the new column header is translated: English source plus its Spanish', () => {
     const header = (l: unknown) => (l as { ui: Record<string, string> }).ui.colOpenedAt;
-    expect(header(en)).toBe('Opened at');
+    // Short on purpose: «Fecha de apertura» was cut to «FECHA DE APERT…» on desktop and tablet.
+    expect(header(en)).toBe('Opened');
     // «Apertura» is already the OPENING FLOAT column in Spanish: the date must not read the same.
-    expect(header(es)).toBe('Fecha de apertura');
+    expect(header(es)).toBe('Abierta el');
   });
 });
 

@@ -60,7 +60,7 @@
     "noSessions": "No cash sessions.",
     "searchPlaceholder": "Search session…",
     "colSession": "Session",
-    "colOpenedAt": "Opened at",
+    "colOpenedAt": "Opened",
     "colStatus": "Status",
     "statusOpen": "Open",
     "statusClosed": "Closed",

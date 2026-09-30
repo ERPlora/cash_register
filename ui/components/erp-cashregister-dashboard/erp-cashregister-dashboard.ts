@@ -211,9 +211,11 @@ export class ErpCashRegisterDashboard extends LitElement {
   private get columns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text' },
-      // cash_register#127: the list's default order (newest first) needs a header to show it on.
-      { key: 'opened_at', header: t('ui.colOpenedAt'), sortable: true, format: (r) => formatDateTime(r.opened_at) },
+      // cash_register#127: the number and the opening date keep a floor that holds «S-260930-0003» and
+      // «30/09/2026, 23:43» on a tablet; without it seven columns share 820 px and both get cut.
+      { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text', width: 'minmax(8.5rem,1fr)' },
+      // The list's default order (newest first) needs a header to show it on.
+      { key: 'opened_at', header: t('ui.colOpenedAt'), sortable: true, width: 'minmax(10rem,1fr)', format: (r) => formatDateTime(r.opened_at) },
       {
         key: 'status',
         header: t('ui.colStatus'),
