@@ -5093,7 +5093,7 @@ function erplora2() {
   if (!c5) throw new Error("erplora SDK not initialised by the shell");
   return c5;
 }
-var ErpCashRegisterSessionDetail = class extends i3 {
+var _ErpCashRegisterSessionDetail = class _ErpCashRegisterSessionDetail extends i3 {
   constructor() {
     super(...arguments);
     this.session = null;
@@ -5206,10 +5206,19 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       { label: t6("ui.colDifference"), value: closed ? this.fmt(row?.difference) : "\u2014" }
     ];
   }
+  static {
+    /**
+     * Floor of the WHEN column in both lists. On a tablet the tracks share the width evenly: at
+     * 820 px the five movement columns got 138 px each while «10/01/2026, 01:34 AM» measures 142 px,
+     * so the English time lost its «AM» behind an ellipsis (cash_register#129). 9.5rem (152 px)
+     * holds the widest date and time the hub paints; the other columns keep the table's own floor.
+     */
+    this.WHEN_WIDTH = "minmax(9.5rem,1fr)";
+  }
   get movementColumns() {
     const t6 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "created_at", header: t6("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.created_at) },
+      { key: "created_at", header: t6("ui.colWhen"), sortable: true, width: _ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r6) => formatDateTime(r6.created_at) },
       { key: "movement_type", header: t6("ui.labelType"), sortable: true, format: (r6) => enumLabel(MOVEMENT_TYPE_KEY, r6.movement_type) },
       { key: "amount", header: t6("ui.labelAmount"), align: "right", sortable: true, format: (r6) => this.fmt(r6.amount) },
       { key: "payment_method", header: t6("ui.colMethod"), sortable: true, format: (r6) => paymentMethodLabel(r6.payment_method) },
@@ -5224,7 +5233,7 @@ var ErpCashRegisterSessionDetail = class extends i3 {
   get countColumns() {
     const t6 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "counted_at", header: t6("ui.colWhen"), sortable: true, format: (r6) => formatDateTime(r6.counted_at) },
+      { key: "counted_at", header: t6("ui.colWhen"), sortable: true, width: _ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r6) => formatDateTime(r6.counted_at) },
       { key: "count_type", header: t6("ui.labelCountType"), sortable: true, format: (r6) => enumLabel(COUNT_TYPE_KEY, r6.count_type) },
       { key: "total", header: t6("ui.totalCounted"), align: "right", sortable: true, format: (r6) => this.fmt(r6.total) },
       { key: "notes", header: t6("ui.labelNotes") }
@@ -5277,13 +5286,14 @@ var ErpCashRegisterSessionDetail = class extends i3 {
 };
 __decorateClass([
   n4({ attribute: false })
-], ErpCashRegisterSessionDetail.prototype, "session", 2);
+], _ErpCashRegisterSessionDetail.prototype, "session", 2);
 __decorateClass([
   r5()
-], ErpCashRegisterSessionDetail.prototype, "summary", 2);
+], _ErpCashRegisterSessionDetail.prototype, "summary", 2);
 __decorateClass([
   r5()
-], ErpCashRegisterSessionDetail.prototype, "error", 2);
+], _ErpCashRegisterSessionDetail.prototype, "error", 2);
+var ErpCashRegisterSessionDetail = _ErpCashRegisterSessionDetail;
 define("erp-cashregister-session-detail", ErpCashRegisterSessionDetail);
 
 // @erplora/module-toolkit/src/money-input.mjs
