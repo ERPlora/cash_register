@@ -124,3 +124,31 @@ describe('la ficha de sesión se lee entera en el móvil (cash_register#129)', (
     expect(counts.shadowRoot.querySelector('.cards-grid')).toBeNull();
   });
 });
+
+// On a tablet the lists stay a table, and the tracks share the width evenly: at 820 px the five
+// movement columns get 138 px each, while «10/01/2026, 01:34 AM» measures 142 px (hub:stable bench,
+// ios and md) — in English the time lost its «AM» behind an ellipsis. The WHEN column keeps a floor
+// that holds the widest date and time the hub paints; the others still share the rest with `1fr`.
+describe('en tablet la columna «Cuándo» cabe entera con su hora (cash_register#129)', () => {
+  type Col = { key: string; width?: string };
+  // A column without `width` gets ok-data-table's floor, minmax(5.5rem,1fr).
+  const floorPx = (c: Col) => {
+    const m = /^minmax\((\d+(?:\.\d+)?)rem,\s*1fr\)$/.exec(c.width ?? 'minmax(5.5rem,1fr)');
+    expect(m, `${c.key} keeps a rem floor that grows with 1fr`).not.toBeNull();
+    return Number(m![1]) * 16;
+  };
+
+  it.each([
+    ['movementColumns', 'created_at'],
+    ['countColumns', 'counted_at'],
+  ] as const)('%s: %s sostiene «12/28/2026, 10:48 PM» y el resto sigue cabiendo a 820 px', async (getter, key) => {
+    viewport(820);
+    await mount();
+    const el = document.body.querySelector('erp-cashregister-session-detail') as unknown as Record<string, Col[]>;
+    const cols = el[getter];
+    // «10/01/2026, 01:34 AM» is 142 px on the bench; wider digits and «PM» need a few more.
+    expect(floorPx(cols.find((c) => c.key === key)!)).toBeGreaterThanOrEqual(150);
+    // The five movement tracks have 690 px at 820: all the floors together still fit.
+    expect(cols.reduce((sum, c) => sum + floorPx(c), 0)).toBeLessThanOrEqual(690);
+  });
+});
