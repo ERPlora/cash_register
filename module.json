@@ -341,7 +341,7 @@
     "cash_register.current_session": {
       "title": "Cash register (current session)",
       "icon": "cash-outline",
-      "category": "Caja",
+      "category": "Cash register",
       "size": "sm",
       "permission": "cash_register.view_expected_totals",
       "sectors": [
@@ -368,7 +368,7 @@
     "cash_register.recent_sessions": {
       "title": "Recent discrepancies",
       "icon": "swap-vertical-outline",
-      "category": "Caja",
+      "category": "Cash register",
       "size": "md",
       "permission": "cash_register.view_reports",
       "sectors": [
