@@ -149,7 +149,8 @@ export class ErpCashRegisterSessionDetail extends LitElement {
       pageSize: 50, sort: 'created_at', dir: 'desc', context: { session_id: session.id },
     });
     this.counts = createListController<Count>(erplora(), 'cash_register.counts.list', () => this.requestUpdate(), {
-      pageSize: 50, sort: 'id', dir: 'asc', context: { session_id: session.id },
+      // cash_register#127: latest count first, like the movements above (never by the UUID `id`).
+      pageSize: 50, sort: 'counted_at', dir: 'desc', context: { session_id: session.id },
     });
     await Promise.all([this.loadSummary(), this.movements.load(), this.counts.load()]);
     this.requestUpdate();

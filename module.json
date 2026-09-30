@@ -139,8 +139,8 @@
           "expected_balance",
           "difference"
         ],
-        "default_sort": "id",
-        "default_dir": "asc",
+        "default_sort": "opened_at",
+        "default_dir": "desc",
         "filters": {
           "session_number": {
             "op": "eq"
@@ -247,8 +247,8 @@
           "notes",
           "counted_at"
         ],
-        "default_sort": "id",
-        "default_dir": "asc",
+        "default_sort": "counted_at",
+        "default_dir": "desc",
         "filters": {
           "count_type": {
             "op": "range"

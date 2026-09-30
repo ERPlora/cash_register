@@ -4212,6 +4212,7 @@ var es_default = {
     noSessions: "Sin sesiones de caja.",
     searchPlaceholder: "Buscar sesi\xF3n\u2026",
     colSession: "Sesi\xF3n",
+    colOpenedAt: "Abierta el",
     colStatus: "Estado",
     statusOpen: "Abierta",
     statusClosed: "Cerrada",
@@ -4423,6 +4424,7 @@ var en_default = {
     noSessions: "No cash sessions.",
     searchPlaceholder: "Search session\u2026",
     colSession: "Session",
+    colOpenedAt: "Opened",
     colStatus: "Status",
     statusOpen: "Open",
     statusClosed: "Closed",
@@ -4619,6 +4621,21 @@ function formatDateTime(value) {
     return raw;
   }
 }
+function formatListDateTime(value) {
+  const raw = value == null ? "" : String(value);
+  if (!raw) return "";
+  const d3 = new Date(raw);
+  if (Number.isNaN(d3.getTime())) return raw;
+  const thisYear = d3.getFullYear() === (/* @__PURE__ */ new Date()).getFullYear();
+  try {
+    return new Intl.DateTimeFormat(
+      erplora().locale || "es",
+      thisYear ? { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "2-digit", year: "numeric" }
+    ).format(d3);
+  } catch {
+    return raw;
+  }
+}
 function denominationLabel(denomination) {
   const client2 = erplora();
   const decimals = typeof client2.currencyDecimals === "number" ? client2.currencyDecimals : 2;
@@ -4729,9 +4746,10 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       context: { session_id: session.id }
     });
     this.counts = createListController(erplora2(), "cash_register.counts.list", () => this.requestUpdate(), {
+      // cash_register#127: latest count first, like the movements above (never by the UUID `id`).
       pageSize: 50,
-      sort: "id",
-      dir: "asc",
+      sort: "counted_at",
+      dir: "desc",
       context: { session_id: session.id }
     });
     await Promise.all([this.loadSummary(), this.movements.load(), this.counts.load()]);
@@ -5296,7 +5314,13 @@ var ErpCashRegisterDashboard = class extends i3 {
   get columns() {
     const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
-      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
+      // cash_register#127: seven columns share the 632 px a landscape tablet (1024 px, side menu open)
+      // leaves the data. Each floor holds its content — «S-260930-0003» 109 px, «9/30, 11:45 PM» 97 px,
+      // «DIFFERENCE» 92 px, «COUNTED» 77 px — and the status gives back what «Cerrada» does not use,
+      // so nothing slides under the actions.
+      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text", width: "minmax(7rem,1fr)" },
+      // The list's default order (newest first) needs a header to show it on.
+      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, width: "minmax(6.25rem,1fr)", format: (r6) => formatListDateTime(r6.opened_at) },
       {
         key: "status",
         header: t6("ui.colStatus"),
@@ -5308,13 +5332,14 @@ var ErpCashRegisterDashboard = class extends i3 {
         // buscador libre sigue siendo por número: es lo ÚNICO que el `search` del servidor mira, y
         // prometer «o estado» en su placeholder era una promesa que la pantalla no podía cumplir.
         filterType: "select",
+        width: "minmax(4.25rem,1fr)",
         options: enumOptions(SESSION_STATUS_KEY),
         format: (r6) => enumLabel(SESSION_STATUS_KEY, r6.status)
       },
       { key: "opening_balance", header: t6("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
       { key: "expected_balance", header: t6("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
-      { key: "closing_balance", header: t6("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
-      { key: "difference", header: t6("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
+      { key: "closing_balance", header: t6("ui.colCounted"), align: "right", width: "minmax(5rem,1fr)", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
+      { key: "difference", header: t6("ui.colDifference"), align: "right", width: "minmax(5.75rem,1fr)", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
     ];
   }
   get rowActions() {
@@ -5333,8 +5358,10 @@ var ErpCashRegisterDashboard = class extends i3 {
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora3(), "cash_register.sessions.list", () => this.requestUpdate(), {
       pageSize: 50,
-      sort: "id",
-      dir: "asc",
+      // cash_register#127: newest shift first (Square, Toast, Lightspeed, Odoo). `id` is a UUID, so
+      // sorting by it scattered today's open shift among the closed ones.
+      sort: "opened_at",
+      dir: "desc",
       // cash_register#103, #107, pm#501: the three balances and the difference are INTEGER in the
       // minor unit and the columns paint them as money of the hub, so the person types the major
       // unit («100», «-5» for a short drawer). The SDK scales each edge with the hub's currency
