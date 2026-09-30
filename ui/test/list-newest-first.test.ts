@@ -8,6 +8,8 @@
 // Odoo all list sessions most-recent first). The table must also show that order in its header, or
 // the first click on «Opened» would flip to ascending while the arrow claimed otherwise.
 import { beforeEach, describe, expect, it } from 'vitest';
+import en from '../../locales/en.json';
+import es from '../../locales/es.json';
 
 type Call = { name: string; params: Record<string, unknown> };
 let calls: Call[];
@@ -81,6 +83,13 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     expect(shown).toMatch(/30\/09\/2026/);
     expect(shown).not.toContain('T08');
     el.remove();
+  });
+
+  it('the new column header is translated: English source plus its Spanish', () => {
+    const header = (l: unknown) => (l as { ui: Record<string, string> }).ui.colOpenedAt;
+    expect(header(en)).toBe('Opened at');
+    // «Apertura» is already the OPENING FLOAT column in Spanish: the date must not read the same.
+    expect(header(es)).toBe('Fecha de apertura');
   });
 });
 
