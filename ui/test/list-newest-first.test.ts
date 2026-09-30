@@ -106,7 +106,12 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     };
     expect(cols).toHaveLength(7);
     expect(cols.reduce((sum, c) => sum + floorPx(c), 0)).toBeLessThanOrEqual(632);
-    expect(floorPx(cols.find((c) => c.key === 'session_number')!)).toBeGreaterThanOrEqual(112);
+    // Each floor still holds the widest thing it paints, measured on the bench: the number (109 px),
+    // «9/30, 11:45 PM» (97 px) and the «DIFFERENCE» header with its sort caret (92 px).
+    const floor = (key: string) => floorPx(cols.find((c) => c.key === key)!);
+    expect(floor('session_number')).toBeGreaterThanOrEqual(112);
+    expect(floor('opened_at')).toBeGreaterThanOrEqual(100);
+    expect(floor('difference')).toBeGreaterThanOrEqual(92);
     el.remove();
   });
 
