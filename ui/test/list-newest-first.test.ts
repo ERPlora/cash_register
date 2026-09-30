@@ -112,6 +112,9 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     expect(floor('session_number')).toBeGreaterThanOrEqual(112);
     expect(floor('opened_at')).toBeGreaterThanOrEqual(100);
     expect(floor('difference')).toBeGreaterThanOrEqual(92);
+    // The status gives back the width «Cerrada» does not use, never what its own words need: the
+    // «ESTADO» header with its caret is 53 px and «Cerrada» 52 px (bench, ios and md).
+    expect(floor('status')).toBeGreaterThanOrEqual(56);
     el.remove();
   });
 
