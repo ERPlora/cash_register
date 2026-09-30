@@ -16,7 +16,7 @@ import { countTotalMinor, denominationsFor, pieceCount, type DenominationTable }
 // Un solo catálogo para los dominios cerrados del módulo y para las fechas (cash_register#50):
 // la celda y el desplegable leen de aquí, así que no tienen dónde separarse. Mismo patrón que
 // `staff/ui/lib/enums.ts` (staff#37).
-import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions, formatDateTime } from '../../lib/enums';
+import { MOVEMENT_TYPE_KEY, SESSION_STATUS_KEY, denominationLabel, enumLabel, enumOptions, formatListDateTime } from '../../lib/enums';
 // La revisión del turno (cash_register#68): qué queda a medias cuando se cierra el cajón. Vive en
 // su propio fichero porque es lógica pura —contar comandas vivas y trabajos encolados— y la
 // pantalla solo la pinta.
@@ -211,11 +211,12 @@ export class ErpCashRegisterDashboard extends LitElement {
   private get columns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      // cash_register#127: the number and the opening date keep a floor that holds «S-260930-0003» and
-      // «30/09/2026, 23:43» on a tablet; without it seven columns share 820 px and both get cut.
-      { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text', width: 'minmax(8.5rem,1fr)' },
+      // cash_register#127: seven columns share the 656 px a tablet (820 px) leaves the data. Each floor
+      // holds its content — «S-260930-0003» 109 px, «9/30, 11:45 PM» 97 px, «DIFFERENCE» 92 px — and
+      // the status gives back what «Cerrada» does not use, so nothing slides under the actions.
+      { key: 'session_number', header: t('ui.colSession'), sortable: true, filterable: true, filterType: 'text', width: 'minmax(7rem,1fr)' },
       // The list's default order (newest first) needs a header to show it on.
-      { key: 'opened_at', header: t('ui.colOpenedAt'), sortable: true, width: 'minmax(10rem,1fr)', format: (r) => formatDateTime(r.opened_at) },
+      { key: 'opened_at', header: t('ui.colOpenedAt'), sortable: true, width: 'minmax(6.25rem,1fr)', format: (r) => formatListDateTime(r.opened_at) },
       {
         key: 'status',
         header: t('ui.colStatus'),
@@ -227,13 +228,14 @@ export class ErpCashRegisterDashboard extends LitElement {
         // buscador libre sigue siendo por número: es lo ÚNICO que el `search` del servidor mira, y
         // prometer «o estado» en su placeholder era una promesa que la pantalla no podía cumplir.
         filterType: 'select',
+        width: 'minmax(4.5rem,1fr)',
         options: enumOptions(SESSION_STATUS_KEY),
         format: (r) => enumLabel(SESSION_STATUS_KEY, r.status),
       },
       { key: 'opening_balance', header: t('ui.colOpening'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.opening_balance as number | null) },
       { key: 'expected_balance', header: t('ui.colExpected'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.expected_balance as number | null) },
       { key: 'closing_balance', header: t('ui.colCounted'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.closing_balance as number | null) },
-      { key: 'difference', header: t('ui.colDifference'), align: 'right', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.difference as number | null) },
+      { key: 'difference', header: t('ui.colDifference'), align: 'right', width: 'minmax(5.75rem,1fr)', sortable: true, filterable: true, filterType: 'range', format: (r) => this.fmt(r.difference as number | null) },
     ];
   }
 

@@ -4621,6 +4621,21 @@ function formatDateTime(value) {
     return raw;
   }
 }
+function formatListDateTime(value) {
+  const raw = value == null ? "" : String(value);
+  if (!raw) return "";
+  const d3 = new Date(raw);
+  if (Number.isNaN(d3.getTime())) return raw;
+  const thisYear = d3.getFullYear() === (/* @__PURE__ */ new Date()).getFullYear();
+  try {
+    return new Intl.DateTimeFormat(
+      erplora().locale || "es",
+      thisYear ? { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "2-digit", year: "numeric" }
+    ).format(d3);
+  } catch {
+    return raw;
+  }
+}
 function denominationLabel(denomination) {
   const client2 = erplora();
   const decimals = typeof client2.currencyDecimals === "number" ? client2.currencyDecimals : 2;
@@ -5299,11 +5314,12 @@ var ErpCashRegisterDashboard = class extends i3 {
   get columns() {
     const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
-      // cash_register#127: the number and the opening date keep a floor that holds «S-260930-0003» and
-      // «30/09/2026, 23:43» on a tablet; without it seven columns share 820 px and both get cut.
-      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text", width: "minmax(8.5rem,1fr)" },
+      // cash_register#127: seven columns share the 656 px a tablet (820 px) leaves the data. Each floor
+      // holds its content — «S-260930-0003» 109 px, «9/30, 11:45 PM» 97 px, «DIFFERENCE» 92 px — and
+      // the status gives back what «Cerrada» does not use, so nothing slides under the actions.
+      { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text", width: "minmax(7rem,1fr)" },
       // The list's default order (newest first) needs a header to show it on.
-      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, width: "minmax(10rem,1fr)", format: (r6) => formatDateTime(r6.opened_at) },
+      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, width: "minmax(6.25rem,1fr)", format: (r6) => formatListDateTime(r6.opened_at) },
       {
         key: "status",
         header: t6("ui.colStatus"),
@@ -5315,13 +5331,14 @@ var ErpCashRegisterDashboard = class extends i3 {
         // buscador libre sigue siendo por número: es lo ÚNICO que el `search` del servidor mira, y
         // prometer «o estado» en su placeholder era una promesa que la pantalla no podía cumplir.
         filterType: "select",
+        width: "minmax(4.5rem,1fr)",
         options: enumOptions(SESSION_STATUS_KEY),
         format: (r6) => enumLabel(SESSION_STATUS_KEY, r6.status)
       },
       { key: "opening_balance", header: t6("ui.colOpening"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.opening_balance) },
       { key: "expected_balance", header: t6("ui.colExpected"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.expected_balance) },
       { key: "closing_balance", header: t6("ui.colCounted"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.closing_balance) },
-      { key: "difference", header: t6("ui.colDifference"), align: "right", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
+      { key: "difference", header: t6("ui.colDifference"), align: "right", width: "minmax(5.75rem,1fr)", sortable: true, filterable: true, filterType: "range", format: (r6) => this.fmt(r6.difference) }
     ];
   }
   get rowActions() {

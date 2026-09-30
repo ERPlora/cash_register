@@ -7,7 +7,7 @@
 // the screen itself has to ask for `opened_at` / `counted_at` DESC (Square, Toast, Lightspeed and
 // Odoo all list sessions most-recent first). The table must also show that order in its header, or
 // the first click on «Opened» would flip to ascending while the arrow claimed otherwise.
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import en from '../../locales/en.json';
 import es from '../../locales/es.json';
 
@@ -79,28 +79,33 @@ describe('the Cash grid lists the newest session first (cash_register#127)', () 
     expect(opened.header).toBe('ui.colOpenedAt');
     expect(opened.sortable).toBe(true);
     // An instant in the hub's locale, never the engine's nine-decimal RFC 3339 string.
-    const shown = opened.format?.({ opened_at: '2026-09-30T08:05:13.093240004+00:00' }) ?? '';
-    expect(shown).toMatch(/30\/09\/2026/);
+    const shown = opened.format?.({ opened_at: '2025-09-30T08:05:13.093240004+00:00' }) ?? '';
+    expect(shown).toMatch(/30\/0?9\/2025/);
     expect(shown).not.toContain('T08');
     el.remove();
   });
 
-  it('keeps the session number and the opening date whole on a tablet (820 px)', async () => {
-    // With the new column the grid shared its width among seven columns and cut both the number
-    // («S-260930-0…») and the date on the 820 px bench — the number was whole before. Each gets a
-    // floor that holds «S-260930-0003» and «30/09/2026, 23:43» with the cell padding.
+  it('fits its seven columns on a tablet (820 px) without sliding under the actions', async () => {
+    // Measured on the hub:stable bench at 820 px: the table is 788 px wide, the collapsed actions
+    // track takes 44 px and the eight tracks add 88 px of gaps and padding, so the data columns
+    // have 656 px. With the new column at a 10rem floor the row needed 868 px: the grid scrolled
+    // and «Diferencia» slid under the pinned actions. The number keeps the 7rem that holds
+    // «S-260930-0003» (109 px); the rest must fit what is left.
     await import('../components/erp-cashregister-dashboard/erp-cashregister-dashboard');
     const el = document.createElement('erp-cashregister-dashboard') as HTMLElement & { updateComplete: Promise<unknown> };
     document.body.appendChild(el);
     await settle(el);
     type Col = { key: string; width?: string };
     const cols = (el.shadowRoot?.querySelector('ok-data-table[testid="cash-register-table"]') as unknown as { columns: Col[] }).columns;
-    const floorRem = (key: string) => {
-      const m = /^minmax\((\d+(?:\.\d+)?)rem,\s*1fr\)$/.exec(cols.find((c) => c.key === key)?.width ?? '');
-      return m ? Number(m[1]) : 0;
+    // A column without `width` gets ok-data-table's floor, minmax(5.5rem,1fr).
+    const floorPx = (c: Col) => {
+      const m = /^minmax\((\d+(?:\.\d+)?)rem,\s*1fr\)$/.exec(c.width ?? 'minmax(5.5rem,1fr)');
+      expect(m, `${c.key} keeps a rem floor that grows with 1fr`).not.toBeNull();
+      return Number(m![1]) * 16;
     };
-    expect(floorRem('session_number')).toBeGreaterThanOrEqual(8.5);
-    expect(floorRem('opened_at')).toBeGreaterThanOrEqual(10);
+    expect(cols).toHaveLength(7);
+    expect(cols.reduce((sum, c) => sum + floorPx(c), 0)).toBeLessThanOrEqual(656);
+    expect(floorPx(cols.find((c) => c.key === 'session_number')!)).toBeGreaterThanOrEqual(112);
     el.remove();
   });
 
@@ -132,6 +137,53 @@ describe('the counts of a session list the newest first (cash_register#127)', ()
       ['created_at', 'desc'],
       ['counted_at', 'desc'],
     ]);
+    el.remove();
+  });
+});
+
+describe('the opening date of the Cash grid is short enough for a tablet (cash_register#127)', () => {
+  // «30/09/2026, 23:45» is 123 px and did not fit the column a tablet can give it. Lists drop the
+  // year of the current one and the time of older ones (Shopify «Sep 30 at 11:45 pm» / «Sep 12,
+  // 2024», Gmail): today's shift reads «30/9, 23:45», a shift of another year its date.
+  afterEach(() => vi.useRealTimers());
+
+  it('prints day, month and time for a session of the current year', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-30T22:00:00'));
+    const { formatListDateTime } = await import('../lib/enums');
+    const shown = formatListDateTime('2026-09-30T08:05:13.093240004+00:00');
+    expect(shown).toBe(new Intl.DateTimeFormat('es', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date('2026-09-30T08:05:13Z')));
+    expect(shown).not.toContain('2026');
+    expect(shown).toMatch(/\d{2}:\d{2}/);
+  });
+
+  it('prints the full date, without the time, for a session of another year', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-30T22:00:00'));
+    const { formatListDateTime } = await import('../lib/enums');
+    const shown = formatListDateTime('2025-12-31T12:00:00+00:00');
+    expect(shown).toMatch(/31\/12\/2025/);
+    expect(shown).not.toMatch(/\d{2}:\d{2}/);
+  });
+
+  it('never prints Invalid Date: an empty value stays empty and garbage comes back untouched', async () => {
+    const { formatListDateTime } = await import('../lib/enums');
+    expect(formatListDateTime(null)).toBe('');
+    expect(formatListDateTime('not-a-date')).toBe('not-a-date');
+  });
+
+  it('is what the Opened column prints', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-30T22:00:00'));
+    const { formatListDateTime } = await import('../lib/enums');
+    await import('../components/erp-cashregister-dashboard/erp-cashregister-dashboard');
+    const el = document.createElement('erp-cashregister-dashboard') as HTMLElement & { updateComplete: Promise<unknown> };
+    document.body.appendChild(el);
+    await settle(el);
+    type Col = { key: string; format?: (r: Record<string, unknown>) => string };
+    const cols = (el.shadowRoot?.querySelector('ok-data-table[testid="cash-register-table"]') as unknown as { columns: Col[] }).columns;
+    const value = '2026-09-30T08:05:13.093240004+00:00';
+    expect(cols.find((c) => c.key === 'opened_at')?.format?.({ opened_at: value })).toBe(formatListDateTime(value));
     el.remove();
   });
 });

@@ -131,6 +131,30 @@ export function formatDateTime(value: unknown): string {
 }
 
 /**
+ * An instant for a LIST column, short enough for a tablet: `30/9, 23:45` for this year, `31/12/2025`
+ * for an older one (cash_register#127). Lists drop the year of the current one and the time of older
+ * ones — Shopify prints «Sep 30 at 11:45 pm» and «Sep 12, 2024», Gmail the same. The full
+ * `formatDateTime` (123 px) did not fit the width a tablet can give the column.
+ */
+export function formatListDateTime(value: unknown): string {
+  const raw = value == null ? '' : String(value);
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  const thisYear = d.getFullYear() === new Date().getFullYear();
+  try {
+    return new Intl.DateTimeFormat(
+      erplora().locale || 'es',
+      thisYear
+        ? { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }
+        : { day: '2-digit', month: '2-digit', year: 'numeric' },
+    ).format(d);
+  } catch {
+    return raw; // an unknown locale is not a reason to lose the date
+  }
+}
+
+/**
  * The label of a denomination of the drawer (`'0.50'`, `'500'`) as MONEY: `0,50 €`, not `0.50 €`.
  *
  * The arqueo card printed the key verbatim, so a Spanish hub showed a dot in the sixteen
