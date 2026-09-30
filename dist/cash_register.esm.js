@@ -4332,10 +4332,12 @@ var es_default = {
   widgets: {
     "cash_register.current_session": {
       title: "Caja (sesi\xF3n actual)",
-      label: "Efectivo esperado en caja"
+      label: "Efectivo esperado en caja",
+      category: "Caja"
     },
     "cash_register.recent_sessions": {
-      title: "Descuadres recientes"
+      title: "Descuadres recientes",
+      category: "Caja"
     }
   },
   errors: {
