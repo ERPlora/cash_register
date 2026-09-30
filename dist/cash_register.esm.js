@@ -4212,6 +4212,7 @@ var es_default = {
     noSessions: "Sin sesiones de caja.",
     searchPlaceholder: "Buscar sesi\xF3n\u2026",
     colSession: "Sesi\xF3n",
+    colOpenedAt: "Fecha de apertura",
     colStatus: "Estado",
     statusOpen: "Abierta",
     statusClosed: "Cerrada",
@@ -4423,6 +4424,7 @@ var en_default = {
     noSessions: "No cash sessions.",
     searchPlaceholder: "Search session\u2026",
     colSession: "Session",
+    colOpenedAt: "Opened at",
     colStatus: "Status",
     statusOpen: "Open",
     statusClosed: "Closed",
@@ -4729,9 +4731,10 @@ var ErpCashRegisterSessionDetail = class extends i3 {
       context: { session_id: session.id }
     });
     this.counts = createListController(erplora2(), "cash_register.counts.list", () => this.requestUpdate(), {
+      // cash_register#127: latest count first, like the movements above (never by the UUID `id`).
       pageSize: 50,
-      sort: "id",
-      dir: "asc",
+      sort: "counted_at",
+      dir: "desc",
       context: { session_id: session.id }
     });
     await Promise.all([this.loadSummary(), this.movements.load(), this.counts.load()]);
@@ -5297,6 +5300,8 @@ var ErpCashRegisterDashboard = class extends i3 {
     const t6 = (k2) => erplora3().t(CATALOG4, k2);
     return [
       { key: "session_number", header: t6("ui.colSession"), sortable: true, filterable: true, filterType: "text" },
+      // cash_register#127: the list's default order (newest first) needs a header to show it on.
+      { key: "opened_at", header: t6("ui.colOpenedAt"), sortable: true, format: (r6) => formatDateTime(r6.opened_at) },
       {
         key: "status",
         header: t6("ui.colStatus"),
@@ -5333,8 +5338,10 @@ var ErpCashRegisterDashboard = class extends i3 {
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora3(), "cash_register.sessions.list", () => this.requestUpdate(), {
       pageSize: 50,
-      sort: "id",
-      dir: "asc",
+      // cash_register#127: newest shift first (Square, Toast, Lightspeed, Odoo). `id` is a UUID, so
+      // sorting by it scattered today's open shift among the closed ones.
+      sort: "opened_at",
+      dir: "desc",
       // cash_register#103, #107, pm#501: the three balances and the difference are INTEGER in the
       // minor unit and the columns paint them as money of the hub, so the person types the major
       // unit («100», «-5» for a short drawer). The SDK scales each edge with the hub's currency
