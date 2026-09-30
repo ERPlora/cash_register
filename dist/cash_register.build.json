@@ -1,7 +1,7 @@
 {
   "file": "dist/cash_register.esm.js",
-  "sources_sha256": "ce4127cb6d87daba7942e32123116d7eb5ef748dae3be4f9c1f3f176d3d7c014",
+  "sources_sha256": "7f997b005ec744c7557fd06a2e70a0f2392ea4a90bca6a03c7ffb552fefb83e1",
   "locales_sha256": "4486f835a69911eab996937050d13677de6656ff8671dfa7d929eba43f613188",
-  "bundle_sha256": "fc6de7ebe599a915960ece59dce1752f73aaccdec0e4d44bc63ad6be20c7d131",
-  "built_at": "2026-09-30T21:55:21.634Z"
+  "bundle_sha256": "1d7dfdf8efd113029207ae85542779f7d7391262bd1007008b14a9ad48e405ed",
+  "built_at": "2026-09-30T23:33:30.900Z"
 }
