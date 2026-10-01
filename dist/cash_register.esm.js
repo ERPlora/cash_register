@@ -1912,6 +1912,17 @@ function decideRowActionsFit(input) {
   if (!collapsed && contentWidth > containerWidth) return { collapsed: true, decidedAtWidth };
   return { collapsed, decidedAtWidth };
 }
+function decideCardsForFit(input) {
+  const { allowed, hostWidth, folded, fitCards, fitWidth } = input;
+  const idle = { fitCards: false, fitWidth: 0 };
+  if (!allowed) return idle;
+  if (!(hostWidth > 0)) return { fitCards, fitWidth };
+  if (fitCards) return hostWidth >= fitWidth ? idle : { fitCards, fitWidth };
+  if (folded && folded.containerWidth > 0 && folded.contentWidth > folded.containerWidth) {
+    return { fitCards: true, fitWidth: hostWidth + folded.contentWidth - folded.containerWidth };
+  }
+  return idle;
+}
 var DEFAULT_LABELS2 = {
   search: "Search\u2026",
   empty: "No results",
@@ -2052,6 +2063,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.unfoldedCells = /* @__PURE__ */ new Set();
     this.lastPointerType = "";
     this.fitDecidedAtWidth = -1;
+    this.fitCards = false;
+    this.fitCardsWidth = 0;
+    this.fitShape = "";
     this.rowMenuOpen = false;
     this.columnChoice = /* @__PURE__ */ new Map();
     this.internalSelection = /* @__PURE__ */ new Set();
@@ -2533,15 +2547,71 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
    *  El criterio y la garantía de que no oscila viven en `decideRowActionsFit`. */
   measureRowActionsFit() {
     const scroll = this.renderRoot?.querySelector?.(".scroll");
-    if (!scroll) return;
+    if (!scroll) {
+      this.measureCardsFit(null);
+      return;
+    }
+    const containerWidth = scroll.clientWidth;
+    const contentWidth = scroll.scrollWidth;
+    const foldedOnScreen = this.rowActionsCollapsed && this.fitDecidedAtWidth === containerWidth && !this.isUpdatePending && this.pinnedTrackIsHonest();
     const next = decideRowActionsFit({
-      containerWidth: scroll.clientWidth,
-      contentWidth: scroll.scrollWidth,
+      containerWidth,
+      contentWidth,
       collapsed: this.rowActionsCollapsed,
       decidedAtWidth: this.fitDecidedAtWidth
     });
     this.fitDecidedAtWidth = next.decidedAtWidth;
     if (this.rowActionsCollapsed !== next.collapsed) this.rowActionsCollapsed = next.collapsed;
+    this.measureCardsFit(foldedOnScreen && next.collapsed ? { containerWidth, contentWidth } : null);
+  }
+  /** #267 - Hands the list over to cards when it does not fit even folded, and back when the hole
+   *  has room again. The criterion lives in `decideCardsForFit`. */
+  measureCardsFit(folded) {
+    if (this.panel !== "none") return;
+    const allowed = this.cardViewEnabled && !this.viewChosenByUser && !this.isMobile && this.defaultView !== "cards";
+    const next = decideCardsForFit({
+      allowed,
+      hostWidth: this.clientWidth,
+      folded,
+      fitCards: this.fitCards,
+      fitWidth: this.fitCardsWidth
+    });
+    this.fitCardsWidth = next.fitWidth;
+    if (next.fitCards === this.fitCards) return;
+    this.fitCards = next.fitCards;
+    if (next.fitCards) this.viewMode = "cards";
+    else if (allowed) this.viewMode = "table";
+  }
+  /** #267 - Is there a column pinned over the data, and does its track hold what it shows?
+   *
+   * Without a pinned actions column an overflow only scrolls sideways and covers nothing: the list
+   * stays a list. With one, the measurement only counts once the track has been re-measured for
+   * the folded "...": `.actions` stretches to the track, so its `scrollWidth` never drops below a
+   * track still pinned to the unfolded buttons, and judging those frames kept the list in cards
+   * for good. The buttons themselves (`flex: 0 0 auto`) say the width they really need, margins
+   * included (ios paints the icon button 28px with 2px of `margin-inline` in a 32px track). */
+  pinnedTrackIsHonest() {
+    const boxes = this.renderRoot?.querySelectorAll?.(".grow-data .gcell.actions-col .actions") ?? [];
+    if (!boxes.length) return false;
+    if (this.actionsTrackPx === 0) return true;
+    const outerWidth = (el) => {
+      const style = getComputedStyle(el);
+      const margins = (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0);
+      return el.getBoundingClientRect().width + margins;
+    };
+    let natural = 0;
+    for (const box of boxes) {
+      for (const child of Array.from(box.children)) natural = Math.max(natural, outerWidth(child));
+    }
+    return natural >= this.actionsTrackPx - 1;
+  }
+  /** #267 - Columns on screen with their widths, the actions and selection: the list's width. */
+  fitShapeOf() {
+    return JSON.stringify([
+      this.visibleColumns.map((c5) => [c5.key, c5.width ?? ""]),
+      this.actions.map((a3) => [a3.id, !!a3.icon]),
+      this.selectable
+    ]);
   }
   /** #218 — Marks the host `content-after` while an element in flow follows it in its parent (a
    *  heading and a second table, a notice). Out of flow does not count: an inline `ion-modal`
@@ -2591,6 +2661,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   updated(changed) {
     if (changed.has("fill")) this.observeSiblings();
+    if (!this.hostObserver && typeof ResizeObserver !== "undefined") {
+      this.hostObserver = new ResizeObserver(() => this.measureRowActionsFit());
+      this.hostObserver.observe(this);
+    }
     this.observeXOverflow();
     this.measureXOverflow();
     if (changed.has("columns") || changed.has("actions") || changed.has("columnChoice") || changed.has("selectable")) {
@@ -2651,6 +2725,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     this.xObserver?.disconnect();
     this.xObserver = void 0;
+    this.hostObserver?.disconnect();
+    this.hostObserver = void 0;
     this.siblingsObserver?.disconnect();
     this.siblingsObserver = void 0;
     this.sheetObserver?.disconnect();
@@ -3233,6 +3309,17 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
    *   `views` después de insertar → tabla   ← lo que hace la página
    */
   willUpdate(changed) {
+    if (changed.has("columns") || changed.has("actions") || changed.has("columnChoice") || changed.has("selectable")) {
+      const shape = this.fitShapeOf();
+      if (shape !== this.fitShape) {
+        this.fitShape = shape;
+        if (this.fitCards) {
+          this.fitCards = false;
+          this.fitCardsWidth = 0;
+          if (!this.viewChosenByUser) this.viewMode = "table";
+        }
+      }
+    }
     this.applyInitialView();
     if (changed.has("rows") && this.unfoldedCells.size) this.unfoldedCells = /* @__PURE__ */ new Set();
     if (changed.has("rows") || changed.has("actions")) {
@@ -3264,6 +3351,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     if (this.isMobile && this.cardViewEnabled) {
       this.viewMode = "cards";
     } else if (this.defaultView === "cards" && this.cardViewEnabled) {
+      this.viewMode = "cards";
+    } else if (this.fitCards && this.cardViewEnabled) {
       this.viewMode = "cards";
     } else if (this.defaultView === "table") {
       this.viewMode = "table";
@@ -4108,6 +4197,9 @@ __decorateClass3([
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "unfoldedCells");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "fitCards");
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "rowMenuOpen");
