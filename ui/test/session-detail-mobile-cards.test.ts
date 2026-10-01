@@ -86,8 +86,8 @@ async function mount(): Promise<{ movements: Table; counts: Table }> {
 /** The date AND time the detail paints for a count, in the hub locale (`formatDateTime`). */
 const whenEs = (iso: string) => new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 
-describe('la ficha de sesión se lee entera en el móvil (cash_register#129)', () => {
-  it('a 375 px los ARQUEOS salen en tarjetas, cada una con su fecha Y su hora, tipo, total y notas', async () => {
+describe('the session detail reads whole on a phone (cash_register#129)', () => {
+  it('at 375 px the COUNTS are cards, each with its date AND time, type, total and notes', async () => {
     viewport(375);
     const { counts } = await mount();
     expect(counts.shadowRoot.querySelector('.cards-grid'), 'counts must be cards on a phone, not a sideways-scrolling table').toBeTruthy();
@@ -105,7 +105,7 @@ describe('la ficha de sesión se lee entera en el móvil (cash_register#129)', (
     expect(counts.shadowRoot.querySelectorAll('.cards-grid > *').length).toBe(COUNTS.length);
   });
 
-  it('a 375 px los MOVIMIENTOS también salen en tarjetas con su fecha y hora como título', async () => {
+  it('at 375 px the MOVEMENTS are cards too, titled by their date and time', async () => {
     viewport(375);
     const { movements } = await mount();
     expect(movements.shadowRoot.querySelector('.cards-grid'), 'movements must be cards on a phone').toBeTruthy();
@@ -117,7 +117,7 @@ describe('la ficha de sesión se lee entera en el móvil (cash_register#129)', (
     expect(text).toContain('supplier bread');
   });
 
-  it('en escritorio (1440 px) las dos siguen siendo tabla: las tarjetas son del móvil', async () => {
+  it('on desktop (1440 px) both stay a table: the cards are for a phone', async () => {
     viewport(1440);
     const { movements, counts } = await mount();
     expect(movements.shadowRoot.querySelector('.cards-grid')).toBeNull();
@@ -129,7 +129,7 @@ describe('la ficha de sesión se lee entera en el móvil (cash_register#129)', (
 // movement columns get 138 px each, while «10/01/2026, 01:34 AM» measures 142 px (hub:stable bench,
 // ios and md) — in English the time lost its «AM» behind an ellipsis. The WHEN column keeps a floor
 // that holds the widest date and time the hub paints; the others still share the rest with `1fr`.
-describe('en tablet la columna «Cuándo» cabe entera con su hora (cash_register#129)', () => {
+describe('on a tablet the WHEN column fits whole with its time (cash_register#129)', () => {
   type Col = { key: string; width?: string };
   // A column without `width` gets ok-data-table's floor, minmax(5.5rem,1fr).
   const floorPx = (c: Col) => {
@@ -141,7 +141,7 @@ describe('en tablet la columna «Cuándo» cabe entera con su hora (cash_registe
   it.each([
     ['movementColumns', 'created_at'],
     ['countColumns', 'counted_at'],
-  ] as const)('%s: %s sostiene «12/28/2026, 10:48 PM» y el resto sigue cabiendo a 820 px', async (getter, key) => {
+  ] as const)('%s: %s holds «12/28/2026, 10:48 PM» and the rest still fits at 820 px', async (getter, key) => {
     viewport(820);
     await mount();
     const el = document.body.querySelector('erp-cashregister-session-detail') as unknown as Record<string, Col[]>;
