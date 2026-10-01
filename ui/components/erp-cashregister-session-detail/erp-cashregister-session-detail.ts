@@ -214,10 +214,18 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     ];
   }
 
+  /**
+   * Floor of the WHEN column in both lists. On a tablet the tracks share the width evenly: at
+   * 820 px the five movement columns got 138 px each while «10/01/2026, 01:34 AM» measures 142 px,
+   * so the English time lost its «AM» behind an ellipsis (cash_register#129). 9.5rem (152 px)
+   * holds the widest date and time the hub paints; the other columns keep the table's own floor.
+   */
+  private static readonly WHEN_WIDTH = 'minmax(9.5rem,1fr)';
+
   private get movementColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'created_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.created_at) },
+      { key: 'created_at', header: t('ui.colWhen'), sortable: true, width: ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r) => formatDateTime(r.created_at) },
       { key: 'movement_type', header: t('ui.labelType'), sortable: true, format: (r) => enumLabel(MOVEMENT_TYPE_KEY, r.movement_type) },
       { key: 'amount', header: t('ui.labelAmount'), align: 'right', sortable: true, format: (r) => this.fmt(r.amount as number) },
       { key: 'payment_method', header: t('ui.colMethod'), sortable: true, format: (r) => paymentMethodLabel(r.payment_method) },
@@ -229,7 +237,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
   private get countColumns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'counted_at', header: t('ui.colWhen'), sortable: true, format: (r) => formatDateTime(r.counted_at) },
+      { key: 'counted_at', header: t('ui.colWhen'), sortable: true, width: ErpCashRegisterSessionDetail.WHEN_WIDTH, format: (r) => formatDateTime(r.counted_at) },
       { key: 'count_type', header: t('ui.labelCountType'), sortable: true, format: (r) => enumLabel(COUNT_TYPE_KEY, r.count_type) },
       { key: 'total', header: t('ui.totalCounted'), align: 'right', sortable: true, format: (r) => this.fmt(r.total as number) },
       { key: 'notes', header: t('ui.labelNotes') },
@@ -242,12 +250,16 @@ export class ErpCashRegisterSessionDetail extends LitElement {
    * from that one attribute (outfitkit#143), so a spec that asks for a movement row and a spec
    * that asks for a count row have to be asking two different questions. A shared namespace would
    * answer both with whichever table rendered first.
+   *
+   * Both turn into cards on a phone (`views`, like the sessions list of the dashboard): as a table
+   * the WHEN column was cut to the date and the time — what tells one count from another — was lost
+   * behind a sideways scroll (cash_register#129). The card is titled by that date and time.
    */
   private renderMovements() {
     const ctrl = this.movements;
     if (!ctrl) return nothing;
     return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-movements-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
-      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      <ok-data-table testid="cash-register-session-movements-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.movementColumns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => formatDateTime(r.created_at)} .cardIcon=${() => 'swap-vertical-outline'} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noMovements')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
@@ -258,7 +270,7 @@ export class ErpCashRegisterSessionDetail extends LitElement {
     const ctrl = this.counts;
     if (!ctrl) return nothing;
     return html`${ctrl.error && !dataTableShowsLoadError() ? html`<ok-inline-feedback data-testid="cash-register-session-counts-load-error" tone="danger" icon="alert-circle-outline">${ctrl.error}</ok-inline-feedback>` : nothing}
-      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
+      <ok-data-table testid="cash-register-session-counts-table" .error=${ctrl.error ?? ''} @retry=${() => Promise.all([ctrl.load(), this.loadSummary()])} .serverSide=${true} .columns=${this.countColumns} .views=${true} .cardTitle=${(r: Record<string, unknown>) => formatDateTime(r.counted_at)} .cardIcon=${() => 'calculator-outline'} .rows=${ctrl.rows ?? []} .total=${ctrl.total ?? 0}
       .page=${ctrl.state.page} .pageSize=${ctrl.state.pageSize} .sort=${ctrl.state.sort} .sortDir=${ctrl.state.dir}
       .emptyMessage=${ctrl.loading ? erplora().t(CATALOG, 'ui.loading') : erplora().t(CATALOG, 'ui.noCounts')}
       @pageChange=${(e: CustomEvent<number>) => ctrl.setPage(e.detail)}
