@@ -191,8 +191,7 @@ Pasos:
 Entra: los ajustes guardados («Activar caja» y «URL del POS protegido») y si hay sesión abierta.
 Sale: nada propio. Mientras la caja esté cerrada, el hub rechaza cualquier orden de Venta, no solo cobrar, anular y devolver: también abrir una cuenta o una mesa, añadir o quitar líneas, enviar la comanda a cocina, dividir o juntar cuentas, descuentos, la vista previa del cobro, los ajustes de Venta, las formas de pago, los departamentos y las notas rápidas. Da igual que venga del TPV, del asistente, de un flujo o de la API. La pantalla solo tapa la ruta del TPV; las demás pantallas de Venta se abren, pero sus órdenes se rechazan. Solo aplica cuando la «URL del POS protegido» apunta a Venta.
 Si falla: si la lectura de los ajustes o de la sesión falla, el TPV se deja abrir (el bloqueo cede antes que parar las ventas). Una orden de Venta rechazada porque la caja está cerrada solo da el aviso genérico de Venta, sin mención a la caja: al cobrar, «Error al cobrar»; al anular, «No se ha podido anular la venta»; al devolver, «No se ha podido registrar la devolución.». El asistente y la API reciben una frase en inglés del hub.
-Implicados: pendiente
-Pendiente de enlazar: sales — el TPV de cobro que se monta detrás de la apertura de caja
+Implicados: SALES-F08
 Pendiente de enlazar: hub — bloquear una ruta y las órdenes de un módulo mientras otro no cumpla su condición
 QA: R-01, B-01, BD-04
 
@@ -259,7 +258,7 @@ Sale: nada; avisa, nunca impide.
 Si falla: si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
 Implicados: pendiente
 Pendiente de enlazar: kitchen — la lista de comandas vivas de la pantalla de cocina
-Pendiente de enlazar: printing — la cola de impresiones pendientes por estación
+Pendiente de enlazar: hub — la cobertura de la cola de impresión por estación (`hub.print.coverage`), la misma que enseña Impresión en PRINTING-F01
 QA: qa-hub-restaurant §14 (discrepa)
 
 ### CASH_REGISTER-F09 Cerrar el turno: esperado, contado y diferencia
@@ -275,7 +274,7 @@ Pasos:
 Entra: el efectivo contado y las notas.
 Sale: la sesión cerrada con esperado (fondo + ventas, entradas y salidas en efectivo con su signo − devoluciones y anulaciones en efectivo; lo cobrado o apuntado con tarjeta, transferencia u otro no cuenta), contado y diferencia (contado − esperado: positiva sobra, negativa falta) (avisa: cash_register.session_closed). Lo que llegue después (una anulación de ayer) va al turno abierto, nunca a este.
 Si falla: «Escribe el efectivo contado para cerrar la sesión.» con el campo vacío (la pantalla siempre lo pide, esté o no el ajuste; el ajuste de recuento obligatorio lo hace cumplir también al asistente y a la API, que reciben el rechazo `cash_register.closing_balance_required`); importe ilegible, negativo o ambiguo, con su motivo. No hay forma de reabrir una sesión cerrada por error: se abre otra con el efectivo real como fondo.
-Implicados: pendiente
+Implicados: PRINTING-F17
 Pendiente de enlazar: REC_RESTAURANTE — cerrar la caja al acabar el servicio
 Pendiente de enlazar: REC_PELUQUERIA — cerrar la caja al acabar el día del salón
 QA: R-10, B-07, BD-11, qa-hub-restaurant §14 (discrepa), qa-hub-restaurant §8 carreras (discrepa)
@@ -308,9 +307,7 @@ Pasos:
 Entra: la sesión elegida; el número de factura o tique de cada venta, si Facturación o Venta lo dan.
 Sale: nada; es de solo lectura.
 Si falla: «No se pudo cargar el detalle de la sesión» o el error de cada tabla con reintento. Sin Facturación, o sin permiso para leer facturas, el concepto es «Venta …» con el número de venta, o «Venta» a secas.
-Implicados: pendiente
-Pendiente de enlazar: invoice — dar el número de factura o tique que nació de una venta
-Pendiente de enlazar: sales — dar el número de una venta
+Implicados: INVOICE-F20, SALES-F01
 QA: R-10, B-07
 
 ### CASH_REGISTER-F12 Ver la caja en los paneles del inicio
@@ -341,9 +338,7 @@ Pasos:
 Entra: el cobro de Venta: total, formas de pago con su tipo, importe de cada una y coste de las invitaciones (sale.completed).
 Sale: los movimientos de venta (avisa: cash_register.movement_added). Una venta de total cero sin invitaciones no deja nada; una toda invitación deja un movimiento de importe cero con su coste.
 Si falla: sin caja abierta la venta se cobra y la caja no la anota (no hay rechazo ni aviso); con el bloqueo del TPV armado ese caso solo puede darse si la caja se cierra mientras llega el cobro.
-Implicados: pendiente
-Pendiente de enlazar: sales — cobrar una venta (efectivo, tarjeta, pago mixto, invitaciones)
-Pendiente de enlazar: printing — abrir el cajón físico al cobrar
+Implicados: SALES-F01, SALES-F02, SALES-F03, SALES-F08, SALES-F15
 QA: R-09, B-06, BD-11, qa-hub-restaurant §10
 
 ### CASH_REGISTER-F14 Compensar en la caja una venta anulada
@@ -358,9 +353,8 @@ Pasos:
 4. Si se pagó solo con tarjeta, o ya se devolvió entera en efectivo, no se anota nada.
 Entra: la venta anulada (sale.voided) y los movimientos de esa venta en la caja.
 Sale: el movimiento de compensación (avisa: cash_register.movement_added). Una segunda entrega del mismo aviso no duplica nada.
-Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente. Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
-Implicados: pendiente
-Pendiente de enlazar: sales — anular una venta cobrada
+Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente. Con el bloqueo del TPV armado (CASH_REGISTER-F04) este caso solo se da si la caja se cierra después de anular: con la caja ya cerrada, Venta no llega a anular (SALES-F08). Anular no corrige nada fiscal: el tique sigue emitido y declarado (SALES-F30). Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
+Implicados: SALES-F30
 Pendiente de enlazar: hub — reintentar y listar los avisos que un módulo no pudo procesar
 QA: R-11, B-08, qa-hub-restaurant §13
 
@@ -375,9 +369,8 @@ Pasos:
 3. Manda por dónde vuelve el dinero, no cómo se cobró: una venta con tarjeta devuelta en efectivo baja el esperado; una en efectivo devuelta a la tarjeta no lo toca.
 Entra: el documento de devolución con sus formas de pago, importes y su referencia (sale.refunded).
 Sale: los movimientos de devolución (avisa: cash_register.movement_added). Cada documento se anota una sola vez por cada cobro de origen del que sale el dinero, aunque el aviso llegue dos veces.
-Si falla: con una parte en efectivo y ninguna caja abierta, la caja la rechaza (reintentos y después avisos fallidos, como en CASH_REGISTER-F14); solo con tarjeta y sin caja abierta, no se anota nada y no es un error. Una devolución sin referencia de documento se rechaza. Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
-Implicados: pendiente
-Pendiente de enlazar: sales — devolver una venta, total o parcial, por su forma de pago
+Si falla: con una parte en efectivo y ninguna caja abierta, la caja la rechaza (reintentos y después avisos fallidos, como en CASH_REGISTER-F14); solo con tarjeta y sin caja abierta, no se anota nada y no es un error. Con el bloqueo del TPV armado, con la caja ya cerrada Venta no llega a devolver (SALES-F08). Una devolución sin referencia de documento se rechaza. Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
+Implicados: SALES-F31
 QA: R-11, B-08, qa-hub-restaurant §13
 
 ## Qué comparten los verticales
