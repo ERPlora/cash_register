@@ -48,8 +48,9 @@ Contrastada en `.claude/agents/qa-hub-restaurant.md` §2 (10/08/2026) y en las d
   encendido, pero **el TPV no se bloquea** y no se exige fondo ni recuento (CASH_REGISTER-F01,
   CASH_REGISTER-F04). La lista de primeros pasos del hub trae el paso opcional «Tu caja», que lleva
   a esos ajustes y se da por hecho al guardarlos.
-- **Cajones**: opcionales. Con uno solo no se pregunta; con varios, la pantalla de apertura del TPV
-  obliga a elegir. Hoy solo se dan de alta con el asistente (CASH_REGISTER-F02).
+- **Cajones**: opcionales. Delante del TPV, con uno solo no se pregunta (se elige solo) y con varios
+  obliga a elegir; en Caja → «Abrir sesión» el campo «Cajón» sale vacío y, si no se elige, la
+  sesión queda sin cajón. Hoy solo se dan de alta con el asistente (CASH_REGISTER-F02).
 - **Moneda del hub**: el arqueo enseña los billetes y monedas de la moneda del hub (18 monedas); en
   cualquier otra pide el total a mano.
 
@@ -171,25 +172,25 @@ Pasos:
 4. Sale «Sesión abierta»; la sesión aparece arriba de la tabla como «Abierta», con número `S-AAMMDD-NNNN` puesto por el sistema, y «Abrir sesión» se apaga. El TPV deja de estar bloqueado.
 Entra: cajón, fondo y notas del cajero; los ajustes del negocio.
 Sale: la sesión abierta, a nombre de quien la abre (avisa: cash_register.session_opened, con el fondo y las notas). El fondo cuenta para el esperado desde ese momento.
-Si falla: «Ya hay una sesión de caja abierta. Ciérrala antes de abrir otra.» (solo hay una por negocio, sea cual sea el cajón); «Este negocio exige fondo de apertura: indica el efectivo con el que empieza la caja.» con el fondo obligatorio y fondo vacío o cero; un importe ilegible («Esto no es un importe. Escribe una cifra, por ejemplo 12,50.»), negativo o ambiguo («1.250») se para antes de enviar. Delante del TPV, con varios cajones y ninguno elegido, el aviso es solo la palabra «Cajón».
+Si falla: «Ya hay una sesión de caja abierta. Ciérrala antes de abrir otra.» (solo hay una por negocio, sea cual sea el cajón); con el fondo obligatorio y fondo vacío o cero, en Caja «Este negocio exige fondo de apertura: indica el efectivo con el que empieza la caja.» y delante del TPV «Este negocio exige un fondo de apertura: indica el efectivo con el que empieza el cajón.»; un importe ilegible («Esto no es un importe. Escribe una cifra, por ejemplo 12,50.»), negativo o ambiguo («1.250») se para antes de enviar. Delante del TPV, con varios cajones y ninguno elegido, el aviso es solo la palabra «Cajón».
 Implicados: pendiente
 Pendiente de enlazar: REC_RESTAURANTE — abrir la caja al empezar el servicio
 Pendiente de enlazar: REC_PELUQUERIA — abrir la caja al empezar el día del salón
 QA: R-01, B-01, BD-04, qa-hub-restaurant §8 carreras (discrepa)
 
 ### CASH_REGISTER-F04 Vender solo con la caja abierta
-Estado: parcial — el bloqueo no existe hasta que el administrador guarda los ajustes por primera vez, aunque la pantalla de ajustes enseñe «Activar caja» encendido
+Estado: parcial — el bloqueo no existe hasta que el administrador guarda los ajustes por primera vez, aunque la pantalla de ajustes enseñe «Activar caja» encendido; y quien se encuentra la caja cerrada fuera de la pantalla del TPV (anulando desde la lista de ventas, o con el TPV ya abierto cuando otro cierra la caja) solo ve el aviso genérico de Venta, que no menciona la caja
 Vertical: comun
 Actor: empleado, sistema
 Pantalla: Apertura de caja delante del TPV
 Pasos:
-1. Con «Activar caja» guardado y ninguna sesión abierta, el cajero entra en el TPV.
+1. Con «Activar caja» guardado, la «URL del POS protegido» apuntando a Venta y ninguna sesión abierta, el cajero entra en el TPV.
 2. En su lugar aparece la tarjeta «Abrir sesión de caja».
 3. Abre la caja como en CASH_REGISTER-F03.
 4. El TPV aparece solo, sin recargar.
 Entra: los ajustes guardados («Activar caja» y «URL del POS protegido») y si hay sesión abierta.
-Sale: nada propio; mientras la caja esté cerrada el hub rechaza toda orden de Venta (cobrar, anular, devolver), venga del TPV, del asistente o de la API.
-Si falla: si la lectura de los ajustes o de la sesión falla, el TPV se deja abrir (el bloqueo cede antes que parar las ventas). Una orden de Venta rechazada por caja cerrada vuelve con el código `protects_guard` (texto en pantalla sin confirmar).
+Sale: nada propio. Mientras la caja esté cerrada, el hub rechaza cualquier orden de Venta, no solo cobrar, anular y devolver: también abrir una cuenta o una mesa, añadir o quitar líneas, enviar la comanda a cocina, dividir o juntar cuentas, descuentos, la vista previa del cobro, los ajustes de Venta, las formas de pago, los departamentos y las notas rápidas. Da igual que venga del TPV, del asistente, de un flujo o de la API. La pantalla solo tapa la ruta del TPV; las demás pantallas de Venta se abren, pero sus órdenes se rechazan. Solo aplica cuando la «URL del POS protegido» apunta a Venta.
+Si falla: si la lectura de los ajustes o de la sesión falla, el TPV se deja abrir (el bloqueo cede antes que parar las ventas). Una orden de Venta rechazada porque la caja está cerrada solo da el aviso genérico de Venta, sin mención a la caja: al cobrar, «Error al cobrar»; al anular, «No se ha podido anular la venta»; al devolver, «No se ha podido registrar la devolución.». El asistente y la API reciben una frase en inglés del hub.
 Implicados: pendiente
 Pendiente de enlazar: sales — el TPV de cobro que se monta detrás de la apertura de caja
 Pendiente de enlazar: hub — bloquear una ruta y las órdenes de un módulo mientras otro no cumpla su condición
@@ -205,7 +206,7 @@ Pasos:
 2. Elige «Entrada» (cambio traído de la caja fuerte) o «Salida» (pago a un proveedor, retirada al banco), escribe el «Importe» en positivo y el «Concepto».
 3. Pulsa «Registrar».
 4. Sale «Movimiento de entrada registrado (…)» o «Movimiento de salida registrado (…)»; en Detalle aparece el movimiento (la salida en negativo) y el esperado sube o baja.
-Entra: tipo, importe y concepto. Desde la pantalla el medio es siempre efectivo; el asistente o la API pueden apuntar también tarjeta, transferencia u otro, que quedan en la lista pero no cuentan para el esperado.
+Entra: tipo, importe y concepto. Desde la pantalla el medio es siempre efectivo; el asistente o la API pueden apuntar también tarjeta, transferencia u otro, que quedan en la lista y no cuentan para el esperado, aunque sí aparecen sumados en «Entradas» y «Salidas» del Detalle.
 Sale: el movimiento, a nombre de quien lo apunta (avisa: cash_register.movement_added). El signo lo pone el sistema según el tipo, mande lo que mande quien llama.
 Si falla: «Esta salida dejaría la caja en negativo y el saldo negativo no está permitido.» si los ajustes no lo permiten; «Importe inválido» con importe cero; un importe ilegible o negativo se para antes de enviar con su motivo; sesión cerrada en otro dispositivo: «Esa caja está cerrada: una caja cerrada no acepta movimientos nuevos.». Un movimiento equivocado no se edita ni se borra: se apunta el contrario con un concepto que diga por qué.
 Implicados: ninguno
@@ -222,19 +223,19 @@ Pasos:
 3. Pulsa «Registrar arqueo».
 4. Sale «Arqueo registrado · total contado …» y el arqueo aparece en Detalle. Si era de «Cierre», se abre directamente el panel de cierre con «Efectivo contado» ya puesto (CASH_REGISTER-F09); el arqueo no cierra nada por sí solo.
 Entra: las cantidades por billete y moneda, o el total.
-Sale: el arqueo con su desglose; el total lo vuelve a sumar el sistema con los decimales de la moneda del hub.
+Sale: el arqueo con su desglose. Si se cuenta por billetes y monedas, el total lo suma el sistema con los decimales de la moneda del hub; si se escribe el total a mano (o lo manda la API), se guarda ese total y prevalece sobre cualquier desglose que venga con él.
 Si falla: «No se pudo registrar el arqueo» u otro motivo en el aviso rojo; con el total a mano, el motivo sale bajo el campo y «Registrar arqueo» queda apagado.
 Implicados: ninguno
 QA: BD-11, R-10, B-07
 
 ### CASH_REGISTER-F07 Contar a ciegas: quién ve el efectivo esperado
-Estado: parcial — con el arqueo ciego tampoco el responsable ni el administrador ven el esperado en el panel de cierre ni en la columna Esperado de la tabla (solo en Detalle y en el panel del inicio)
+Estado: parcial — el ciego oculta la cifra, no los datos: el empleado ve en Detalle cada movimiento con su importe y forma de pago, el fondo y los totales de entradas, salidas y devoluciones, y sumando llega al esperado (al asistente y a la API les pasa lo mismo); y tampoco el responsable ni el administrador ven el esperado en el panel de cierre ni en la columna Esperado de la tabla (solo en Detalle y en el panel del inicio)
 Vertical: comun
 Actor: administrador, responsable, empleado
 Pantalla: Caja
 Pasos:
 1. El administrador enciende «Arqueo ciego» y guarda (CASH_REGISTER-F01).
-2. Durante el turno, en la sesión abierta, la columna Esperado sale vacía para todos; en Detalle, el empleado ve «—» en Esperado y no ve el desglose por forma de pago; el responsable y el administrador sí lo ven en Detalle y en «Caja (sesión actual)».
+2. Durante el turno, en la sesión abierta, la columna Esperado sale vacía para todos; en Detalle, el empleado ve «—» en Esperado y no ve el desglose de ventas por forma de pago, pero sí la lista de movimientos con sus importes; el responsable y el administrador sí lo ven en Detalle y en «Caja (sesión actual)».
 3. El cajero cuenta (CASH_REGISTER-F06) y cierra (CASH_REGISTER-F09) sin ver el esperado.
 4. Al cerrar aparecen esperado, contado y diferencia.
 Entra: el ajuste «Arqueo ciego» y el permiso de ver el esperado (administrador y responsable).
@@ -255,7 +256,7 @@ Pasos:
 4. El segundo clic cierra (CASH_REGISTER-F09).
 Entra: las comandas vivas de Cocina (solo si está instalada) y la cola de impresión del hub.
 Sale: nada; avisa, nunca impide.
-Si falla: si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.» y el cierre sigue funcionando sin el paso extra.
+Si falla: si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
 Implicados: pendiente
 Pendiente de enlazar: kitchen — la lista de comandas vivas de la pantalla de cocina
 Pendiente de enlazar: printing — la cola de impresiones pendientes por estación
@@ -272,7 +273,7 @@ Pasos:
 3. Pulsa «Cerrar sesión» (dos veces si la revisión del turno avisó, CASH_REGISTER-F08).
 4. Sale «Sesión S-… cerrada · esperado … · contado … · diferencia …»; la fila pasa a «Cerrada» con los tres importes fijos para siempre y «Abrir sesión» vuelve a encenderse.
 Entra: el efectivo contado y las notas.
-Sale: la sesión cerrada con esperado (fondo + ventas en efectivo + entradas − salidas − devoluciones en efectivo), contado y diferencia (contado − esperado: positiva sobra, negativa falta) (avisa: cash_register.session_closed). Lo que llegue después (una anulación de ayer) va al turno abierto, nunca a este.
+Sale: la sesión cerrada con esperado (fondo + ventas, entradas y salidas en efectivo con su signo − devoluciones y anulaciones en efectivo; lo cobrado o apuntado con tarjeta, transferencia u otro no cuenta), contado y diferencia (contado − esperado: positiva sobra, negativa falta) (avisa: cash_register.session_closed). Lo que llegue después (una anulación de ayer) va al turno abierto, nunca a este.
 Si falla: «Escribe el efectivo contado para cerrar la sesión.» con el campo vacío (la pantalla siempre lo pide, esté o no el ajuste; el ajuste de recuento obligatorio lo hace cumplir también al asistente y a la API, que reciben el rechazo `cash_register.closing_balance_required`); importe ilegible, negativo o ambiguo, con su motivo. No hay forma de reabrir una sesión cerrada por error: se abre otra con el efectivo real como fondo.
 Implicados: pendiente
 Pendiente de enlazar: REC_RESTAURANTE — cerrar la caja al acabar el servicio
@@ -288,7 +289,7 @@ Pasos:
 1. El administrador enciende «Cierre automático diario» y elige la hora (04:00 de fábrica) en Ajustes.
 2. Cada 5 minutos el hub mira si ya ha pasado el último corte en la hora local del negocio y cierra la sesión que siga abierta desde antes de ese corte; la abierta después del corte no se toca. Un hub apagado durante el corte la cierra en cuanto vuelve.
 3. En Caja, la sesión aparece «Cerrada» con su esperado y Contado y Diferencia vacíos.
-Entra: el ajuste, la hora y la zona horaria del negocio (la del hub o, si no, la de su país; UTC si no se sabe).
+Entra: el ajuste, la hora y la zona horaria del negocio: la zona del hub; si no hay, la de su región (Canarias, Azores, Madeira) o la de su país; un hub sin país usa la hora de Madrid, y UTC solo se usa con un país que no está en la tabla del módulo.
 Sale: la sesión cerrada sin recuento, sin persona que la cerrara y con una marca en las notas de cierre (que ninguna pantalla enseña) (avisa: cash_register.session_closed, también en las pasadas que no cierran nada).
 Si falla: sin ajustes guardados o con el ajuste apagado no cierra nada. No hay aviso a nadie de que la caja se cerró sola.
 Implicados: ninguno
@@ -346,7 +347,7 @@ Pendiente de enlazar: printing — abrir el cajón físico al cobrar
 QA: R-09, B-06, BD-11, qa-hub-restaurant §10
 
 ### CASH_REGISTER-F14 Compensar en la caja una venta anulada
-Estado: hecho
+Estado: parcial — si la caja se cierra justo entre la comprobación de que hay caja abierta y la anotación (otro dispositivo o el cierre automático), no se anota nada, el aviso se da por entregado y no queda rastro
 Vertical: comun
 Actor: sistema
 Pantalla: ninguna
@@ -357,14 +358,14 @@ Pasos:
 4. Si se pagó solo con tarjeta, o ya se devolvió entera en efectivo, no se anota nada.
 Entra: la venta anulada (sale.voided) y los movimientos de esa venta en la caja.
 Sale: el movimiento de compensación (avisa: cash_register.movement_added). Una segunda entrega del mismo aviso no duplica nada.
-Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente.
+Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente. Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
 Implicados: pendiente
 Pendiente de enlazar: sales — anular una venta cobrada
 Pendiente de enlazar: hub — reintentar y listar los avisos que un módulo no pudo procesar
 QA: R-11, B-08, qa-hub-restaurant §13
 
 ### CASH_REGISTER-F15 Anotar en la caja una devolución
-Estado: hecho
+Estado: parcial — si la caja se cierra justo entre la comprobación de que hay caja abierta y la anotación (otro dispositivo o el cierre automático), no se anota nada, el aviso se da por entregado y no queda rastro
 Vertical: comun
 Actor: sistema
 Pantalla: ninguna
@@ -373,8 +374,8 @@ Pasos:
 2. La sesión abierta ahora recibe una «Devolución» por cada forma de pago por la que vuelve el dinero; en Detalle se lee «Devolución de …».
 3. Manda por dónde vuelve el dinero, no cómo se cobró: una venta con tarjeta devuelta en efectivo baja el esperado; una en efectivo devuelta a la tarjeta no lo toca.
 Entra: el documento de devolución con sus formas de pago, importes y su referencia (sale.refunded).
-Sale: los movimientos de devolución (avisa: cash_register.movement_added). Cada documento se anota una sola vez aunque el aviso llegue dos veces.
-Si falla: con una parte en efectivo y ninguna caja abierta, la caja la rechaza (reintentos y después avisos fallidos, como en CASH_REGISTER-F14); solo con tarjeta y sin caja abierta, no se anota nada y no es un error. Una devolución sin referencia de documento se rechaza.
+Sale: los movimientos de devolución (avisa: cash_register.movement_added). Cada documento se anota una sola vez por cada cobro de origen del que sale el dinero, aunque el aviso llegue dos veces.
+Si falla: con una parte en efectivo y ninguna caja abierta, la caja la rechaza (reintentos y después avisos fallidos, como en CASH_REGISTER-F14); solo con tarjeta y sin caja abierta, no se anota nada y no es un error. Una devolución sin referencia de documento se rechaza. Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
 Implicados: pendiente
 Pendiente de enlazar: sales — devolver una venta, total o parcial, por su forma de pago
 QA: R-11, B-08, qa-hub-restaurant §13
@@ -398,7 +399,7 @@ mismas reglas. Tocar una pieza de esta tabla afecta a los dos negocios.
 | Elemento de la referencia | Estado | Flujo |
 |---|---|---|
 | Abrir turno con fondo, fondo obligatorio opcional | hecho | F01, F03 |
-| No vender sin caja abierta | parcial: solo tras guardar los ajustes | F04 |
+| No vender sin caja abierta | parcial: solo tras guardar los ajustes, y el rechazo fuera del TPV no dice que la caja está cerrada | F04 |
 | Elegir cajón al abrir | hecho | F03 |
 | Varios cajones abiertos a la vez | no hecho (una sesión por negocio, decidido en cash_register#11) | — |
 | Alta y baja de cajones en pantalla | no hecho (solo asistente) | F02 |
@@ -408,10 +409,10 @@ mismas reglas. Tocar una pieza de esta tabla afecta a los dos negocios.
 | Ventas en efectivo anotadas solas; tarjeta fuera del cajón | hecho | F13 |
 | Pago mixto: una línea por forma de pago | hecho | F13 |
 | Venta sin caja abierta | parcial: se pierde en silencio | F13 |
-| Anulación y devolución compensan en el turno abierto | hecho | F14, F15 |
+| Anulación y devolución compensan en el turno abierto | parcial: se pierden si la caja se cierra justo mientras se anotan | F14, F15 |
 | Esperado en el cajón visible durante el turno | hecho | F09, F11, F12 |
 | Arqueo por billetes y monedas de la moneda del negocio | hecho | F06 |
-| Arqueo ciego con permiso de supervisor | parcial: el supervisor no lo ve al cerrar | F07 |
+| Arqueo ciego con permiso de supervisor | parcial: el cajero ve los movimientos y puede sumarlos; el supervisor no ve el esperado al cerrar | F07 |
 | Revisión del turno al cerrar (avisa, no impide) | hecho: comandas e impresiones; no cuentas ni mesas abiertas | F08 |
 | Cerrar con esperado, contado y diferencia | hecho | F09 |
 | Aprobar una diferencia fuera de umbral, nota obligatoria | no hecho | — |
@@ -447,14 +448,19 @@ mismas reglas. Tocar una pieza de esta tabla afecta a los dos negocios.
   - los ajustes antiguos de abrir al iniciar sesión y cerrar al salir siguen como columnas retiradas
     (sin datos personales);
   - copias fuera de Caja: los avisos de turno abierto, turno cerrado y movimiento llevan lo que se
-    escribió al hacerlo (fondo, notas, concepto) y el usuario que lo hizo.
+    escribió al hacerlo (fondo, notas, concepto) y el usuario que lo hizo; el aviso de movimiento
+    que nace de un cobro, de una anulación o de una devolución reenvía además el aviso entero de
+    Venta: nombre, NIF, dirección y país del cliente, quién atendió, las líneas de la venta, y el
+    motivo y quién anuló o devolvió. Todos los avisos llevan también la razón social, el NIF y la
+    dirección del negocio.
 
 ## Reglas que no se rompen
 
 - **Aislamiento**: toda lectura va con el negocio; un movimiento no se puede colgar de una sesión de
   otro negocio (el arqueo no lo comprueba: hueco de CASH_REGISTER-F06).
-- **Una sola sesión abierta por negocio**: la base de datos no admite dos; abrir con una abierta se
-  rechaza.
+- **Una sola sesión abierta por negocio**: la base de datos no admite dos, nunca quedan dos
+  abiertas. Abrir con una ya abierta se rechaza; si dos aperturas llegan a la vez, la segunda
+  responde bien sin abrir nada (hueco de CASH_REGISTER-F03).
 - **El signo lo pone el sistema**: entrada y venta suman, salida y devolución restan, según el
   tipo y no según el signo con que llegue el importe; las lecturas lo derivan también para las filas
   antiguas.
@@ -466,24 +472,31 @@ mismas reglas. Tocar una pieza de esta tabla afecta a los dos negocios.
 - **Lo que no existe**: no hay orden para reabrir una sesión, ni para editar o borrar un movimiento o
   un arqueo.
 - **Los ajustes, una vez guardados, los aplica el servidor**: fondo obligatorio, recuento
-  obligatorio, saldo negativo y arqueo ciego se cumplen también por el asistente y la API.
+  obligatorio y saldo negativo se cumplen también por el asistente y la API. El arqueo ciego oculta
+  la cifra del esperado en todas las lecturas, pero no la lista de movimientos (hueco de
+  CASH_REGISTER-F07).
 - **El número de turno lo pone el sistema** (`S-AAMMDD-NNNN`, correlativo por día), venga la apertura
   de donde venga; un número enviado por quien llama se ignora.
-- **Una anulación o devolución con efectivo nunca se pierde en silencio**: sin caja abierta se
-  rechaza y queda reintentándose o en la lista de avisos fallidos. Cada devolución se anota una vez
-  por documento y forma de pago; cada anulación, una vez.
-- **El TPV bloqueado lo aplica el servidor**: con la caja activada y cerrada, el hub rechaza toda
-  orden de Venta, no solo la pantalla.
+- **Una anulación o devolución con efectivo y sin caja abierta se rechaza**: el aviso se reintenta y
+  después queda en la lista de avisos fallidos (si la caja se cierra justo mientras se anota, se
+  pierde: hueco de CASH_REGISTER-F14 y CASH_REGISTER-F15). Cada devolución se anota una vez por
+  documento y por cada cobro de origen del que sale el dinero; cada anulación, una vez.
+- **El TPV bloqueado lo aplica el servidor**: con la caja activada y cerrada y la «URL del POS
+  protegido» apuntando a Venta, el hub rechaza cualquier orden de Venta (abrir cuenta, añadir
+  líneas, enviar a cocina, cobrar, anular, devolver, ajustes…), venga de donde venga.
 - **Permisos**: abrir, apuntar, contar y cerrar, cualquier perfil con caja; ver el esperado con el
   arqueo ciego, administrador y responsable; ajustes y cajones, solo administrador. El servidor lo
   aplica aunque la pantalla enseñe el botón.
-- **Dinero**: importes enteros en la unidad más pequeña de la moneda del hub; el arqueo se suma con
-  los decimales de esa moneda, nunca con los que mande la pantalla.
+- **Dinero**: importes enteros en la unidad más pequeña de la moneda del hub. Un arqueo por billetes
+  y monedas lo suma el sistema con los decimales de esa moneda, nunca con los que mande la
+  pantalla; un total escrito a mano (o enviado por la API) se guarda tal cual y prevalece sobre el
+  desglose.
 
 ## Lo que NO hace, a propósito
 
 - No cobra ni factura: eso es de Venta, Facturación y VeriFactu.
-- No abre el cajón físico: lo abre Impresión al cobrar, si su ajuste lo pide.
+- No abre el cajón físico: lo abre el hub en el dispositivo que cobró si el ajuste de Impresión lo
+  pide, con cualquier forma de pago.
 - No lleva varios cajones abiertos a la vez: una sesión por negocio (cash_register#11).
 - No reabre turnos ni edita o borra movimientos: se corrige con otro movimiento.
 - No abre la caja al iniciar sesión ni la cierra al salir: esos ajustes se retiraron
@@ -527,6 +540,8 @@ Contra `origin/main` v1.3.74 (05/10/2026). Una línea por discrepancia; manda el
 - **Comentarios de `commands/open_session.sql` y `commands/add_movement.sql`** y del mapa de errores del panel: citan una comprobación de filas (`expect_rows`) que `module.json` no declara; por eso la doble apertura y el doble cierre responden bien sin hacer nada (F03, F09).
 - **`qa-hub-restaurant` §14**: «una sola sesión por caja/usuario»; es por negocio (F03, duda 1). «Diferencia fuera de umbral con aprobación y nota»; no existe (duda 2). «No cerrar turno con comandas o cobros pendientes»; avisa sin impedir y no mira cuentas abiertas (F08). «Informe X y Z numerado»; no hay papel (duda 3). «Arqueo ciego para cajero y esperado visible para encargado»; el encargado tampoco lo ve al cerrar (F07).
 - **`qa-hub-restaurant` §8, casos de carrera** («dos aperturas/cierres: nunca dos éxitos»): la segunda apertura simultánea y el segundo cierre responden bien sin hacer nada (F03, F09).
-- **Rechazo de una orden de Venta con la caja cerrada** (`protects_guard`): el shell no tiene traducción para ese código; sin confirmar qué texto ve el cajero (F04).
+- **Rechazo de una orden de Venta con la caja cerrada** (`protects_guard`): ni el shell ni el SDK lo traducen y Venta no lo reconoce, así que el cajero ve el aviso genérico de Venta («Error al cobrar», «No se ha podido anular la venta», «No se ha podido registrar la devolución.»), sin mención a la caja; el asistente y la API reciben la frase en inglés del hub (F04).
+- **Descripción del ajuste «Arqueo ciego»** («Quien cuenta la caja no ve el efectivo esperado hasta declarar el recuento»): no ve la cifra, pero sí cada movimiento en Detalle, y puede sumarla (F07).
+- **Comentario de `_refund_movement_for_open_session.sql` y del handler** («rechaza en voz alta… para que el evento caiga al dead-letter en vez de evaporarse»): la comprobación de caja abierta se hace antes de la escritura, sin comprobación de filas, así que un cierre en medio la evapora igual (F14, F15).
 - **Apertura delante del TPV con varios cajones y ninguno elegido**: el aviso es la etiqueta «Cajón» a secas, no una frase; y el panel de Caja deja abrir sin cajón en el mismo caso (F03).
 - **Cierre automático**: la marca en las notas está en inglés («auto-closed by schedule (cash_register#23)»); existe la cadena `ui.autoClosedNote` en español que no usa nadie, y ninguna pantalla enseña las notas (F10, F11).
