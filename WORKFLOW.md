@@ -142,7 +142,7 @@ Pasos:
 Entra: las decisiones del administrador.
 Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla. El primer guardado da por hecho el paso «Tu caja» de la lista de puesta en marcha del hub, que solo ve el administrador y no es obligatorio.
 Si falla: si el guardado se rechaza, «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Si lo que falla es la lectura (también para el administrador, por un fallo pasajero), el formulario enseña los valores de fábrica sin avisar y «Guardar» los escribe en los ocho ajustes, «Activar caja» incluido. Quien no es administrador no ve «Guardar».
-Implicados: HUB-F33, HUB-F35, HUB_SHELL-F31, HUB_SHELL-F43, HUB_SHELL-F44
+Implicados: HUB-F33, HUB-F35, HUB_SHELL-F31, HUB_SHELL-F43, HUB_SHELL-F44, REC_ALTA-F18
 QA: ninguno
 
 ### CASH_REGISTER-F02 Dar de alta un cajón
@@ -172,7 +172,7 @@ Pasos:
 Entra: cajón, fondo y notas del cajero; los ajustes del negocio.
 Sale: la sesión abierta, a nombre de quien la abre (avisa: cash_register.session_opened, con el fondo y las notas). El fondo cuenta para el esperado desde ese momento.
 Si falla: «Ya hay una sesión de caja abierta. Ciérrala antes de abrir otra.» (solo hay una por negocio, sea cual sea el cajón); con el fondo obligatorio y fondo vacío o cero, en Caja «Este negocio exige fondo de apertura: indica el efectivo con el que empieza la caja.» y delante del TPV «Este negocio exige un fondo de apertura: indica el efectivo con el que empieza el cajón.»; un importe ilegible («Esto no es un importe. Escribe una cifra, por ejemplo 12,50.»), negativo o ambiguo («1.250») se para antes de enviar. Delante del TPV, con varios cajones y ninguno elegido, el aviso es solo la palabra «Cajón».
-Implicados: REC_PELUQUERIA-F01, REC_RESTAURANTE-F01
+Implicados: REC_PELUQUERIA-F01, REC_RESTAURANTE-F01, REC_ALTA-F18
 QA: R-01, B-01, BD-04, qa-hub-restaurant §8 carreras (discrepa)
 
 ### CASH_REGISTER-F04 Vender solo con la caja abierta
@@ -188,7 +188,7 @@ Pasos:
 Entra: los ajustes guardados («Activar caja» y «URL del POS protegido») y si hay sesión abierta.
 Sale: nada propio. Mientras la caja esté cerrada, el hub rechaza cualquier orden de Venta, no solo cobrar, anular y devolver: también abrir una cuenta o una mesa, añadir o quitar líneas, enviar la comanda a cocina, dividir o juntar cuentas, descuentos, la vista previa del cobro, los ajustes de Venta, las formas de pago, los departamentos y las notas rápidas. Da igual que venga del TPV, del asistente, de un flujo o de la API. La pantalla solo tapa la ruta del TPV; las demás pantallas de Venta se abren, pero sus órdenes se rechazan. Solo aplica cuando la «URL del POS protegido» apunta a Venta.
 Si falla: si la lectura de los ajustes o de la sesión falla, el TPV se deja abrir (el bloqueo cede antes que parar las ventas). Una orden de Venta rechazada porque la caja está cerrada solo da el aviso genérico de Venta, sin mención a la caja: al cobrar, «Error al cobrar»; al anular, «No se ha podido anular la venta»; al devolver, «No se ha podido registrar la devolución.». El asistente y la API reciben una frase en inglés del hub.
-Implicados: SALES-F08, REC_PELUQUERIA-F01, REC_RESTAURANTE-F01, HUB-F13, HUB_SHELL-F50
+Implicados: SALES-F08, REC_PELUQUERIA-F01, REC_RESTAURANTE-F01, HUB-F13, HUB_SHELL-F50, REC_ALTA-F18
 QA: R-01, B-01, BD-04
 
 ### CASH_REGISTER-F05 Registrar una entrada o una salida de efectivo
@@ -329,7 +329,7 @@ Pasos:
 Entra: el cobro de Venta: total, formas de pago con su tipo, importe de cada una y coste de las invitaciones (sale.completed).
 Sale: los movimientos de venta (avisa: cash_register.movement_added). Una venta de total cero sin invitaciones no deja nada; una toda invitación deja un movimiento de importe cero con su coste.
 Si falla: sin caja abierta la venta se cobra y la caja no la anota (no hay rechazo ni aviso); con el bloqueo del TPV armado ese caso solo puede darse si la caja se cierra mientras llega el cobro.
-Implicados: SALES-F01, SALES-F02, SALES-F03, SALES-F08, SALES-F15, REC_PELUQUERIA-F09, REC_RESTAURANTE-F11, REC_RESTAURANTE-F17
+Implicados: SALES-F01, SALES-F02, SALES-F03, SALES-F08, SALES-F15, REC_PELUQUERIA-F09, REC_RESTAURANTE-F11, REC_RESTAURANTE-F17, REC_ALTA-F18
 QA: R-09, B-06, BD-11, qa-hub-restaurant §10
 
 ### CASH_REGISTER-F14 Compensar en la caja una venta anulada
