@@ -333,7 +333,7 @@ Pasos:
 Entra: el cobro de Venta: total, formas de pago con su tipo, importe de cada una y coste de las invitaciones (sale.completed).
 Sale: los movimientos de venta (avisa: cash_register.movement_added). Una venta de total cero sin invitaciones no deja nada; una toda invitación deja un movimiento de importe cero con su coste.
 Si falla: sin caja abierta la venta se cobra y la caja no la anota (no hay rechazo ni aviso); con el bloqueo del TPV armado ese caso solo puede darse si la caja se cierra mientras llega el cobro.
-Implicados: SALES-F01, SALES-F02, SALES-F03, SALES-F08, SALES-F15, REC_PELUQUERIA-F09, REC_RESTAURANTE-F11
+Implicados: SALES-F01, SALES-F02, SALES-F03, SALES-F08, SALES-F15, REC_PELUQUERIA-F09, REC_RESTAURANTE-F11, REC_RESTAURANTE-F17
 QA: R-09, B-06, BD-11, qa-hub-restaurant §10
 
 ### CASH_REGISTER-F14 Compensar en la caja una venta anulada
@@ -349,7 +349,7 @@ Pasos:
 Entra: la venta anulada (sale.voided) y los movimientos de esa venta en la caja.
 Sale: el movimiento de compensación (avisa: cash_register.movement_added). Una segunda entrega del mismo aviso no duplica nada.
 Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente. Con el bloqueo del TPV armado (CASH_REGISTER-F04) este caso solo se da si la caja se cierra después de anular: con la caja ya cerrada, Venta no llega a anular (SALES-F08). Anular no corrige nada fiscal: el tique sigue emitido y declarado (SALES-F30). Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
-Implicados: SALES-F30, REC_PELUQUERIA-F14, REC_RESTAURANTE-F15
+Implicados: SALES-F30, REC_FISCAL-F13, REC_PELUQUERIA-F14, REC_RESTAURANTE-F15
 Pendiente de enlazar: hub — reintentar y listar los avisos que un módulo no pudo procesar
 QA: R-11, B-08, qa-hub-restaurant §13
 
