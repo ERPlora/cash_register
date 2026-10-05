@@ -130,7 +130,7 @@ también con cada movimiento.
 ## Flujos
 
 ### CASH_REGISTER-F01 Configurar cómo funciona la caja
-Estado: hecho
+Estado: parcial — si la lectura de los ajustes falla, el formulario enseña los de fábrica y «Guardar» los escribe todos, «Activar caja» incluido
 Vertical: comun
 Actor: administrador
 Pantalla: Ajustes de Caja
@@ -140,10 +140,9 @@ Pasos:
 3. Pulsa «Guardar». Se guarda todo el formulario de una vez.
 4. Sale «Ajustes guardados.»; desde ese momento el servidor aplica el fondo obligatorio (CASH_REGISTER-F03), el recuento obligatorio (CASH_REGISTER-F09), el saldo negativo (CASH_REGISTER-F05), el arqueo ciego (CASH_REGISTER-F07), el cierre automático (CASH_REGISTER-F10) y el bloqueo del TPV.
 Entra: las decisiones del administrador.
-Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla.
-Si falla: «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Quien no es administrador no ve «Guardar».
-Implicados: pendiente
-Pendiente de enlazar: hub — pintar la pestaña «Ajustes» de un módulo y su lista de primeros pasos
+Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla. El primer guardado da por hecho el paso «Tu caja» de la lista de puesta en marcha del hub, que solo ve el administrador y no es obligatorio.
+Si falla: si el guardado se rechaza, «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Si lo que falla es la lectura (también para el administrador, por un fallo pasajero), el formulario enseña los valores de fábrica sin avisar y «Guardar» los escribe en los ocho ajustes, «Activar caja» incluido. Quien no es administrador no ve «Guardar».
+Implicados: HUB-F33, HUB-F35, HUB_SHELL-F31, HUB_SHELL-F43, HUB_SHELL-F44
 QA: ninguno
 
 ### CASH_REGISTER-F02 Dar de alta un cajón
@@ -189,8 +188,7 @@ Pasos:
 Entra: los ajustes guardados («Activar caja» y «URL del POS protegido») y si hay sesión abierta.
 Sale: nada propio. Mientras la caja esté cerrada, el hub rechaza cualquier orden de Venta, no solo cobrar, anular y devolver: también abrir una cuenta o una mesa, añadir o quitar líneas, enviar la comanda a cocina, dividir o juntar cuentas, descuentos, la vista previa del cobro, los ajustes de Venta, las formas de pago, los departamentos y las notas rápidas. Da igual que venga del TPV, del asistente, de un flujo o de la API. La pantalla solo tapa la ruta del TPV; las demás pantallas de Venta se abren, pero sus órdenes se rechazan. Solo aplica cuando la «URL del POS protegido» apunta a Venta.
 Si falla: si la lectura de los ajustes o de la sesión falla, el TPV se deja abrir (el bloqueo cede antes que parar las ventas). Una orden de Venta rechazada porque la caja está cerrada solo da el aviso genérico de Venta, sin mención a la caja: al cobrar, «Error al cobrar»; al anular, «No se ha podido anular la venta»; al devolver, «No se ha podido registrar la devolución.». El asistente y la API reciben una frase en inglés del hub.
-Implicados: SALES-F08, REC_PELUQUERIA-F01, REC_RESTAURANTE-F01
-Pendiente de enlazar: hub — bloquear una ruta y las órdenes de un módulo mientras otro no cumpla su condición
+Implicados: SALES-F08, REC_PELUQUERIA-F01, REC_RESTAURANTE-F01, HUB-F13, HUB_SHELL-F50
 QA: R-01, B-01, BD-04
 
 ### CASH_REGISTER-F05 Registrar una entrada o una salida de efectivo
@@ -253,9 +251,8 @@ Pasos:
 4. El segundo clic cierra (CASH_REGISTER-F09).
 Entra: las comandas vivas de Cocina (solo si está instalada) y la cola de impresión del hub.
 Sale: nada; avisa, nunca impide.
-Si falla: si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
-Implicados: KITCHEN-F31, REC_PELUQUERIA-F16, REC_RESTAURANTE-F16
-Pendiente de enlazar: hub — la cobertura de la cola de impresión por estación (`hub.print.coverage`), la misma que enseña Impresión en PRINTING-F01
+Si falla: un tique que la impresora de red perdió no aparece: el hub no lo sabe, porque solo cuenta lo que sigue esperando en la cola, y lo impreso directo no deja rastro (ERPlora/hub#2494). Si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
+Implicados: KITCHEN-F31, REC_PELUQUERIA-F16, REC_RESTAURANTE-F16, HUB-F201, HUB-F202, PRINTING-F01
 QA: qa-hub-restaurant §14 (discrepa)
 
 ### CASH_REGISTER-F09 Cerrar el turno: esperado, contado y diferencia
@@ -315,9 +312,8 @@ Pasos:
 2. «Caja (sesión actual)» enseña el efectivo esperado de la sesión abierta y se mueve con cada venta y movimiento; «Descuadres recientes», la diferencia de las ocho últimas sesiones cerradas.
 Entra: la sesión abierta y las sesiones cerradas.
 Sale: nada.
-Si falla: sin sesión abierta el primer panel sale vacío; el empleado no ve el primero (solo administrador y responsable).
-Implicados: pendiente
-Pendiente de enlazar: hub — pintar los paneles de los módulos en el inicio
+Si falla: sin sesión abierta el primer panel sale vacío; el empleado puede poner el primero, pero sale «No disponible»: su consulta solo la tienen el administrador y el responsable (el inicio no filtra los paneles por permiso).
+Implicados: HUB-F34, HUB_SHELL-F33, HUB_SHELL-F35
 QA: R-01
 
 ### CASH_REGISTER-F13 Anotar en la caja cada cobro de una venta
@@ -349,8 +345,7 @@ Pasos:
 Entra: la venta anulada (sale.voided) y los movimientos de esa venta en la caja.
 Sale: el movimiento de compensación (avisa: cash_register.movement_added). Una segunda entrega del mismo aviso no duplica nada.
 Si falla: con efectivo que devolver y ninguna caja abierta, la caja rechaza la anotación: el hub la reintenta durante unos minutos y, si sigue sin caja, queda en la lista de avisos fallidos del hub, de donde un administrador la reintenta. La venta queda anulada igualmente. Con el bloqueo del TPV armado (CASH_REGISTER-F04) este caso solo se da si la caja se cierra después de anular: con la caja ya cerrada, Venta no llega a anular (SALES-F08). Anular no corrige nada fiscal: el tique sigue emitido y declarado (SALES-F30). Si la caja se cierra justo mientras se anota, no se anota nada y no hay rechazo ni reintento.
-Implicados: SALES-F30, REC_FISCAL-F13, REC_PELUQUERIA-F14, REC_RESTAURANTE-F15
-Pendiente de enlazar: hub — reintentar y listar los avisos que un módulo no pudo procesar
+Implicados: SALES-F30, REC_FISCAL-F13, REC_PELUQUERIA-F14, REC_RESTAURANTE-F15, HUB-F52, HUB-F54, HUB-F55, HUB_SHELL-F145, HUB_SHELL-F146
 QA: R-11, B-08, qa-hub-restaurant §13
 
 ### CASH_REGISTER-F15 Anotar en la caja una devolución
