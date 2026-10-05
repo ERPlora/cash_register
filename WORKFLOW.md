@@ -130,7 +130,7 @@ también con cada movimiento.
 ## Flujos
 
 ### CASH_REGISTER-F01 Configurar cómo funciona la caja
-Estado: hecho
+Estado: parcial — si la lectura de los ajustes falla, el formulario enseña los de fábrica y «Guardar» los escribe todos, «Activar caja» incluido
 Vertical: comun
 Actor: administrador
 Pantalla: Ajustes de Caja
@@ -140,8 +140,8 @@ Pasos:
 3. Pulsa «Guardar». Se guarda todo el formulario de una vez.
 4. Sale «Ajustes guardados.»; desde ese momento el servidor aplica el fondo obligatorio (CASH_REGISTER-F03), el recuento obligatorio (CASH_REGISTER-F09), el saldo negativo (CASH_REGISTER-F05), el arqueo ciego (CASH_REGISTER-F07), el cierre automático (CASH_REGISTER-F10) y el bloqueo del TPV.
 Entra: las decisiones del administrador.
-Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla.
-Si falla: «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Quien no es administrador no ve «Guardar».
+Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla. El primer guardado da por hecho el paso «Tu caja» de la lista de puesta en marcha del hub, que solo ve el administrador y no es obligatorio.
+Si falla: si el guardado se rechaza, «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Si lo que falla es la lectura (también para el administrador, por un fallo pasajero), el formulario enseña los valores de fábrica sin avisar y «Guardar» los escribe en los ocho ajustes, «Activar caja» incluido. Quien no es administrador no ve «Guardar».
 Implicados: pendiente
 Pendiente de enlazar: hub — pintar la pestaña «Ajustes» de un módulo y su lista de primeros pasos
 QA: ninguno
@@ -253,7 +253,7 @@ Pasos:
 4. El segundo clic cierra (CASH_REGISTER-F09).
 Entra: las comandas vivas de Cocina (solo si está instalada) y la cola de impresión del hub.
 Sale: nada; avisa, nunca impide.
-Si falla: si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
+Si falla: un tique que la impresora de red perdió no aparece: el hub no lo sabe, porque solo cuenta lo que sigue esperando en la cola, y lo impreso directo no deja rastro (ERPlora/hub#2494). Si una de las dos lecturas no se puede hacer, sale «No se ha podido comprobar lo que queda pendiente, así que esta revisión puede estar incompleta.». Si la otra lectura no encontró nada pendiente, se cierra con un solo clic; si encontró comandas o impresiones, se pide igual la confirmación, con esa línea dentro del aviso.
 Implicados: KITCHEN-F31, REC_PELUQUERIA-F16, REC_RESTAURANTE-F16
 Pendiente de enlazar: hub — la cobertura de la cola de impresión por estación (`hub.print.coverage`), la misma que enseña Impresión en PRINTING-F01
 QA: qa-hub-restaurant §14 (discrepa)
@@ -315,7 +315,7 @@ Pasos:
 2. «Caja (sesión actual)» enseña el efectivo esperado de la sesión abierta y se mueve con cada venta y movimiento; «Descuadres recientes», la diferencia de las ocho últimas sesiones cerradas.
 Entra: la sesión abierta y las sesiones cerradas.
 Sale: nada.
-Si falla: sin sesión abierta el primer panel sale vacío; el empleado no ve el primero (solo administrador y responsable).
+Si falla: sin sesión abierta el primer panel sale vacío; el empleado puede poner el primero, pero sale «No disponible»: su consulta solo la tienen el administrador y el responsable (el inicio no filtra los paneles por permiso).
 Implicados: pendiente
 Pendiente de enlazar: hub — pintar los paneles de los módulos en el inicio
 QA: R-01
