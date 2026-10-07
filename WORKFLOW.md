@@ -130,7 +130,7 @@ también con cada movimiento.
 ## Flujos
 
 ### CASH_REGISTER-F01 Configurar cómo funciona la caja
-Estado: parcial — si la lectura de los ajustes falla, el formulario enseña los de fábrica y «Guardar» los escribe todos, «Activar caja» incluido
+Estado: hecho
 Vertical: comun
 Actor: administrador
 Pantalla: Ajustes de Caja
@@ -141,7 +141,7 @@ Pasos:
 4. Sale «Ajustes guardados.»; desde ese momento el servidor aplica el fondo obligatorio (CASH_REGISTER-F03), el recuento obligatorio (CASH_REGISTER-F09), el saldo negativo (CASH_REGISTER-F05), el arqueo ciego (CASH_REGISTER-F07), el cierre automático (CASH_REGISTER-F10) y el bloqueo del TPV.
 Entra: las decisiones del administrador.
 Sale: los ajustes de caja del negocio, una sola fila por hub (avisa: cash_register.settings_updated). Antes del primer guardado no existe ninguna y no se aplica ninguna regla. El primer guardado da por hecho el paso «Tu caja» de la lista de puesta en marcha del hub, que solo ve el administrador y no es obligatorio.
-Si falla: si el guardado se rechaza, «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Si lo que falla es la lectura (también para el administrador, por un fallo pasajero), el formulario enseña los valores de fábrica sin avisar y «Guardar» los escribe en los ocho ajustes, «Activar caja» incluido. Quien no es administrador no ve «Guardar».
+Si falla: si el guardado se rechaza, «No se pudieron guardar los ajustes.» y los ajustes quedan como estaban. Si lo que falla es la lectura (red, hub reiniciándose), la pestaña no enseña el formulario ni «Guardar»: dice «No se pudieron cargar los ajustes.» con «Reintentar», así que nada se guarda encima de lo que no se leyó (HUB_SHELL-F43, hub#2511). Quien no es administrador no ve «Guardar».
 Implicados: HUB-F33, HUB-F35, HUB_SHELL-F31, HUB_SHELL-F43, HUB_SHELL-F44, REC_ALTA-F18
 QA: ninguno
 
