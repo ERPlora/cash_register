@@ -108,8 +108,9 @@ Menú **Caja → Ajustes** (pestaña que pone el hub). Formulario con cabecera �
 «Exigir saldo de apertura», «Exigir saldo de cierre», «Permitir saldo negativo», «Arqueo ciego»,
 «Cierre automático diario», «Hora del cierre automático» (de 00:00 a 23:00, en horas en punto) y
 «URL del POS protegido» (de fábrica `/m/sales/pos/`), y el botón «Guardar». Sin ajustes guardados
-enseña los valores de fábrica. Quien no es administrador lo ve de solo lectura con «Solo un
-administrador puede cambiar estos ajustes.». Cargando: «Cargando ajustes…». Error: «No se pudieron
+enseña los valores de fábrica. Solo lo ve quien tiene el
+permiso de cambiarlos (`cash_register.manage_settings`; de fábrica, solo el administrador): a los
+demás el hub no les enseña la pestaña (HUB_SHELL-F43, hub#2588). Cargando: «Cargando ajustes…». Error: «No se pudieron
 cargar los ajustes.» o, al guardar, «No se pudieron guardar los ajustes.». Guardado: «Ajustes
 guardados.».
 
