@@ -25,7 +25,7 @@
 use erplora_guest_sdk::{currency, money};
 use rust_decimal::Decimal;
 use std::str::FromStr;
-use erplora_guest_sdk::{DomainError, Operation, Output};
+use erplora_guest_sdk::{DomainError, Event, Operation, Output};
 use serde_json::{json, Map, Value};
 
 #[cfg(feature = "guest")]
@@ -65,6 +65,12 @@ pub fn open_session(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Outp
 #[plugin_fn]
 pub fn close_session(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
     Ok(Json(close_session_pure(input.into_inner().into_value())))
+}
+
+#[cfg(feature = "guest")]
+#[plugin_fn]
+pub fn auto_close_sessions(input: Json<erplora_guest_sdk::Input>) -> FnResult<Json<Output>> {
+    Ok(Json(auto_close_sessions_pure(input.into_inner().into_value())))
 }
 
 #[cfg(feature = "guest")]
@@ -578,6 +584,43 @@ pub fn close_session_pure(input: Value) -> Output {
     let mut p = passthrough(&payload, &["session_id", "closing_notes"]);
     p.insert("closing_balance".into(), counted.map(|v| json!(money::from_json(v, 0))).unwrap_or(Value::Null));
     Output::new().with_operation(Operation::sql("cash_register._close_session_apply", p))
+}
+
+/// The scheduled automatic close (cash_register#23), run every 5 minutes by the task
+/// `auto_close_sessions` with the system context (cash_register#145).
+///
+/// It used to be a declarative command with `"emit": ["cash_register.session_closed"]`, and the
+/// runtime writes a declared event once per EXECUTION: every pass announced «caja cerrada» — about
+/// 288 a day — whether it closed a drawer or not, with the task's empty payload instead of the
+/// session. A flow «when the drawer closes → create a task» created a task every 5 minutes.
+///
+/// So the decision of WHICH sessions are due stays in SQL (the business-day cut-off in the local
+/// time zone, `queries/sessions_due_for_auto_close.sql`, preloaded by the host as a trusted read),
+/// and this handler turns each due row into its close plus ONE announcement naming it. Nothing due
+/// → no operation and no event: the pass only advances the task. The command declares no `emit`
+/// on purpose — a declared event would be written on every pass again.
+///
+/// `_auto_close_session_apply` refuses to close fewer than one row: if somebody closed that drawer
+/// by hand between the read and this transaction, the whole pass rolls back (nothing closed,
+/// nothing announced) and the next pass reads the new state, instead of announcing a close that
+/// this pass did not make.
+pub fn auto_close_sessions_pure(input: Value) -> Output {
+    let mut out = Output::new();
+    for row in read_rows(&input, "cash_register.sessions.due_for_auto_close") {
+        let session_id = row.get("session_id").map(s).unwrap_or_default();
+        if session_id.trim().is_empty() {
+            continue;
+        }
+        let mut p = Map::new();
+        p.insert("session_id".into(), json!(session_id));
+        out = out
+            .with_operation(Operation::sql("cash_register._auto_close_session_apply", p))
+            .with_event(Event::new(
+                "cash_register.session_closed",
+                json!({ "session_id": session_id, "closing_balance": Value::Null, "auto_closed": true }),
+            ));
+    }
+    out
 }
 
 /// The SIGN of a cash movement belongs to the SERVER (cash_register#48). It used to be a convention
@@ -1948,5 +1991,68 @@ mod void_tests {
             reverse_sale_pure(starved).error.as_ref().map(|e| e.code.as_str()),
             Some("cash_register.void_not_enough_ids")
         );
+    }
+}
+
+#[cfg(test)]
+mod auto_close_tests {
+    //! cash_register#145: the scheduled auto-close announces ONE `session_closed` per session it
+    //! actually closes, and nothing on a pass that closes none.
+    use super::*;
+
+    const DUE: &str = "cash_register.sessions.due_for_auto_close";
+
+    fn inp(due: Value) -> Value {
+        json!({ "payload": {}, "context": { "new_ids": ["id-0"], "now": "2026-08-18T05:00:00+00:00",
+            "reads": { DUE: due } } })
+    }
+
+    #[test]
+    fn a_pass_with_nothing_due_writes_and_announces_nothing() {
+        let out = auto_close_sessions_pure(inp(json!([])));
+        assert!(out.error.is_none());
+        assert!(out.operations.is_empty(), "nothing to close → no write: {:?}", out.operations);
+        assert!(out.events.is_empty(), "nothing closed → no announcement: {:?}", out.events);
+    }
+
+    #[test]
+    fn a_missing_read_is_treated_as_nothing_due() {
+        let out = auto_close_sessions_pure(json!({ "payload": {}, "context": { "reads": {} } }));
+        assert!(out.operations.is_empty() && out.events.is_empty());
+    }
+
+    #[test]
+    fn each_due_session_is_closed_and_announced_once_by_its_id() {
+        let out = auto_close_sessions_pure(inp(json!([{ "session_id": "s-1" }, { "session_id": "s-2" }])));
+        let closed: Vec<(&str, Value)> = out.operations.iter()
+            .map(|op| (op.command.as_str(), op.params.get("session_id").cloned().unwrap_or(Value::Null)))
+            .collect();
+        assert_eq!(closed, vec![
+            ("cash_register._auto_close_session_apply", json!("s-1")),
+            ("cash_register._auto_close_session_apply", json!("s-2")),
+        ]);
+        let announced: Vec<(&str, Value)> = out.events.iter()
+            .map(|ev| (ev.name.as_str(), ev.payload.get("session_id").cloned().unwrap_or(Value::Null)))
+            .collect();
+        assert_eq!(announced, vec![
+            ("cash_register.session_closed", json!("s-1")),
+            ("cash_register.session_closed", json!("s-2")),
+        ]);
+    }
+
+    #[test]
+    fn the_announcement_says_nobody_counted_the_drawer() {
+        let out = auto_close_sessions_pure(inp(json!([{ "session_id": "s-1" }])));
+        let payload = &out.events[0].payload;
+        assert_eq!(payload.get("closing_balance"), Some(&Value::Null));
+        assert_eq!(payload.get("auto_closed"), Some(&json!(true)));
+    }
+
+    #[test]
+    fn a_row_without_an_id_is_neither_closed_nor_announced() {
+        let out = auto_close_sessions_pure(inp(json!([{ "session_id": "" }, { "other": 1 }, { "session_id": "s-3" }])));
+        assert_eq!(out.operations.len(), 1);
+        assert_eq!(out.events.len(), 1);
+        assert_eq!(out.events[0].payload.get("session_id"), Some(&json!("s-3")));
     }
 }

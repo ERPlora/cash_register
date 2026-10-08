@@ -279,7 +279,10 @@ def check_against_postgres() -> None:
             "require_closing_balance": False, "allow_negative_balance": True,
             "require_blind_count": False, "auto_close_enabled": True,
             "auto_close_time": "04:00", "protected_pos_url": "/m/sales/pos/"})
-        run_sql_command("cash_register._auto_close_sessions", {})
+        # cash_register#145: the pass is a handler — the read picks the due sessions and each one
+        # is closed by `_auto_close_session_apply`, the statement that carries the formula.
+        for row in run_query("cash_register.sessions.due_for_auto_close"):
+            run_sql_command("cash_register._auto_close_session_apply", {"session_id": row["session_id"]})
         auto = json.loads(psql(["-tA", "-c",
                                 f"SELECT row_to_json(s) FROM cash_register_session s WHERE id = '{sid2}'"],
                                db=DB).strip())

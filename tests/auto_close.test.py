@@ -58,6 +58,8 @@ HUB = "hub-a"
 OTHER_HUB = "hub-b"
 USER = "u-cashier"
 COMMAND = "cash_register._auto_close_sessions"
+DUE = "cash_register.sessions.due_for_auto_close"
+APPLY = "cash_register._auto_close_session_apply"
 TASK = "auto_close_sessions"
 DEAD = ("auto_open_session_on_login", "auto_close_session_on_logout")
 
@@ -154,6 +156,29 @@ def run_command(
     )
 
 
+def run_auto_close(hub: str = HUB, now: str = "2026-08-18T10:00:00+00:00") -> int:
+    """What one pass of `_auto_close_sessions` does (cash_register#145): the trusted read decides
+    which sessions are due and the WASM handler closes each one through `_auto_close_session_apply`,
+    all in one transaction. Driven here as SQL with the system context (no user)."""
+    cmd = MANIFEST["commands"][COMMAND]
+    params = {"hub_id": hub, "current_user_id": "", "now": now}
+    due_sql = MANIFEST["queries"][cmd["reads"][0]["query"]]["sql"]
+    out = psql(["-At"], db=DB, stdin=bind((MODULE_DIR / due_sql).read_text(), params))
+    due = [line for line in out.splitlines() if line.strip()]
+    if not due:
+        return 0
+    apply_sql = (MODULE_DIR / MANIFEST["commands"][APPLY]["sql"][0]).read_text()
+    script = (
+        ["BEGIN;"]
+        + [bind(apply_sql, {**params, "session_id": sid}) for sid in due]
+        + ["COMMIT;"]
+    )
+    out = psql([], db=DB, stdin="\n".join(script))
+    return sum(
+        int(m.group(1)) for m in re.finditer(r"^UPDATE (\d+)$", out, re.MULTILINE)
+    )
+
+
 def session(sid: str) -> dict:
     return json.loads(
         psql(
@@ -233,10 +258,25 @@ def check_manifest() -> None:
             fail(
                 "catch_up must be `collapse`: a hub that slept through the cut-off closes ONCE on boot"
             )
+    # cash_register#145: a declared `emit` is written once per EXECUTION — every 5-minute pass
+    # announced «drawer closed» whether it closed one or not. The handler announces each session it
+    # closes (widgets and the POS guard refresh on it), so the command must declare none.
     cmd = MANIFEST["commands"].get(COMMAND, {})
-    if "cash_register.session_closed" not in cmd.get("emit", []):
+    if cmd.get("emit"):
         fail(
-            f"`{COMMAND}` must emit cash_register.session_closed (widgets and the POS guard refresh on it)"
+            f"`{COMMAND}` must not declare `emit` (it would announce a close on every pass): {cmd['emit']}"
+        )
+    elif cmd.get("handler", {}).get("function") != "auto_close_sessions" or [
+        r.get("query") for r in cmd.get("reads", [])
+    ] != [DUE]:
+        fail(
+            f"`{COMMAND}` must run the WASM handler `auto_close_sessions` over the read `{DUE}`"
+        )
+    else:
+        ok(f"`{COMMAND}` = handler over `{DUE}`, no declared emit")
+    if MANIFEST["commands"].get(APPLY, {}).get("min_affected_rows") != 1:
+        fail(
+            f"`{APPLY}` must declare min_affected_rows: 1 (a drawer closed by hand meanwhile rolls the pass back)"
         )
 
     schema = json.loads((MODULE_DIR / "schemas" / "settings_update.json").read_text())
@@ -322,7 +362,7 @@ def check_against_postgres() -> None:
         # 2. Disabled (default): nothing happens, even long after any cut-off.
         run_command("cash_register.settings.update", settings_payload())
         open_at("s-off", "2026-08-10T18:00:00+00:00")
-        n = run_command(COMMAND, {}, now="2026-08-18T10:00:00+00:00", user="")
+        n = run_auto_close(now="2026-08-18T10:00:00+00:00")
         if n != 0 or session("s-off")["status"] != "open":
             fail(
                 f"auto close DISABLED must touch nothing (affected={n}, status={session('s-off')['status']})"
@@ -349,16 +389,12 @@ def check_against_postgres() -> None:
             ],
             db=DB,
         )
-        n = run_command(
-            COMMAND, {}, now="2026-08-17T20:30:00+00:00", user=""
-        )  # 22:30 Madrid
+        n = run_auto_close(now="2026-08-17T20:30:00+00:00")  # 22:30 Madrid
         if n != 0 or session("s-1")["status"] != "open":
             fail(f"before the cut-off (22:30 local) nothing must close (affected={n})")
         else:
             ok("22:30 local, cut-off 23:00 → still open")
-        n = run_command(
-            COMMAND, {}, now="2026-08-17T21:05:00+00:00", user=""
-        )  # 23:05 Madrid
+        n = run_auto_close(now="2026-08-17T21:05:00+00:00")  # 23:05 Madrid
         row = session("s-1")
         if n != 1 or row["status"] != "closed":
             fail(
@@ -394,6 +430,19 @@ def check_against_postgres() -> None:
         else:
             ok("other hub untouched")
 
+        # cash_register#145: the read and the close are two steps. A drawer somebody closed by hand
+        # in between must not be closed again (its count, its closing time) — the apply touches 0
+        # rows and `min_affected_rows: 1` rolls the pass back instead of announcing a close.
+        psql(["-c", "UPDATE cash_register_session SET closing_balance = 12000, difference = -500 WHERE id = 's-1'"], db=DB)
+        out = psql([], db=DB, stdin=bind(
+            (MODULE_DIR / MANIFEST["commands"][APPLY]["sql"][0]).read_text(),
+            {"hub_id": HUB, "current_user_id": "", "now": "2026-08-17T21:10:00+00:00", "session_id": "s-1"}))
+        again = session("s-1")
+        if "UPDATE 0" not in out or again["closed_at"] != "2026-08-17T21:05:00+00:00" or again["closing_balance"] != 12000:
+            fail(f"`{APPLY}` must not touch an already-closed drawer (psql={out.strip()!r}, closed_at={again['closed_at']!r}, counted={again['closing_balance']!r})")
+        else:
+            ok("an already-closed drawer is not closed again (0 rows: the pass would roll back)")
+
         # 4. Catch-up: the hub slept through the 23:00 cut-off; next morning the stale session goes,
         #    the one opened this morning stays.
         psql(["-c", "DELETE FROM cash_register_session"], db=DB)
@@ -401,9 +450,7 @@ def check_against_postgres() -> None:
             "s-stale", "2026-08-17T16:00:00+00:00"
         )  # yesterday 18:00 Madrid, never closed
         # (the partial unique index allows ONE open per hub → close it before opening the fresh one)
-        n = run_command(
-            COMMAND, {}, now="2026-08-18T05:00:00+00:00", user=""
-        )  # 07:00 Madrid next day
+        n = run_auto_close(now="2026-08-18T05:00:00+00:00")  # 07:00 Madrid next day
         if n != 1 or session("s-stale")["status"] != "closed":
             fail(
                 f"catch-up: a session opened before YESTERDAY's cut-off must be closed next morning (affected={n})"
@@ -411,9 +458,7 @@ def check_against_postgres() -> None:
         else:
             ok("catch-up next morning → yesterday's stale session closed")
         open_at("s-fresh", "2026-08-18T05:30:00+00:00")  # 07:30 Madrid today
-        n = run_command(
-            COMMAND, {}, now="2026-08-18T06:00:00+00:00", user=""
-        )  # 08:00 Madrid
+        n = run_auto_close(now="2026-08-18T06:00:00+00:00")  # 08:00 Madrid
         if n != 0 or session("s-fresh")["status"] != "open":
             fail(
                 f"a session opened AFTER the last cut-off must not be closed (affected={n})"
@@ -426,14 +471,12 @@ def check_against_postgres() -> None:
         set_hub_setting("timezone", None)
         set_hub_setting("country_code", "ES")
         open_at("s-es", "2026-08-17T16:00:00+00:00")
-        n = run_command(
-            COMMAND, {}, now="2026-08-17T20:30:00+00:00", user=""
-        )  # 22:30 Madrid, 20:30 UTC
+        n = run_auto_close(now="2026-08-17T20:30:00+00:00")  # 22:30 Madrid, 20:30 UTC
         if n != 0:
             fail(
                 "country ES without explicit zone must resolve to Europe/Madrid (20:30 UTC = 22:30 local, before 23:00)"
             )
-        n = run_command(COMMAND, {}, now="2026-08-17T21:05:00+00:00", user="")
+        n = run_auto_close(now="2026-08-17T21:05:00+00:00")
         if n != 1:
             fail(
                 "country ES without explicit zone: 21:05 UTC = 23:05 Madrid → must close"

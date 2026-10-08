@@ -31,7 +31,7 @@ without anyone typing it in.
 | Event | When |
 |---|---|
 | `cash_register.session_opened` | a session is opened |
-| `cash_register.session_closed` | a session is closed and reconciled |
+| `cash_register.session_closed` | a session is closed and reconciled — and once per drawer the daily automatic close closes (`session_id`, `closing_balance: null`, `auto_closed: true`); a pass that closes nothing announces nothing |
 | `cash_register.settings_updated` | the settings are saved |
 
 **Events it listens to**

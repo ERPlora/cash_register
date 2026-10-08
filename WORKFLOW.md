@@ -282,7 +282,7 @@ Pasos:
 2. Cada 5 minutos el hub mira si ya ha pasado el último corte en la hora local del negocio y cierra la sesión que siga abierta desde antes de ese corte; la abierta después del corte no se toca. Un hub apagado durante el corte la cierra en cuanto vuelve.
 3. En Caja, la sesión aparece «Cerrada» con su esperado y Contado y Diferencia vacíos.
 Entra: el ajuste, la hora y la zona horaria del negocio: la zona del hub; si no hay, la de su región (Canarias, Azores, Madeira) o la de su país; un hub sin país usa la hora de Madrid, y UTC solo se usa con un país que no está en la tabla del módulo.
-Sale: la sesión cerrada sin recuento, sin persona que la cerrara y con una marca en las notas de cierre (que ninguna pantalla enseña) (avisa: cash_register.session_closed, también en las pasadas que no cierran nada).
+Sale: la sesión cerrada sin recuento, sin persona que la cerrara y con una marca en las notas de cierre (que ninguna pantalla enseña) (avisa: cash_register.session_closed una vez por sesión cerrada, con su `session_id`; una pasada que no cierra nada no avisa).
 Si falla: sin ajustes guardados o con el ajuste apagado no cierra nada. No hay aviso a nadie de que la caja se cerró sola.
 Implicados: ninguno
 QA: ninguno

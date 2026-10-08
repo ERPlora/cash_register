@@ -135,7 +135,9 @@ All fields are sent together — the form saves a complete snapshot, not a singl
 The former *Abrir caja al iniciar sesión* / *Cerrar caja al cerrar sesión* toggles are gone: no
 part of the product ever read them (and no reference POS opens a drawer on login or closes it on
 logout), so offering them was a lie. What actually closes a forgotten drawer is the daily automatic
-close above, run by the hub's scheduler every 5 minutes (`auto_close_sessions`).
+close above, run by the hub's scheduler every 5 minutes (`auto_close_sessions`). Each drawer it
+closes is announced once with `cash_register.session_closed`; a pass that closes nothing announces
+nothing.
 
 ## First-run setup
 
