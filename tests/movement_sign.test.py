@@ -274,17 +274,29 @@ def check_against_postgres() -> None:
               " payment_method, payment_method_type, is_deleted, created_at, updated_at) VALUES"
               f" ('{uuid.uuid4()}', '{HUB}', '{sid2}', 'out', 1000, 'cash', 'cash', 0,"
               " '2026-08-20T09:00:00+00:00', '2026-08-20T09:00:00+00:00')"], db=DB)
+        # Neither a card sale nor a soft-deleted cash sale is money in the drawer: the expected cash
+        # the schedule freezes must leave both out, like the manual close does (rv cash_register#148).
+        psql(["-c",
+              "INSERT INTO cash_register_movement (id, hub_id, session_id, movement_type, amount,"
+              " payment_method, payment_method_type, is_deleted, created_at, updated_at) VALUES"
+              f" ('{uuid.uuid4()}', '{HUB}', '{sid2}', 'sale', 7000, 'card', 'card', 0,"
+              " '2026-08-20T09:10:00+00:00', '2026-08-20T09:10:00+00:00'),"
+              f" ('{uuid.uuid4()}', '{HUB}', '{sid2}', 'sale', 3000, 'cash', 'cash', 1,"
+              " '2026-08-20T09:20:00+00:00', '2026-08-20T09:20:00+00:00')"], db=DB)
         run_sql_command("cash_register.settings.update", {
             "enable_cash_register": True, "require_opening_balance": False,
             "require_closing_balance": False, "allow_negative_balance": True,
             "require_blind_count": False, "auto_close_enabled": True,
             "auto_close_time": "04:00", "protected_pos_url": "/m/sales/pos/"})
-        run_sql_command("cash_register._auto_close_sessions", {})
+        # cash_register#145: the pass is a handler — the read picks the due sessions and each one
+        # is closed by `_auto_close_session_apply`, the statement that carries the formula.
+        for row in run_query("cash_register.sessions.due_for_auto_close"):
+            run_sql_command("cash_register._auto_close_session_apply", {"session_id": row["session_id"]})
         auto = json.loads(psql(["-tA", "-c",
                                 f"SELECT row_to_json(s) FROM cash_register_session s WHERE id = '{sid2}'"],
                                db=DB).strip())
         if auto["expected_balance"] != 9000:
-            fail(f"_auto_close_sessions must expect 10000 − 1000 = 9000, got {auto['expected_balance']}")
+            fail(f"_auto_close_sessions must expect 10000 − 1000 = 9000 (card and deleted sales left out), got {auto['expected_balance']}")
         else:
             ok("_auto_close_sessions uses the same corrected formula as the manual close")
     finally:

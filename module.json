@@ -120,6 +120,10 @@
     ]
   },
   "queries": {
+    "cash_register.sessions.due_for_auto_close": {
+      "permission": "cash_register.view_session",
+      "sql": "queries/sessions_due_for_auto_close.sql"
+    },
     "cash_register.sessions.list": {
       "permission": "cash_register.view_session",
       "sql": "queries/sessions_list.sql",
@@ -490,13 +494,25 @@
     },
     "cash_register._auto_close_sessions": {
       "permission": "cash_register.close_session",
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "auto_close_sessions"
+      },
+      "reads": [
+        {
+          "query": "cash_register.sessions.due_for_auto_close",
+          "required": true
+        }
+      ]
+    },
+    "cash_register._auto_close_session_apply": {
+      "permission": "cash_register.close_session",
       "transaction": true,
       "sql": [
-        "commands/_auto_close_sessions.sql"
+        "commands/_auto_close_session_apply.sql"
       ],
-      "emit": [
-        "cash_register.session_closed"
-      ]
+      "min_affected_rows": 1
     },
     "cash_register.movement.add": {
       "permission": "cash_register.add_movement",
