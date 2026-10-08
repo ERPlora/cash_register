@@ -394,6 +394,16 @@ def check_against_postgres() -> None:
             fail(f"before the cut-off (22:30 local) nothing must close (affected={n})")
         else:
             ok("22:30 local, cut-off 23:00 → still open")
+        # Tenancy of the close itself (rv cash_register#148): the apply is reached with an id the
+        # trusted read chose, but it must still refuse to close a drawer under another hub's id —
+        # 0 rows, the session stays open.
+        out = psql([], db=DB, stdin=bind(
+            (MODULE_DIR / MANIFEST["commands"][APPLY]["sql"][0]).read_text(),
+            {"hub_id": OTHER_HUB, "current_user_id": "", "now": "2026-08-17T21:05:00+00:00", "session_id": "s-1"}))
+        if "UPDATE 0" not in out or session("s-1")["status"] != "open":
+            fail(f"`{APPLY}` must not close a session under another hub's id (psql={out.strip()!r}, status={session('s-1')['status']!r})")
+        else:
+            ok("the apply under another hub's id touches 0 rows")
         n = run_auto_close(now="2026-08-17T21:05:00+00:00")  # 23:05 Madrid
         row = session("s-1")
         if n != 1 or row["status"] != "closed":
